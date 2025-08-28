@@ -475,7 +475,7 @@
                     const data = await response.json();
                     database = data.record;
                     // Verifica se o bin está vazio ou com estrutura antiga/inválida
-                    if (true) // Sempre usar configurações atualizadas {
+                    if (!database.config || !database.config.actions || database.config.actions.length === 0) {
                         database = { leads: database.leads || [], config: defaultConfig }; // Mantém os leads se existirem
                         needsUpdate = true;
                     }
