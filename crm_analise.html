@@ -331,7 +331,7 @@
         // Configuração das credenciais - CONFIGURADO
         const CONFIG = {
             JSONBIN_API_KEY: "$2a$10$8LughrqC.RmXcfp0ZKyEousPzWo4jgDSJNUc4isyT15.hiUdG9brW", // API Key configurada
-            JSONBIN_BIN_ID: "677a1b2c3d4e5f6789abcdef",  // Bin ID configurado
+            JSONBIN_BIN_ID: "68af741f43b1c97be92dbe9a",  // Bin ID configurado
             // Para maior segurança, considere usar um backend que faça essas chamadas
         };
         
@@ -475,7 +475,7 @@
                     const data = await response.json();
                     database = data.record;
                     // Verifica se o bin está vazio ou com estrutura antiga/inválida
-                    if (!database.config || !database.config.actions || database.config.actions.length === 0) {
+                    if (!database.config || !database.config.actions || database.config.actions.length === 0 || true) {
                         database = { leads: database.leads || [], config: defaultConfig }; // Mantém os leads se existirem
                         needsUpdate = true;
                     }
