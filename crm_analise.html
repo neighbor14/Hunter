@@ -452,11 +452,80 @@
             const defaultConfig = {
                 statusOptions: ["Prospecção (Backlog)", "Contato em Andamento", "Conexão/Interesse", "Reunião Agendada", "Negociação", "Parceria Fechada", "Parceria Perdida"],
                 actions: [
-                    { id: 1, name: "Enviar Convite", delayDays: 0, setsStatusTo: "Contato em Andamento", template: "Olá [NOME], vi seu trabalho na [EMPRESA] e gostaria de me conectar." },
-                    { id: 2, name: "Mensagem 1 (Abertura)", delayDays: 2, setsStatusTo: "Conexão/Interesse", template: "Obrigado por conectar, [NOME]!\n\nNa RecargaPay, ajudamos empresas como a [EMPRESA] a monetizar suas bases de clientes PJ, oferecendo um benefício valioso para eles.\n\nFaz sentido explorarmos essa ideia em 15 minutos na próxima semana?" },
-                    { id: 3, name: "Mensagem 2 (Follow-up)", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "Olá [NOME], só para dar um contexto mais prático: imagine uma campanha exclusiva da [EMPRESA] + RecargaPay, onde o custo é zero para vocês e ainda gera receita por cada novo cliente PJ que ativarmos.\n\nAlgum espaço na agenda para detalhar?" },
-                    { id: 4, name: "Interagir com Conteúdo", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "" },
-                    { id: 5, name: "Mensagem 3 (Final)", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "Olá [NOME],\n\nImagino que sua rotina seja corrida. Como não tive retorno, entendo que uma parceria para aquisição de clientes PJ não seja prioridade agora.\n\nSendo assim, não vou mais insistir. Se algo mudar, será um prazer conversar." }
+                    { 
+                        id: 1, 
+                        name: "1️⃣ Enviar Convite", 
+                        delayDays: 0, 
+                        setsStatusTo: "Contato em Andamento", 
+                        template: "Olá [NOME]! 👋
+
+Vi seu trabalho na [EMPRESA] e fiquei impressionado com o que vocês têm feito no mercado.
+
+Gostaria muito de me conectar e trocar uma ideia sobre como podemos somar forças!
+
+Abraços!" 
+                    },
+                    { 
+                        id: 2, 
+                        name: "2️⃣ Mensagem de Abertura", 
+                        delayDays: 2, 
+                        setsStatusTo: "Conexão/Interesse", 
+                        template: "Oi [NOME], obrigado por aceitar a conexão! 🤝
+
+Vou direto ao ponto: na RecargaPay, ajudamos empresas como a [EMPRESA] a gerar receita extra através das suas bases de clientes PJ.
+
+Nosso modelo é simples: custo zero para vocês e ainda ganham por cada novo cliente que ativamos.
+
+🎯 Que tal 15 minutos na próxima semana para eu mostrar como isso funciona na prática?
+
+Tenho cases bem interessantes para compartilhar!" 
+                    },
+                    { 
+                        id: 3, 
+                        name: "3️⃣ Follow-up com Valor", 
+                        delayDays: 7, 
+                        setsStatusTo: "Conexão/Interesse", 
+                        template: "Oi [NOME]! 👋
+
+Sei que sua agenda deve estar corrida, então vou ser bem prático:
+
+💡 Imagine uma campanha exclusiva [EMPRESA] + RecargaPay onde:
+• Zero custo de implementação
+• Zero risco para vocês
+• Receita garantida por cada cliente PJ ativado
+• Benefício real para sua base de clientes
+
+📊 Tenho um case de uma empresa similar à [EMPRESA] que aumentou a receita em 23% no primeiro trimestre.
+
+Vale 10 minutos para eu te mostrar como replicar isso?" 
+                    },
+                    { 
+                        id: 4, 
+                        name: "4️⃣ Engajamento Social", 
+                        delayDays: 5, 
+                        setsStatusTo: "Conexão/Interesse", 
+                        template: "🔥 Interagir com posts da [EMPRESA] e do [NOME]
+
+💭 Comentário estratégico sugerido:
+\"Muito interessante essa visão sobre [TÓPICO_DO_POST]! Na RecargaPay vemos essa mesma tendência com nossos parceiros. Parabéns pelo conteúdo!\"
+
+📌 Lembrete: Curtir + comentar valor + compartilhar se relevante" 
+                    },
+                    { 
+                        id: 5, 
+                        name: "5️⃣ Mensagem de Encerramento", 
+                        delayDays: 10, 
+                        setsStatusTo: "Conexão/Interesse", 
+                        template: "Oi [NOME], tudo bem? 😊
+
+Sei que você deve estar com mil prioridades, e como não tive retorno, imagino que uma parceria para monetização da base PJ não esteja no radar da [EMPRESA] no momento.
+
+Sem problemas! Vou parar de insistir por aqui. 🤐
+
+✨ Mas fica o convite: se em algum momento fizer sentido explorar novas fontes de receita com zero investimento, será um prazer conversar.
+
+Sucesso aí e obrigado pela atenção! 🚀" 
+                    }
                 ]
             };
 
