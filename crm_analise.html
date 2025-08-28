@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Prospecção B2B - RecargaPay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 40;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+        }
+        .report-modal {
+            top: 0;
+            left: 0;
+            transform: none;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+        }
+        .highlight-today {
+            background-color: #fef9c3; /* yellow-100 */
+        }
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .loading-text {
+            margin-top: 1rem;
+            color: #4f46e5;
+            font-weight: 500;
+        }
+        .button-loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+            position: relative;
+        }
+        .button-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .kanban-board {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+        .kanban-column {
+            flex: 0 0 300px;
+            min-width: 300px;
+        }
+        .editable-date:hover {
+            background-color: #e5e7eb;
+            cursor: pointer;
+        }
+        .handle {
+            cursor: grab;
+        }
+        
+        /* Melhorias de responsividade mobile */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .mobile-stack {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .mobile-stack > * {
+                width: 100% !important;
+            }
+            
+            .table-responsive {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .mobile-card {
+                display: none;
+            }
+            
+            .mobile-view .table-responsive {
+                display: none;
+            }
+            
+            .mobile-view .mobile-card {
+                display: block;
+            }
+            
+            .mobile-lead-card {
+                background: white;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+                border-left: 4px solid #4f46e5;
+            }
+            
+            .modal {
+                width: 95% !important;
+                height: 90% !important;
+                top: 5% !important;
+                left: 2.5% !important;
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="loader">
+        <svg class="animate-spin h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <div id="loading-text" class="loading-text">Carregando dados...</div>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-gray-900">Sistema de Prospecção B2B</h1>
+            <p class="text-lg text-gray-600 mt-2">RecargaPay - Gestão de Leads LinkedIn</p>
+        </header>
+
+        <div class="flex justify-end mb-4 space-x-2">
+            <button id="export-xls-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">Exportar para Excel (.xls)</button>
+            <button id="open-report-btn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700">Ver Relatórios</button>
+        </div>
+
+        <!-- Seção de Configurações -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <details>
+                <summary class="text-xl font-semibold cursor-pointer">Configurações</summary>
+                
+                <div class="mt-6 border-t pt-6">
+                    <h3 class="text-lg font-semibold mb-2">Gerenciar Status do Funil</h3>
+                    <div id="status-config-container" class="space-y-2">
+                        <!-- Status configuráveis serão inseridos aqui -->
+                    </div>
+                    <button id="add-status-btn" class="mt-2 text-sm bg-gray-200 text-gray-800 font-semibold py-1 px-3 rounded-md hover:bg-gray-300">Adicionar Status</button>
+                </div>
+
+                <div class="mt-6 border-t pt-6">
+                    <h3 class="text-lg font-semibold mb-2">Gerenciar Ações da Cadência</h3>
+                    <div id="actions-config-container" class="space-y-4">
+                        <!-- Ações dinâmicas serão inseridas aqui -->
+                    </div>
+                    <button id="add-action-btn" class="mt-4 text-sm bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-300">Adicionar Ação</button>
+                </div>
+                 <div class="flex justify-end mt-6">
+                    <button id="save-config-btn" class="w-full md:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700">Salvar Todas as Configurações</button>
+                </div>
+            </details>
+        </div>
+
+
+        <!-- Seção para Adicionar Novo Lead -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Adicionar Novo Lead</h2>
+            <form id="add-lead-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <div class="lg:col-span-1">
+                    <label for="empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
+                    <input type="text" id="empresa" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome do Contato</label>
+                    <input type="text" id="nome" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="cargo" class="block text-sm font-medium text-gray-700">Cargo</label>
+                    <input type="text" id="cargo" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="lg:col-span-1">
+                    <label for="linkedin" class="block text-sm font-medium text-gray-700">URL LinkedIn</label>
+                    <input type="url" id="linkedin" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Adicionar Lead</button>
+            </form>
+        </div>
+
+        <!-- Filtros e Busca -->
+        <div class="bg-white p-4 rounded-xl shadow-md mb-8">
+            <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+                <div class="flex-grow">
+                    <label for="search-input" class="block text-sm font-medium text-gray-700">Buscar por Empresa ou Contato</label>
+                    <input type="text" id="search-input" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Digite para buscar...">
+                </div>
+                <div class="md:w-64">
+                    <label for="status-filter" class="block text-sm font-medium text-gray-700">Filtrar por Status</label>
+                    <select id="status-filter" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="md:w-auto">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Visualização</label>
+                    <button id="toggle-view-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 md:hidden">
+                        📱 Modo Cards
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Leads -->
+        <div id="leads-container" class="bg-white rounded-xl shadow-md">
+            <!-- Visualização Desktop (Tabela) -->
+            <div class="table-responsive overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Empresa / Contato</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Próxima Ação</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Data Próxima Ação</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Ações Manuais</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Linhas da tabela serão inseridas aqui via JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Visualização Mobile (Cards) -->
+            <div class="mobile-card p-4">
+                <div id="leads-cards-body">
+                    <!-- Cards mobile serão inseridos aqui via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Notas -->
+    <div id="notes-modal-backdrop" class="modal-backdrop"></div>
+    <div id="notes-modal" class="modal bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2">
+        <h3 class="text-xl font-semibold mb-4">Observações</h3>
+        <textarea id="modal-notes-textarea" class="w-full h-40 p-2 border border-gray-300 rounded-md"></textarea>
+        <div class="mt-4 flex justify-end space-x-2">
+            <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+            <button id="modal-save-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Salvar</button>
+        </div>
+    </div>
+
+    <!-- Modal para Relatórios -->
+    <div id="report-modal-backdrop" class="modal-backdrop"></div>
+    <div id="report-modal" class="modal report-modal bg-gray-100 p-6 rounded-lg shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-3xl font-bold">Relatório de Performance</h2>
+            <button id="close-report-btn" class="text-gray-500 hover:text-gray-800">&times;</button>
+        </div>
+        
+        <!-- KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-gray-500 text-sm font-medium">Contatos (Últimos 7 dias)</h3>
+                <p id="report-contacts-week" class="text-3xl font-bold mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-gray-500 text-sm font-medium">Novas Reuniões (Últimos 7 dias)</h3>
+                <p id="report-meetings-week" class="text-3xl font-bold mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-gray-500 text-sm font-medium">Total de Leads Ativos</h3>
+                <p id="report-active-leads" class="text-3xl font-bold mt-1">0</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-gray-500 text-sm font-medium">Taxa de Conversão (Contato -> Reunião)</h3>
+                <p id="report-conversion-rate" class="text-3xl font-bold mt-1">0%</p>
+            </div>
+        </div>
+
+        <!-- Funil Kanban -->
+        <h3 class="text-2xl font-bold mb-4">Funil de Prospecção</h3>
+        <div id="kanban-board" class="kanban-board">
+            <!-- Colunas do Kanban serão inseridas aqui -->
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO OBRIGATÓRIA ---
+        // AVISO DE SEGURANÇA: Em produção, mova estas chaves para variáveis de ambiente
+        // Por enquanto, configure aqui mas considere implementar um backend
+        
+        // Configuração das credenciais - ALTERE AQUI SUAS CHAVES
+        const CONFIG = {
+            JSONBIN_API_KEY: "", // Cole sua API Key aqui (começa com $2a$ ou $2b$)
+            JSONBIN_BIN_ID: "",  // Cole seu Bin ID aqui
+            // Para maior segurança, considere usar um backend que faça essas chamadas
+        };
+        
+        // Validação de configuração
+        function validateConfig() {
+            if (!CONFIG.JSONBIN_API_KEY || !CONFIG.JSONBIN_BIN_ID) {
+                return {
+                    valid: false,
+                    message: "API Key e Bin ID devem ser configurados no início do código."
+                };
+            }
+            
+            // Aceita tanto $2a$ quanto $2b$ (ambos são válidos para JSONBin)
+            if (!CONFIG.JSONBIN_API_KEY.startsWith('$2a$') && !CONFIG.JSONBIN_API_KEY.startsWith('$2b$')) {
+                return {
+                    valid: false,
+                    message: "API Key deve começar com $2a$ ou $2b$"
+                };
+            }
+            
+            if (CONFIG.JSONBIN_BIN_ID.length < 10) {
+                return {
+                    valid: false,
+                    message: "Bin ID parece inválido (muito curto)"
+                };
+            }
+            
+            return { valid: true };
+        }
+        
+        // --- FUNÇÕES DE SEGURANÇA ---
+        // Função para escapar HTML e prevenir XSS
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return text;
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Função para validar URL
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+        
+        // Função para validar email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        // ------------------------------------
+
+        // --- VARIÁVEIS GLOBAIS ---
+        let leads = [];
+        let cadenceConfig = {};
+        let database = { leads: [], config: {} };
+
+        // --- ELEMENTOS DO DOM ---
+        const form = document.getElementById('add-lead-form');
+        const tableBody = document.getElementById('leads-table-body');
+        const cardsBody = document.getElementById('leads-cards-body');
+        const leadsContainer = document.getElementById('leads-container');
+        const toggleViewBtn = document.getElementById('toggle-view-btn');
+        const saveConfigBtn = document.getElementById('save-config-btn');
+        const addActionBtn = document.getElementById('add-action-btn');
+        const addStatusBtn = document.getElementById('add-status-btn');
+        const actionsConfigContainer = document.getElementById('actions-config-container');
+        const statusConfigContainer = document.getElementById('status-config-container');
+        const loader = document.getElementById('loader');
+        const openReportBtn = document.getElementById('open-report-btn');
+        const closeReportBtn = document.getElementById('close-report-btn');
+        const exportXlsBtn = document.getElementById('export-xls-btn');
+        const searchInput = document.getElementById('search-input');
+        const statusFilter = document.getElementById('status-filter');
+        
+        // Variável para controlar visualização mobile
+        let isMobileView = false;
+
+        // --- MODAL ---
+        const notesModalBackdrop = document.getElementById('notes-modal-backdrop');
+        const notesModal = document.getElementById('notes-modal');
+        const modalTextarea = document.getElementById('modal-notes-textarea');
+        const modalSaveBtn = document.getElementById('modal-save-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        let currentLeadIdForModal = null;
+
+        // --- MODAL RELATÓRIO ---
+        const reportModalBackdrop = document.getElementById('report-modal-backdrop');
+        const reportModal = document.getElementById('report-modal');
+
+        // --- LÓGICA DO BANCO DE DADOS (JSONBIN.IO) ---
+        const binUrl = `https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`;
+        
+        async function loadDataFromBin() {
+            const configValidation = validateConfig();
+            if (!configValidation.valid) {
+                document.body.innerHTML = `<div class="text-red-500 text-center p-8">
+                    <h1>❌ Erro de Configuração</h1>
+                    <p><strong>${configValidation.message}</strong></p>
+                    <p>Por favor, configure suas credenciais no início do código JavaScript.</p>
+                    <div class="mt-4 p-4 bg-gray-100 rounded-lg text-left text-sm">
+                        <p><strong>Como configurar:</strong></p>
+                        <ol class="list-decimal list-inside mt-2 space-y-1">
+                            <li>Acesse <a href="https://jsonbin.io" target="_blank" class="text-blue-600 underline">jsonbin.io</a></li>
+                            <li>Crie uma conta e obtenha sua API Key</li>
+                            <li>Crie um novo "bin" e copie o ID</li>
+                            <li>Cole as credenciais no objeto CONFIG no início do código</li>
+                        </ol>
+                    </div>
+                </div>`;
+                return;
+            }
+
+            const defaultConfig = {
+                statusOptions: ["Prospecção (Backlog)", "Contato em Andamento", "Conexão/Interesse", "Reunião Agendada", "Negociação", "Parceria Fechada", "Parceria Perdida"],
+                actions: [
+                    { id: 1, name: "Enviar Convite", delayDays: 0, setsStatusTo: "Contato em Andamento", template: "Olá [NOME], vi seu trabalho na [EMPRESA] e gostaria de me conectar." },
+                    { id: 2, name: "Mensagem 1 (Abertura)", delayDays: 2, setsStatusTo: "Conexão/Interesse", template: "Obrigado por conectar, [NOME]!\n\nNa RecargaPay, ajudamos empresas como a [EMPRESA] a monetizar suas bases de clientes PJ, oferecendo um benefício valioso para eles.\n\nFaz sentido explorarmos essa ideia em 15 minutos na próxima semana?" },
+                    { id: 3, name: "Mensagem 2 (Follow-up)", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "Olá [NOME], só para dar um contexto mais prático: imagine uma campanha exclusiva da [EMPRESA] + RecargaPay, onde o custo é zero para vocês e ainda gera receita por cada novo cliente PJ que ativarmos.\n\nAlgum espaço na agenda para detalhar?" },
+                    { id: 4, name: "Interagir com Conteúdo", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "" },
+                    { id: 5, name: "Mensagem 3 (Final)", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "Olá [NOME],\n\nImagino que sua rotina seja corrida. Como não tive retorno, entendo que uma parceria para aquisição de clientes PJ não seja prioridade agora.\n\nSendo assim, não vou mais insistir. Se algo mudar, será um prazer conversar." }
+                ]
+            };
+
+            try {
+                const response = await fetch(`${binUrl}/latest`, {
+                    headers: { 'X-Master-Key': CONFIG.JSONBIN_API_KEY }
+                });
+
+                let needsUpdate = false;
+                if (response.status === 404) { // Bin não existe
+                    database = { leads: [], config: defaultConfig };
+                    needsUpdate = true;
+                } else if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                } else {
+                    const data = await response.json();
+                    database = data.record;
+                    // Verifica se o bin está vazio ou com estrutura antiga/inválida
+                    if (!database.config || !database.config.statusOptions || !database.config.actions || database.config.statusOptions.length < 2) {
+                        database = { leads: database.leads || [], config: defaultConfig }; // Mantém os leads se existirem
+                        needsUpdate = true;
+                    }
+                }
+                
+                if (needsUpdate) {
+                    await saveDataToBin(true); // Salva a estrutura correta no bin
+                }
+                
+                leads = database.leads;
+                cadenceConfig = database.config;
+
+                renderConfigForm();
+                populateStatusFilter();
+                renderTable();
+                loader.style.display = 'none';
+
+            } catch (error) {
+                console.error("Falha ao carregar dados do JSONBin:", error);
+                document.body.innerHTML = `<div class="text-red-500 text-center p-8"><h1>Falha ao carregar dados.</h1><p>Verifique se a API Key e o Bin ID estão corretos e se o Bin existe.</p><p>Erro: ${error.message}</p></div>`;
+            }
+        }
+
+        async function saveDataToBin(isInitialSave = false, customMessage = "Salvando dados...") {
+            if (!isInitialSave) {
+                showLoader(customMessage);
+            }
+            try {
+                database.leads = leads;
+                database.config = cadenceConfig;
+
+                await fetch(binUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': CONFIG.JSONBIN_API_KEY
+                    },
+                    body: JSON.stringify(database)
+                });
+                if (!isInitialSave) {
+                    renderTable();
+                }
+            } catch (error) {
+                console.error("Falha ao salvar dados no JSONBin:", error);
+                showNotification("❌ Erro ao salvar os dados. Verifique sua conexão.", "error");
+            } finally {
+                if (!isInitialSave) {
+                    hideLoader();
+                }
+            }
+        }
+        
+        // Funções de utilidade para loading e notificações
+        function showLoader(message = "Carregando...") {
+            const loadingText = document.getElementById('loading-text');
+            if (loadingText) loadingText.textContent = message;
+            loader.style.display = 'flex';
+        }
+        
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
+        
+        function showNotification(message, type = "info") {
+            // Criar notificação toast simples
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'error' ? 'bg-red-500 text-white' : 
+                type === 'success' ? 'bg-green-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            
+            // Remover após 3 segundos
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+
+        // --- LÓGICA DE CONFIGURAÇÃO ---
+        const renderConfigForm = () => {
+            // Render Status
+            statusConfigContainer.innerHTML = '';
+            if (cadenceConfig.statusOptions) {
+                cadenceConfig.statusOptions.forEach((status, index) => {
+                    const statusDiv = document.createElement('div');
+                    statusDiv.className = 'flex items-center space-x-2';
+                    statusDiv.innerHTML = `
+                        <span class="handle text-gray-400 cursor-grab">&#x2630;</span>
+                        <input type="text" value="${status}" class="config-status-name mt-1 w-full p-2 border rounded-md">
+                        <button class="remove-status-btn text-red-500 hover:text-red-700 p-2 bg-gray-100 rounded-md" data-index="${index}" title="Remover Status">&times;</button>
+                    `;
+                    statusConfigContainer.appendChild(statusDiv);
+                });
+            }
+
+            // Render Actions
+            actionsConfigContainer.innerHTML = '';
+            if (!cadenceConfig.actions) return;
+            cadenceConfig.actions.forEach((action, index) => {
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'p-4 border rounded-lg grid grid-cols-1 md:grid-cols-1 gap-4 items-center';
+                actionDiv.dataset.actionId = action.id;
+
+                const statusOptionsHTML = (cadenceConfig.statusOptions || []).map(status => 
+                    `<option value="${status}" ${action.setsStatusTo === status ? 'selected' : ''}>${status}</option>`
+                ).join('');
+
+                actionDiv.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Nome da Ação ${index + 1}</label>
+                            <input type="text" value="${action.name}" class="config-action-name mt-1 w-full p-2 border rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Dias Após Ação Anterior</label>
+                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" ${index === 0 ? 'disabled title="A primeira ação tem sempre 0 dias de espera."' : ''}>
+                        </div>
+                        <div class="flex items-end space-x-2">
+                            <div class="flex-grow">
+                                <label class="block text-sm font-medium text-gray-700">Muda Status Para:</label>
+                                <select class="config-action-status mt-1 w-full p-2 border rounded-md">${statusOptionsHTML}</select>
+                            </div>
+                            <button class="remove-action-btn text-red-500 hover:text-red-700 p-2 bg-gray-100 rounded-md" title="Remover Ação">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-sm font-medium text-gray-700">Template de Mensagem (use [NOME] e [EMPRESA])</label>
+                        <textarea class="config-action-template mt-1 w-full p-2 border rounded-md h-24">${action.template || ''}</textarea>
+                    </div>
+                `;
+                actionsConfigContainer.appendChild(actionDiv);
+            });
+        };
+
+        async function saveConfig() {
+            // Save Statuses
+            const newStatusOptions = [];
+            const statusInputs = statusConfigContainer.querySelectorAll('.config-status-name');
+            statusInputs.forEach(input => {
+                if(input.value.trim()) newStatusOptions.push(input.value.trim());
+            });
+            cadenceConfig.statusOptions = newStatusOptions;
+
+            // Save Actions
+            const newActions = [];
+            const actionDivs = actionsConfigContainer.querySelectorAll('[data-action-id]');
+            actionDivs.forEach(div => {
+                const id = parseFloat(div.dataset.actionId);
+                const name = div.querySelector('.config-action-name').value;
+                const delayDays = parseInt(div.querySelector('.config-action-delay').value) || 0;
+                const setsStatusTo = div.querySelector('.config-action-status').value;
+                const template = div.querySelector('.config-action-template').value;
+                newActions.push({ id, name, delayDays, setsStatusTo, template });
+            });
+            cadenceConfig.actions = newActions;
+            
+            await saveDataToBin(false, "Salvando configurações...");
+            populateStatusFilter();
+            renderConfigForm();
+            showNotification("✅ Configurações salvas com sucesso!", "success");
+        };
+
+        addStatusBtn.addEventListener('click', () => {
+             if (!cadenceConfig.statusOptions) cadenceConfig.statusOptions = [];
+             cadenceConfig.statusOptions.push("Novo Status");
+             renderConfigForm();
+        });
+
+        statusConfigContainer.addEventListener('click', (e) => {
+            const removeButton = e.target.closest('.remove-status-btn');
+            if (removeButton) {
+                const indexToRemove = parseInt(removeButton.dataset.index);
+                cadenceConfig.statusOptions.splice(indexToRemove, 1);
+                renderConfigForm();
+            }
+        });
+
+        addActionBtn.addEventListener('click', () => {
+            if (!cadenceConfig.actions) cadenceConfig.actions = [];
+            cadenceConfig.actions.push({
+                id: Date.now(),
+                name: "Nova Ação",
+                delayDays: 7,
+                setsStatusTo: (cadenceConfig.statusOptions && cadenceConfig.statusOptions.length > 0) ? cadenceConfig.statusOptions[0] : "",
+                template: ""
+            });
+            renderConfigForm();
+        });
+
+        actionsConfigContainer.addEventListener('click', (e) => {
+            const removeButton = e.target.closest('.remove-action-btn');
+            if (removeButton) {
+                const actionDiv = removeButton.closest('[data-action-id]');
+                const actionIdToRemove = parseFloat(actionDiv.dataset.actionId);
+                cadenceConfig.actions = cadenceConfig.actions.filter(a => a.id !== actionIdToRemove);
+                renderConfigForm();
+            }
+        });
+
+        saveConfigBtn.addEventListener('click', saveConfig);
+
+
+        // --- LÓGICA PRINCIPAL DE LEADS ---
+        // Funções de data padronizadas para evitar problemas de timezone
+        const addDays = (date, days) => {
+            const result = new Date(date);
+            result.setUTCDate(result.getUTCDate() + days);
+            return result;
+        };
+
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '---';
+            const d = new Date(dateStr);
+            // Usar UTC para evitar problemas de timezone
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const year = d.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        };
+
+        const getToday = () => {
+            const today = new Date();
+            // Criar data UTC para evitar problemas de timezone
+            return new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+        };
+        
+        const parseDate = (dateStr) => {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        };
+
+        const renderTable = () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedStatus = statusFilter.value;
+
+            const filteredLeads = leads.filter(lead => {
+                const matchesSearch = lead.empresa.toLowerCase().includes(searchTerm) || lead.nome.toLowerCase().includes(searchTerm);
+                const matchesStatus = selectedStatus === 'all' || lead.status === selectedStatus;
+                return matchesSearch && matchesStatus;
+            });
+
+            // Renderizar tanto tabela quanto cards
+            renderTableView(filteredLeads);
+            renderCardsView(filteredLeads);
+        };
+        
+        const renderTableView = (filteredLeads) => {
+            tableBody.innerHTML = '';
+            if (filteredLeads.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</td></tr>`;
+                return;
+            }
+
+            const groupedLeads = filteredLeads.reduce((acc, lead) => {
+                (acc[lead.empresa] = acc[lead.empresa] || []).push(lead);
+                return acc;
+            }, {});
+
+            const sortedCompanies = Object.keys(groupedLeads).sort();
+            const today = getToday();
+
+            sortedCompanies.forEach(companyName => {
+                const companyHeader = document.createElement('tr');
+                companyHeader.className = 'bg-gray-100';
+                companyHeader.innerHTML = `<td colspan="5" class="px-6 py-2 font-bold text-gray-800">${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))</td>`;
+                tableBody.appendChild(companyHeader);
+
+                groupedLeads[companyName].forEach(lead => {
+                    const nextActionDate = lead.nextActionDate ? parseDate(lead.nextActionDate) : null;
+                    let rowClass = '';
+                    if (nextActionDate && nextActionDate.getTime() === today.getTime()) {
+                        rowClass = 'highlight-today';
+                    } else if (nextActionDate && nextActionDate < today) {
+                        rowClass = 'bg-red-100'; // Atrasado
+                    }
+
+                    const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                    const actionOptions = [...configuredActions, {name: "Ação Manual"}, {name: "Ciclo Finalizado"}];
+                    const nextActionOptionsHTML = actionOptions.map((action, index) => 
+                        `<option value="${index}" ${lead.currentActionIndex === index ? 'selected' : ''}>${action.name}</option>`
+                    ).join('');
+                    
+                    const statusOptionsHTML = (cadenceConfig.statusOptions || []).map(status => 
+                        `<option value="${status}" ${lead.status === status ? 'selected' : ''}>${status}</option>`
+                    ).join('');
+                    
+                    let actionButtonsHTML = `
+                        <button onclick="window.app.openNotesModal('${lead.id}')" class="text-gray-500 hover:text-gray-800 inline-flex items-center" title="Ver/Editar Notas">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                        </button>
+                        <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 ml-2 inline-flex items-center" title="Excluir Lead">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                    `;
+
+                    if (lead.history && lead.history.length > 0) {
+                        actionButtonsHTML = `
+                            <button onclick="window.app.undoAction('${lead.id}')" class="text-yellow-600 hover:text-yellow-800 mr-2 inline-flex items-center" title="Desfazer Última Ação">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+                            </button>
+                        ` + actionButtonsHTML;
+                    }
+
+                    const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
+                    if (currentAction) {
+                        const color = lead.currentActionIndex === 0 ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600';
+                        let copyButton = '';
+                        if (currentAction.template) {
+                            copyButton = `<button onclick="window.app.copyTemplate(this, '${lead.id}')" class="bg-gray-500 text-white text-xs font-bold py-1 px-2 rounded ml-2" title="Copiar Template">Copiar</button>`;
+                        }
+                        actionButtonsHTML = `<div class="flex items-center justify-center"><button onclick="window.app.executeAction('${lead.id}')" class="${color} text-white text-xs font-bold py-1 px-2 rounded">${currentAction.name}</button>${copyButton}</div> ${actionButtonsHTML}`;
+                    }
+
+                    const row = document.createElement('tr');
+                    row.dataset.id = lead.id;
+                    row.className = rowClass;
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-bold text-gray-900">${escapeHtml(lead.empresa)}</div>
+                            <div class="text-sm text-gray-500">${escapeHtml(lead.nome)} (${escapeHtml(lead.cargo)})</div>
+                            <a href="${isValidUrl(lead.linkedin) ? lead.linkedin : '#'}" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-900">Perfil LinkedIn</a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select onchange="window.app.updateLeadStatus('${lead.id}', this.value)" class="p-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-full">
+                                ${statusOptionsHTML}
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                             <select onchange="window.app.updateNextAction('${lead.id}', this.value)" class="p-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-full">
+                                ${nextActionOptionsHTML}
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            <span class="editable-date p-1 rounded-md" onclick="window.app.showDateInput(this, '${lead.id}')">${formatDate(lead.nextActionDate)}</span>
+                            <input type="date" class="hidden" onchange="window.app.updateNextActionDate('${lead.id}', this.value)" onblur="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden')">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                            ${actionButtonsHTML}
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            });
+        };
+        
+        const renderCardsView = (filteredLeads) => {
+            if (!cardsBody) return;
+            
+            cardsBody.innerHTML = '';
+            if (filteredLeads.length === 0) {
+                cardsBody.innerHTML = `<div class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</div>`;
+                return;
+            }
+
+            const groupedLeads = filteredLeads.reduce((acc, lead) => {
+                (acc[lead.empresa] = acc[lead.empresa] || []).push(lead);
+                return acc;
+            }, {});
+
+            const sortedCompanies = Object.keys(groupedLeads).sort();
+            const today = getToday();
+
+            sortedCompanies.forEach(companyName => {
+                // Header da empresa
+                const companyHeader = document.createElement('div');
+                companyHeader.className = 'mb-4 pb-2 border-b-2 border-gray-200';
+                companyHeader.innerHTML = `<h3 class="text-lg font-bold text-gray-800">${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))</h3>`;
+                cardsBody.appendChild(companyHeader);
+
+                groupedLeads[companyName].forEach(lead => {
+                    const nextActionDate = lead.nextActionDate ? parseDate(lead.nextActionDate) : null;
+                    let cardBorderColor = 'border-gray-300';
+                    if (nextActionDate && nextActionDate.getTime() === today.getTime()) {
+                        cardBorderColor = 'border-yellow-400';
+                    } else if (nextActionDate && nextActionDate < today) {
+                        cardBorderColor = 'border-red-400';
+                    }
+
+                    const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                    const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
+
+                    let actionButton = '';
+                    if (currentAction) {
+                        const color = lead.currentActionIndex === 0 ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600';
+                        actionButton = `<button onclick="window.app.executeAction('${lead.id}')" class="${color} text-white text-sm font-bold py-2 px-4 rounded w-full mb-2">${currentAction.name}</button>`;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = `mobile-lead-card border-l-4 ${cardBorderColor}`;
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-bold text-gray-900">${escapeHtml(lead.nome)}</h4>
+                                <p class="text-sm text-gray-600">${escapeHtml(lead.cargo)}</p>
+                                <a href="${isValidUrl(lead.linkedin) ? lead.linkedin : '#'}" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-900">🔗 LinkedIn</a>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">${escapeHtml(lead.status)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-sm text-gray-600">Próxima ação: ${currentAction ? currentAction.name : 'Ciclo Finalizado'}</p>
+                            <p class="text-sm text-gray-600">Data: ${formatDate(lead.nextActionDate)}</p>
+                        </div>
+                        
+                        ${actionButton}
+                        
+                        <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
+                            <button onclick="window.app.openNotesModal('${lead.id}')" class="text-gray-500 hover:text-gray-800 text-sm">📝 Notas</button>
+                            <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
+                        </div>
+                    `;
+                    cardsBody.appendChild(card);
+                });
+            });
+        };
+
+        // Função para alternar entre visualizações (mobile)
+        const toggleMobileView = () => {
+            isMobileView = !isMobileView;
+            if (isMobileView) {
+                leadsContainer.classList.add('mobile-view');
+                toggleViewBtn.textContent = '📊 Modo Tabela';
+            } else {
+                leadsContainer.classList.remove('mobile-view');
+                toggleViewBtn.textContent = '📱 Modo Cards';
+            }
+        };
+
+        // --- MANIPULADORES DE EVENTOS GLOBAIS ---
+        window.app = {
+            executeAction: (id) => {
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if(leadIndex === -1) return;
+
+                const today = getToday();
+                const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                const actionJustCompleted = configuredActions[leads[leadIndex].currentActionIndex];
+                if (!actionJustCompleted) return;
+
+                leads[leadIndex].history = leads[leadIndex].history || [];
+                leads[leadIndex].history.push({
+                    status: leads[leadIndex].status,
+                    currentActionIndex: leads[leadIndex].currentActionIndex,
+                    nextActionDate: leads[leadIndex].nextActionDate,
+                    timestamp: new Date().toISOString()
+                });
+
+                leads[leadIndex].status = actionJustCompleted.setsStatusTo;
+                leads[leadIndex].currentActionIndex++;
+
+                const nextAction = configuredActions[leads[leadIndex].currentActionIndex];
+                leads[leadIndex].nextActionDate = nextAction ? addDays(today, nextAction.delayDays).toISOString() : null;
+
+                saveDataToBin();
+            },
+            
+            undoAction: (id) => {
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if (leadIndex === -1 || !leads[leadIndex].history || leads[leadIndex].history.length === 0) return;
+
+                const previousState = leads[leadIndex].history.pop();
+                leads[leadIndex].status = previousState.status;
+                leads[leadIndex].currentActionIndex = previousState.currentActionIndex;
+                leads[leadIndex].nextActionDate = previousState.nextActionDate;
+                
+                saveDataToBin();
+            },
+
+            updateLeadStatus: (id, newStatus) => {
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if (leadIndex === -1 || leads[leadIndex].status === newStatus) return;
+
+                leads[leadIndex].history = leads[leadIndex].history || [];
+                leads[leadIndex].history.push({ 
+                    status: leads[leadIndex].status, 
+                    currentActionIndex: leads[leadIndex].currentActionIndex, 
+                    nextActionDate: leads[leadIndex].nextActionDate,
+                    timestamp: new Date().toISOString(),
+                    newStatus: newStatus
+                });
+                
+                leads[leadIndex].status = newStatus;
+
+                const finalStages = ["Reunião Agendada", "Negociação", "Parceria Fechada", "Parceria Perdida"];
+                if (finalStages.includes(newStatus)) {
+                    leads[leadIndex].currentActionIndex = (cadenceConfig.actions.length + 1);
+                    leads[leadIndex].nextActionDate = null;
+                }
+
+                saveDataToBin();
+            },
+
+            updateNextAction: (id, newActionIndexStr) => {
+                const newActionIndex = parseInt(newActionIndexStr);
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if (leadIndex === -1 || leads[leadIndex].currentActionIndex === newActionIndex) return;
+
+                leads[leadIndex].currentActionIndex = newActionIndex;
+
+                const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                const nextAction = configuredActions[newActionIndex];
+                if (nextAction) {
+                    const today = getToday();
+                    leads[leadIndex].nextActionDate = addDays(today, nextAction.delayDays).toISOString();
+                } else {
+                    leads[leadIndex].nextActionDate = null;
+                }
+                
+                saveDataToBin();
+            },
+
+            showDateInput: (element, leadId) => {
+                const lead = leads.find(l => l.id === leadId);
+                if (!lead) return;
+
+                const dateInput = element.nextElementSibling;
+                element.classList.add('hidden');
+                dateInput.classList.remove('hidden');
+                dateInput.value = lead.nextActionDate ? lead.nextActionDate.split('T')[0] : '';
+                dateInput.focus();
+            },
+
+            updateNextActionDate: (id, newDateStr) => {
+                if (!newDateStr) return;
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if (leadIndex === -1) return;
+                // Usar parseDate para garantir consistência
+                const parsedDate = new Date(newDateStr + 'T00:00:00.000Z'); // Força UTC
+                leads[leadIndex].nextActionDate = parsedDate.toISOString();
+                saveDataToBin();
+            },
+
+            deleteLead: (id) => {
+                if (confirm('Tem certeza que deseja excluir este lead? Esta ação não pode ser desfeita.')) {
+                    leads = leads.filter(l => l.id !== id);
+                    saveDataToBin();
+                }
+            },
+            
+            openNotesModal: (id) => {
+                currentLeadIdForModal = id;
+                const lead = leads.find(l => l.id === id);
+                if (lead) {
+                    modalTextarea.value = lead.notes || '';
+                    notesModal.style.display = 'block';
+                    notesModalBackdrop.style.display = 'block';
+                }
+            },
+
+            copyTemplate: (buttonElement, leadId) => {
+                const lead = leads.find(l => l.id === leadId);
+                const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                const currentAction = configuredActions[lead.currentActionIndex];
+
+                if (!lead || !currentAction || !currentAction.template) return;
+
+                let templateText = currentAction.template;
+                templateText = templateText.replace(/\[NOME\]/g, lead.nome.split(' ')[0]); // Pega só o primeiro nome
+                templateText = templateText.replace(/\[EMPRESA\]/g, lead.empresa);
+
+                navigator.clipboard.writeText(templateText).then(() => {
+                    buttonElement.textContent = 'Copiado!';
+                    setTimeout(() => {
+                        buttonElement.textContent = 'Copiar';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Falha ao copiar texto: ', err);
+                });
+            }
+        };
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newLead = {
+                id: Date.now().toString(),
+                empresa: document.getElementById('empresa').value,
+                nome: document.getElementById('nome').value,
+                cargo: document.getElementById('cargo').value,
+                linkedin: document.getElementById('linkedin').value,
+                status: (cadenceConfig.statusOptions && cadenceConfig.statusOptions.length > 0) ? cadenceConfig.statusOptions[0] : "N/A",
+                currentActionIndex: 0,
+                nextActionDate: getToday().toISOString(),
+                notes: '',
+                history: [],
+                createdAt: new Date().toISOString()
+            };
+            leads.push(newLead);
+            saveDataToBin();
+            form.reset();
+        });
+
+        const closeNotesModal = () => {
+            notesModal.style.display = 'none';
+            notesModalBackdrop.style.display = 'none';
+            currentLeadIdForModal = null;
+        };
+
+        modalSaveBtn.addEventListener('click', () => {
+            if (currentLeadIdForModal) {
+                const leadIndex = leads.findIndex(l => l.id === currentLeadIdForModal);
+                if(leadIndex !== -1) {
+                    leads[leadIndex].notes = modalTextarea.value;
+                    saveDataToBin();
+                }
+            }
+            closeNotesModal();
+        });
+
+        modalCancelBtn.addEventListener('click', closeNotesModal);
+        notesModalBackdrop.addEventListener('click', closeNotesModal);
+        
+        // Adicionar suporte para tecla ESC fechar modais
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (notesModal.style.display === 'block') {
+                    closeNotesModal();
+                }
+                if (reportModal.style.display === 'block') {
+                    closeReportModal();
+                }
+            }
+        });
+
+        // --- LÓGICA DO RELATÓRIO ---
+        const generateReport = () => {
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            let contactsLastWeek = 0;
+            let meetingsLastWeek = 0;
+            
+            // Contar apenas ações reais de contato (não mudanças de status manuais)
+            leads.forEach(lead => {
+                if (lead.history && lead.history.length > 0) {
+                    lead.history.forEach(h => {
+                        const actionDate = new Date(h.timestamp);
+                        if (actionDate >= sevenDaysAgo) {
+                            // Contar apenas se for uma execução de ação (não mudança manual de status)
+                            if (!h.newStatus) {
+                                contactsLastWeek++; // Esta é uma ação real executada
+                            }
+                            
+                            // Contar reuniões agendadas (tanto por ação quanto manual)
+                            if (h.newStatus === "Reunião Agendada" || 
+                                (h.status && h.status !== "Reunião Agendada" && 
+                                 lead.status === "Reunião Agendada")) {
+                                meetingsLastWeek++;
+                            }
+                        }
+                    });
+                }
+            });
+
+            const activeLeads = leads.filter(l => l.status !== "Parceria Fechada" && l.status !== "Parceria Perdida").length;
+            
+            const leadsReachedContact = leads.filter(l => l.history && l.history.some(h => h.status === "Contato em Andamento")).length;
+            const leadsReachedMeeting = leads.filter(l => l.status === "Reunião Agendada" || l.status === "Negociação" || l.status === "Parceria Fechada").length;
+            const conversionRate = leadsReachedContact > 0 ? ((leadsReachedMeeting / leadsReachedContact) * 100).toFixed(1) : 0;
+
+            document.getElementById('report-contacts-week').textContent = contactsLastWeek;
+            document.getElementById('report-meetings-week').textContent = meetingsLastWeek;
+            document.getElementById('report-active-leads').textContent = activeLeads;
+            document.getElementById('report-conversion-rate').textContent = `${conversionRate}%`;
+
+            // Kanban Board
+            const kanbanBoard = document.getElementById('kanban-board');
+            kanbanBoard.innerHTML = '';
+            (cadenceConfig.statusOptions || []).forEach(status => {
+                const column = document.createElement('div');
+                column.className = 'kanban-column bg-white p-3 rounded-lg shadow';
+                
+                const leadsInStatus = leads.filter(l => l.status === status);
+                
+                let leadsHTML = '';
+                leadsInStatus.forEach(l => {
+                    leadsHTML += `<div class="bg-gray-50 p-2 mt-2 rounded border">
+                        <p class="font-semibold text-sm">${escapeHtml(l.empresa)}</p>
+                        <p class="text-xs text-gray-600">${escapeHtml(l.nome)}</p>
+                    </div>`;
+                });
+
+                column.innerHTML = `
+                    <h4 class="font-bold text-md mb-2">${escapeHtml(status)} (${leadsInStatus.length})</h4>
+                    <div>${leadsHTML}</div>
+                `;
+                kanbanBoard.appendChild(column);
+            });
+        };
+
+        const closeReportModal = () => {
+            reportModal.style.display = 'none';
+            reportModalBackdrop.style.display = 'none';
+        };
+
+        openReportBtn.addEventListener('click', () => {
+            generateReport();
+            reportModal.style.display = 'block';
+            reportModalBackdrop.style.display = 'block';
+        });
+
+        closeReportBtn.addEventListener('click', closeReportModal);
+        reportModalBackdrop.addEventListener('click', closeReportModal);
+
+        // --- LÓGICA DE EXPORTAÇÃO ---
+        const exportToXLS = () => {
+            if (leads.length === 0) {
+                alert("Não há leads para exportar.");
+                return;
+            }
+
+            const headers = ["Empresa", "Nome Contato", "Cargo", "LinkedIn", "Status", "Próxima Ação", "Data Próxima Ação", "Observações"];
+            
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(";") + "\n";
+
+            leads.forEach(lead => {
+                const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                const currentAction = lead.currentActionIndex < configuredActions.length 
+                    ? configuredActions[lead.currentActionIndex] 
+                    : null;
+                const nextActionName = currentAction ? currentAction.name : "Ciclo Finalizado";
+
+                const row = [
+                    lead.empresa,
+                    lead.nome,
+                    lead.cargo,
+                    lead.linkedin,
+                    lead.status,
+                    nextActionName,
+                    formatDate(lead.nextActionDate),
+                    `"${(lead.notes || '').replace(/"/g, '""')}"` // Trata aspas nas notas
+                ];
+                csvContent += row.join(";") + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const today = new Date().toISOString().slice(0, 10);
+            link.setAttribute("download", `backup_prospeccao_${today}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        exportXlsBtn.addEventListener('click', exportToXLS);
+
+        // --- LÓGICA DE FILTROS ---
+        const populateStatusFilter = () => {
+            statusFilter.innerHTML = `<option value="all">Todos os Status</option>`;
+            (cadenceConfig.statusOptions || []).forEach(status => {
+                const option = document.createElement('option');
+                option.value = status;
+                option.textContent = status;
+                statusFilter.appendChild(option);
+            });
+        };
+        
+        // Implementar debouncing para busca para melhorar performance
+        let searchTimeout;
+        const debounceSearch = (callback, delay = 300) => {
+            return function(...args) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => callback.apply(this, args), delay);
+            };
+        };
+        
+        const debouncedRenderTable = debounceSearch(renderTable, 300);
+        
+        searchInput.addEventListener('input', debouncedRenderTable);
+        statusFilter.addEventListener('change', renderTable);
+        
+        // Event listener para toggle de visualização mobile
+        if (toggleViewBtn) {
+            toggleViewBtn.addEventListener('click', toggleMobileView);
+        }
+
+
+        // --- INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', loadDataFromBin);
+    </script>
+
+</body>
+</html>

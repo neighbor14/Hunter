@@ -1,0 +1,44 @@
+🔧 CONFIGURAÇÃO DO CRM DE PROSPECÇÃO B2B - RecargaPay
+=======================================================
+
+📌 INSTRUÇÕES PARA CONFIGURAR AS CREDENCIAIS:
+
+1. Acesse https://jsonbin.io
+2. Crie uma conta gratuita
+3. Obtenha sua API Key (começa com $2a$ ou $2b$)
+4. Crie um novo "bin" (gaveta de dados) e copie o ID
+5. Cole as credenciais no código HTML
+
+🚨 IMPORTANTE: Configure as credenciais no início do arquivo crm_analise.html:
+
+No arquivo HTML, procure por:
+```javascript
+const CONFIG = {
+    JSONBIN_API_KEY: "", // ← Cole sua API Key aqui
+    JSONBIN_BIN_ID: "",  // ← Cole seu Bin ID aqui
+};
+```
+
+Substitua por:
+```javascript
+const CONFIG = {
+    JSONBIN_API_KEY: "$2a$10$SuaChaveAquiXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", 
+    JSONBIN_BIN_ID: "seu-bin-id-aqui-xxxxxxxxxxxxxxxxx",
+};
+```
+
+✅ VERIFICAÇÃO:
+- API Key deve começar com $2a$ ou $2b$
+- Bin ID deve ter pelo menos 10 caracteres
+- Não compartilhe essas credenciais publicamente
+
+🔒 SEGURANÇA:
+- Para uso em produção, considere implementar um backend
+- Estas credenciais são visíveis no frontend
+- Mantenha um backup das suas configurações
+
+💡 SUPORTE:
+- Se tiver problemas, verifique o console do navegador (F12)
+- O sistema mostrará instruções detalhadas se as credenciais estiverem incorretas
+
+📧 Em caso de dúvidas, consulte a documentação do JSONBin.io
