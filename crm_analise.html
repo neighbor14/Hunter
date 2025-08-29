@@ -450,6 +450,9 @@
         
         // Variável para controlar visualização mobile
         let isMobileView = false;
+        
+        // Controle para evitar renderizações múltiplas
+        let isRendering = false;
 
         // --- MODAL ---
         const notesModalBackdrop = document.getElementById('notes-modal-backdrop');
@@ -774,11 +777,21 @@
         };
         
         const renderTableView = (filteredLeads) => {
+            // Evitar renderizações múltiplas simultâneas
+            if (isRendering) {
+                console.log('⚠️ Renderização já em andamento, pulando...');
+                return;
+            }
+            
+            isRendering = true;
+            console.log('🔄 Iniciando renderização da tabela...');
+            
             // Limpar completamente a tabela antes de renderizar
             tableBody.innerHTML = '';
             
             if (filteredLeads.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</td></tr>`;
+                isRendering = false;
                 return;
             }
 
@@ -905,6 +918,10 @@
                     tableBody.appendChild(row);
                 });
             });
+            
+            // Finalizar renderização
+            isRendering = false;
+            console.log('✅ Renderização da tabela concluída');
         };
         
         // Função para alternar expansão/retração de empresa
