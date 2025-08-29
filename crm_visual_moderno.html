@@ -1582,7 +1582,16 @@
                                     </a>
                                 </div>
                             </div>
-                            <span class="status-badge ${statusColor}">${escapeHtml(lead.status)}</span>
+                            <div class="flex flex-col items-end space-y-2">
+                                <span class="status-badge ${statusColor}">${escapeHtml(lead.status)}</span>
+                                <select onchange="window.app.updateLeadStatus('${lead.id}', this.value)" 
+                                        class="text-xs p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                        title="Alterar Status">
+                                    ${(cadenceConfig.statusOptions || []).map(status => 
+                                        `<option value="${status}" ${lead.status === status ? 'selected' : ''}>${status}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
                         </div>
 
                         <div class="bg-gray-50 rounded-lg p-4 mb-4">
