@@ -781,10 +781,19 @@
                 
                 const companyHeader = document.createElement('tr');
                 companyHeader.className = `bg-gray-100 company-header ${isExpanded ? '' : 'company-collapsed'}`;
-                companyHeader.innerHTML = `<td colspan="5" class="px-6 py-2 font-bold text-gray-800">
-                    <span class="company-toggle">${isExpanded ? '▼' : '▶'}</span>
-                    ${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))
-                </td>`;
+                
+                const headerCell = document.createElement('td');
+                headerCell.setAttribute('colspan', '5');
+                headerCell.className = 'px-6 py-2 font-bold text-gray-800';
+                
+                const toggleSpan = document.createElement('span');
+                toggleSpan.className = 'company-toggle';
+                toggleSpan.textContent = isExpanded ? '▼' : '▶';
+                
+                headerCell.appendChild(toggleSpan);
+                headerCell.appendChild(document.createTextNode(` ${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))`));
+                
+                companyHeader.appendChild(headerCell);
                 
                 // Adicionar evento de clique para expandir/retrair
                 companyHeader.addEventListener('click', () => {
