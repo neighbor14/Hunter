@@ -477,23 +477,94 @@
             <button id="close-report-btn" class="text-gray-500 hover:text-gray-800">&times;</button>
         </div>
         
-        <!-- KPIs -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white p-4 rounded-lg shadow">
-                <h3 class="text-gray-500 text-sm font-medium">Contatos (Últimos 7 dias)</h3>
-                <p id="report-contacts-week" class="text-3xl font-bold mt-1">0</p>
+        <!-- KPIs Semanais -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-3">📊 Métricas Semanais (Últimos 7 dias)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Contatos Executados</h3>
+                    <p id="report-contacts-week" class="text-3xl font-bold mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Novas Reuniões</h3>
+                    <p id="report-meetings-week" class="text-3xl font-bold mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Total de Leads Ativos</h3>
+                    <p id="report-active-leads" class="text-3xl font-bold mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Taxa de Conversão</h3>
+                    <p id="report-conversion-rate" class="text-3xl font-bold mt-1">0%</p>
+                </div>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow">
-                <h3 class="text-gray-500 text-sm font-medium">Novas Reuniões (Últimos 7 dias)</h3>
-                <p id="report-meetings-week" class="text-3xl font-bold mt-1">0</p>
+        </div>
+
+        <!-- KPIs Mensais - Progressão no Funil -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-3">🎯 Progressão no Funil (Últimos 30 dias)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg shadow border-l-4 border-blue-500">
+                    <h3 class="text-blue-700 text-sm font-medium">📝 Novos Leads Adicionados</h3>
+                    <p id="report-new-leads-month" class="text-2xl font-bold mt-1 text-blue-800">0</p>
+                    <p class="text-xs text-blue-600 mt-1">Leads adicionados ao sistema</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg shadow border-l-4 border-yellow-500">
+                    <h3 class="text-yellow-700 text-sm font-medium">📞 Lista → Em Contato</h3>
+                    <p id="report-to-contact-month" class="text-2xl font-bold mt-1 text-yellow-800">0</p>
+                    <p class="text-xs text-yellow-600 mt-1">Primeiro contato iniciado</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg shadow border-l-4 border-purple-500">
+                    <h3 class="text-purple-700 text-sm font-medium">💬 Em Contato → Conversando</h3>
+                    <p id="report-to-talking-month" class="text-2xl font-bold mt-1 text-purple-800">0</p>
+                    <p class="text-xs text-purple-600 mt-1">Resposta obtida</p>
+                </div>
+                <div class="bg-indigo-50 p-4 rounded-lg shadow border-l-4 border-indigo-500">
+                    <h3 class="text-indigo-700 text-sm font-medium">🤝 Conversando → Reunião</h3>
+                    <p id="report-to-meeting-month" class="text-2xl font-bold mt-1 text-indigo-800">0</p>
+                    <p class="text-xs text-indigo-600 mt-1">Reunião agendada</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg shadow border-l-4 border-orange-500">
+                    <h3 class="text-orange-700 text-sm font-medium">💼 Reunião → Negociação</h3>
+                    <p id="report-to-negotiation-month" class="text-2xl font-bold mt-1 text-orange-800">0</p>
+                    <p class="text-xs text-orange-600 mt-1">Proposta apresentada</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg shadow border-l-4 border-green-500">
+                    <h3 class="text-green-700 text-sm font-medium">✅ Negociação → Cliente</h3>
+                    <p id="report-to-client-month" class="text-2xl font-bold mt-1 text-green-800">0</p>
+                    <p class="text-xs text-green-600 mt-1">Parceria fechada</p>
+                </div>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow">
-                <h3 class="text-gray-500 text-sm font-medium">Total de Leads Ativos</h3>
-                <p id="report-active-leads" class="text-3xl font-bold mt-1">0</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow">
-                <h3 class="text-gray-500 text-sm font-medium">Taxa de Conversão (Contato -> Reunião)</h3>
-                <p id="report-conversion-rate" class="text-3xl font-bold mt-1">0%</p>
+        </div>
+
+        <!-- Taxas de Conversão por Etapa -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-3">📈 Taxas de Conversão por Etapa (Últimos 30 dias)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Lista → Em Contato</h3>
+                    <p id="conversion-to-contact" class="text-xl font-bold mt-1 text-yellow-600">0%</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Em Contato → Conversando</h3>
+                    <p id="conversion-to-talking" class="text-xl font-bold mt-1 text-purple-600">0%</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Conversando → Reunião</h3>
+                    <p id="conversion-to-meeting" class="text-xl font-bold mt-1 text-indigo-600">0%</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Reunião → Negociação</h3>
+                    <p id="conversion-to-negotiation" class="text-xl font-bold mt-1 text-orange-600">0%</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-gray-500 text-sm font-medium">Negociação → Cliente</h3>
+                    <p id="conversion-to-client" class="text-xl font-bold mt-1 text-green-600">0%</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg shadow border-2 border-gray-300">
+                    <h3 class="text-gray-700 text-sm font-medium">🏆 Taxa Geral (Lead → Cliente)</h3>
+                    <p id="conversion-overall" class="text-xl font-bold mt-1 text-gray-800">0%</p>
+                </div>
             </div>
         </div>
 
@@ -1739,9 +1810,13 @@
 
         // --- LÓGICA DO RELATÓRIO ---
         const generateReport = () => {
+            const today = getToday();
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+            // ========== MÉTRICAS SEMANAIS ==========
             let contactsLastWeek = 0;
             let meetingsLastWeek = 0;
             
@@ -1773,10 +1848,131 @@
             const leadsReachedMeeting = leads.filter(l => l.status === "Reunião Agendada" || l.status === "Negociação" || l.status === "Parceria Fechada").length;
             const conversionRate = leadsReachedContact > 0 ? ((leadsReachedMeeting / leadsReachedContact) * 100).toFixed(1) : 0;
 
+            // ========== MÉTRICAS MENSAIS - PROGRESSÃO NO FUNIL ==========
+            let newLeadsMonth = 0;
+            let toContactMonth = 0;
+            let toTalkingMonth = 0;
+            let toMeetingMonth = 0;
+            let toNegotiationMonth = 0;
+            let toClientMonth = 0;
+
+            // Contar leads adicionados no último mês (baseado na data de criação estimada)
+            leads.forEach(lead => {
+                // Estimar data de criação pela primeira entrada no histórico ou nextActionDate
+                let creationDate = null;
+                if (lead.history && lead.history.length > 0) {
+                    // Usar a entrada mais antiga do histórico
+                    const oldestHistory = lead.history.reduce((oldest, current) => {
+                        return new Date(current.timestamp) < new Date(oldest.timestamp) ? current : oldest;
+                    });
+                    creationDate = new Date(oldestHistory.timestamp);
+                } else if (lead.nextActionDate) {
+                    creationDate = new Date(lead.nextActionDate);
+                }
+                
+                if (creationDate && creationDate >= thirtyDaysAgo) {
+                    newLeadsMonth++;
+                }
+
+                // Analisar progressões de status no último mês
+                if (lead.history) {
+                    lead.history.forEach(h => {
+                        const actionDate = new Date(h.timestamp);
+                        if (actionDate >= thirtyDaysAgo && h.newStatus) {
+                            const fromStatus = h.status;
+                            const toStatus = h.newStatus;
+
+                            // Lista → Em Contato
+                            if ((fromStatus?.includes('Lista') || fromStatus?.includes('Prospecção')) && 
+                                (toStatus?.includes('Contato') || toStatus?.includes('Em Contato'))) {
+                                toContactMonth++;
+                            }
+
+                            // Em Contato → Conversando
+                            if ((fromStatus?.includes('Contato') || fromStatus?.includes('Em Contato')) && 
+                                (toStatus?.includes('Interesse') || toStatus?.includes('Conversando') || toStatus?.includes('Conexão'))) {
+                                toTalkingMonth++;
+                            }
+
+                            // Conversando → Reunião
+                            if ((fromStatus?.includes('Interesse') || fromStatus?.includes('Conversando') || fromStatus?.includes('Conexão')) && 
+                                toStatus?.includes('Reunião')) {
+                                toMeetingMonth++;
+                            }
+
+                            // Reunião → Negociação
+                            if (fromStatus?.includes('Reunião') && toStatus?.includes('Negociação')) {
+                                toNegotiationMonth++;
+                            }
+
+                            // Negociação → Cliente
+                            if (fromStatus?.includes('Negociação') && 
+                                (toStatus?.includes('Fechada') || toStatus?.includes('Cliente') || toStatus?.includes('Parceria Fechada'))) {
+                                toClientMonth++;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // ========== TAXAS DE CONVERSÃO POR ETAPA ==========
+            const statusCounts = {};
+            leads.forEach(lead => {
+                statusCounts[lead.status] = (statusCounts[lead.status] || 0) + 1;
+            });
+
+            // Contagem aproximada por tipo de status
+            const listStatusCount = Object.keys(statusCounts).reduce((total, status) => {
+                return total + (status.includes('Lista') || status.includes('Prospecção') ? statusCounts[status] : 0);
+            }, 0);
+
+            const contactStatusCount = Object.keys(statusCounts).reduce((total, status) => {
+                return total + (status.includes('Contato') || status.includes('Em Contato') ? statusCounts[status] : 0);
+            }, 0);
+
+            const talkingStatusCount = Object.keys(statusCounts).reduce((total, status) => {
+                return total + (status.includes('Interesse') || status.includes('Conversando') || status.includes('Conexão') ? statusCounts[status] : 0);
+            }, 0);
+
+            const meetingStatusCount = Object.keys(statusCounts).reduce((total, status) => {
+                return total + (status.includes('Reunião') ? statusCounts[status] : 0);
+            }, 0);
+
+            const negotiationStatusCount = Object.keys(statusCounts).reduce((total, status) => {
+                return total + (status.includes('Negociação') ? statusCounts[status] : 0);
+            }, 0);
+
+            // Calcular taxas de conversão
+            const conversionToContact = listStatusCount > 0 ? ((toContactMonth / listStatusCount) * 100).toFixed(1) : 0;
+            const conversionToTalking = contactStatusCount > 0 ? ((toTalkingMonth / contactStatusCount) * 100).toFixed(1) : 0;
+            const conversionToMeeting = talkingStatusCount > 0 ? ((toMeetingMonth / talkingStatusCount) * 100).toFixed(1) : 0;
+            const conversionToNegotiation = meetingStatusCount > 0 ? ((toNegotiationMonth / meetingStatusCount) * 100).toFixed(1) : 0;
+            const conversionToClient = negotiationStatusCount > 0 ? ((toClientMonth / negotiationStatusCount) * 100).toFixed(1) : 0;
+            const conversionOverall = newLeadsMonth > 0 ? ((toClientMonth / newLeadsMonth) * 100).toFixed(1) : 0;
+
+            // ========== ATUALIZAR INTERFACE ==========
+            
+            // Métricas semanais
             document.getElementById('report-contacts-week').textContent = contactsLastWeek;
             document.getElementById('report-meetings-week').textContent = meetingsLastWeek;
             document.getElementById('report-active-leads').textContent = activeLeads;
             document.getElementById('report-conversion-rate').textContent = `${conversionRate}%`;
+
+            // Progressão mensal
+            document.getElementById('report-new-leads-month').textContent = newLeadsMonth;
+            document.getElementById('report-to-contact-month').textContent = toContactMonth;
+            document.getElementById('report-to-talking-month').textContent = toTalkingMonth;
+            document.getElementById('report-to-meeting-month').textContent = toMeetingMonth;
+            document.getElementById('report-to-negotiation-month').textContent = toNegotiationMonth;
+            document.getElementById('report-to-client-month').textContent = toClientMonth;
+
+            // Taxas de conversão
+            document.getElementById('conversion-to-contact').textContent = `${conversionToContact}%`;
+            document.getElementById('conversion-to-talking').textContent = `${conversionToTalking}%`;
+            document.getElementById('conversion-to-meeting').textContent = `${conversionToMeeting}%`;
+            document.getElementById('conversion-to-negotiation').textContent = `${conversionToNegotiation}%`;
+            document.getElementById('conversion-to-client').textContent = `${conversionToClient}%`;
+            document.getElementById('conversion-overall').textContent = `${conversionOverall}%`;
 
             // Agenda dos próximos 14 dias úteis
             generateAgenda();
