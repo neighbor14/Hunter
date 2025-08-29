@@ -788,7 +788,13 @@
                 
                 const toggleSpan = document.createElement('span');
                 toggleSpan.className = 'company-toggle';
+                toggleSpan.style.marginRight = '8px';
+                toggleSpan.style.fontSize = '16px';
+                toggleSpan.style.cursor = 'pointer';
                 toggleSpan.textContent = isExpanded ? '▼' : '▶';
+                
+                // Debug - forçar exibição
+                console.log('Adicionando ícone:', isExpanded ? '▼' : '▶', 'para empresa:', companyName);
                 
                 headerCell.appendChild(toggleSpan);
                 headerCell.appendChild(document.createTextNode(` ${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))`));
