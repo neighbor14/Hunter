@@ -471,6 +471,94 @@
             border-color: rgba(255, 255, 255, 0.2) !important;
         }
 
+        /* Melhorar contrastes nos cards de métricas em dark mode */
+        .dark .bg-blue-100 {
+            background-color: #1e40af !important;
+            color: white !important;
+        }
+
+        .dark .bg-green-100 {
+            background-color: #059669 !important;
+            color: white !important;
+        }
+
+        .dark .bg-yellow-100 {
+            background-color: #f59e0b !important;
+            color: white !important;
+        }
+
+        .dark .bg-red-100 {
+            background-color: #dc2626 !important;
+            color: white !important;
+        }
+
+        .dark .bg-purple-100 {
+            background-color: #7c3aed !important;
+            color: white !important;
+        }
+
+        .dark .bg-orange-100 {
+            background-color: #ea580c !important;
+            color: white !important;
+        }
+
+        .dark .bg-indigo-100 {
+            background-color: #4f46e5 !important;
+            color: white !important;
+        }
+
+        /* Textos nos cards de progressão */
+        .dark .text-blue-800,
+        .dark .text-green-800,
+        .dark .text-yellow-800,
+        .dark .text-red-800,
+        .dark .text-purple-800,
+        .dark .text-orange-800,
+        .dark .text-indigo-800 {
+            color: white !important;
+        }
+
+        .dark .text-blue-700,
+        .dark .text-green-700,
+        .dark .text-yellow-700,
+        .dark .text-red-700,
+        .dark .text-purple-700,
+        .dark .text-orange-700,
+        .dark .text-indigo-700 {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        /* Cards de métricas específicos */
+        .dark [class*="bg-blue-"]:not(.bg-blue-500):not(.bg-blue-600) {
+            background-color: #1e40af !important;
+            color: white !important;
+        }
+
+        .dark [class*="bg-green-"]:not(.bg-green-500):not(.bg-green-600) {
+            background-color: #059669 !important;
+            color: white !important;
+        }
+
+        .dark [class*="bg-yellow-"]:not(.bg-yellow-500):not(.bg-yellow-600) {
+            background-color: #f59e0b !important;
+            color: white !important;
+        }
+
+        .dark [class*="bg-red-"]:not(.bg-red-500):not(.bg-red-600) {
+            background-color: #dc2626 !important;
+            color: white !important;
+        }
+
+        .dark [class*="bg-purple-"]:not(.bg-purple-500):not(.bg-purple-600) {
+            background-color: #7c3aed !important;
+            color: white !important;
+        }
+
+        .dark [class*="bg-orange-"]:not(.bg-orange-500):not(.bg-orange-600) {
+            background-color: #ea580c !important;
+            color: white !important;
+        }
+
         /* Animação suave para transição de tema */
         * {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
