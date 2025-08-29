@@ -551,7 +551,20 @@
                 showLoader(customMessage);
             }
             try {
-                database.leads = leads;
+                // Limpar leads duplicados antes de salvar
+                const uniqueLeads = [];
+                const seenIds = new Set();
+                
+                leads.forEach(lead => {
+                    if (!seenIds.has(lead.id)) {
+                        seenIds.add(lead.id);
+                        uniqueLeads.push(lead);
+                    }
+                });
+                
+                console.log('🧹 Limpeza no save - Leads antes:', leads.length, 'depois:', uniqueLeads.length);
+                
+                database.leads = uniqueLeads;
                 database.config = cadenceConfig;
 
                 await fetch(binUrl, {
@@ -786,8 +799,19 @@
             isRendering = true;
             console.log('🔄 Iniciando renderização da tabela...');
             
-            // Limpar completamente a tabela antes de renderizar
-            tableBody.innerHTML = '';
+            // LIMPEZA AGRESSIVA - remover todos os elementos da tabela
+            while (tableBody.firstChild) {
+                tableBody.removeChild(tableBody.firstChild);
+            }
+            
+            // Também limpar qualquer tbody extra que possa ter sido criado
+            const allTbodies = tableBody.parentElement.querySelectorAll('tbody');
+            allTbodies.forEach((tbody, index) => {
+                if (index > 0) { // Manter apenas o primeiro tbody
+                    console.log('🗑️ Removendo tbody extra:', index);
+                    tbody.remove();
+                }
+            });
             
             if (filteredLeads.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</td></tr>`;
@@ -810,8 +834,16 @@
                 // Verificar se a empresa está expandida (padrão: expandida)
                 const isExpanded = companyExpandedState[companyName] !== false;
                 
+                // Verificar se já existe header para esta empresa
+                const existingHeader = tableBody.querySelector(`[data-company-header="${companyName}"]`);
+                if (existingHeader) {
+                    console.log('⚠️ Header duplicado detectado para:', companyName, '- pulando esta empresa');
+                    return; // Pular esta empresa se já renderizada
+                }
+                
                 const companyHeader = document.createElement('tr');
                 companyHeader.className = `bg-gray-100 company-header ${isExpanded ? '' : 'company-collapsed'}`;
+                companyHeader.setAttribute('data-company-header', companyName);
                 
                 const headerCell = document.createElement('td');
                 headerCell.setAttribute('colspan', '5');
