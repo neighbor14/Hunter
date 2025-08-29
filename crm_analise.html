@@ -1522,7 +1522,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             <div class="flex items-center space-x-2">
                                 <input type="date" 
-                                       value="${lead.nextActionDate}" 
+                                       value="${lead.nextActionDate ? lead.nextActionDate.split('T')[0] : ''}" 
                                        onchange="window.app.updateActionDate('${lead.id}', this.value)"
                                        class="text-sm p-2 border-2 border-blue-300 rounded-md bg-blue-50 hover:bg-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 cursor-pointer"
                                        title="📅 Clique para alterar a data da próxima ação">
@@ -1686,7 +1686,7 @@
                             <div class="flex items-center space-x-2 mt-2">
                                 <span class="text-sm text-gray-600">Data:</span>
                                 <input type="date" 
-                                       value="${lead.nextActionDate || ''}" 
+                                       value="${lead.nextActionDate ? lead.nextActionDate.split('T')[0] : ''}" 
                                        onchange="window.app.updateActionDate('${lead.id}', this.value)"
                                        class="text-xs p-1 border-2 border-blue-300 rounded bg-blue-50 hover:bg-blue-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 cursor-pointer"
                                        title="📅 Clique para alterar a data da próxima ação">
@@ -2267,15 +2267,20 @@
                 const leadIndex = leads.findIndex(l => l.id === id);
                 if (leadIndex === -1) return;
 
+                // Converter data do input (YYYY-MM-DD) para ISO completo
+                const newDateISO = newDate ? new Date(newDate + 'T00:00:00.000Z').toISOString() : null;
                 const oldDate = leads[leadIndex].nextActionDate;
-                if (oldDate === newDate) return;
+                
+                // Comparar apenas a parte da data (sem hora)
+                const oldDateStr = oldDate ? oldDate.split('T')[0] : null;
+                if (oldDateStr === newDate) return;
 
                 // Validar se a data não é anterior ao dia atual
                 const today = getToday();
-                const selectedDate = parseDate(newDate);
+                const selectedDate = parseDate(newDateISO);
                 
-                if (selectedDate < today) {
-                    const confirmPast = confirm(`⚠️ ATENÇÃO: Você está definindo uma data no passado (${formatDate(newDate)}).\n\nIsso pode ser útil para:\n• Ajustar ações que deveriam ter sido feitas\n• Corrigir datas incorretas\n• Reagendar ações atrasadas\n\nDeseja continuar?`);
+                if (selectedDate && selectedDate < today) {
+                    const confirmPast = confirm(`⚠️ ATENÇÃO: Você está definindo uma data no passado (${formatDate(newDateISO)}).\n\nIsso pode ser útil para:\n• Ajustar ações que deveriam ter sido feitas\n• Corrigir datas incorretas\n• Reagendar ações atrasadas\n\nDeseja continuar?`);
                     if (!confirmPast) return;
                 }
 
@@ -2287,12 +2292,12 @@
                     timestamp: new Date().toISOString(),
                     action: 'date_updated',
                     oldDate: oldDate,
-                    newDate: newDate
+                    newDate: newDateISO
                 });
                 
-                leads[leadIndex].nextActionDate = newDate;
+                leads[leadIndex].nextActionDate = newDateISO;
 
-                alert(`📅 Data atualizada para ${formatDate(newDate)}`);
+                alert(`📅 Data atualizada para ${formatDate(newDateISO)}`);
                 saveDataToBin();
                 renderTable();
                 
