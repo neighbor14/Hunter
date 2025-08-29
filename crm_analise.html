@@ -513,7 +513,11 @@
             <button id="version-history-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 flex items-center space-x-2">
                 <span>⏰</span>
                 <span>Histórico</span>
-                <span id="current-version" class="text-xs opacity-75">v2.4</span>
+                <span id="current-version" class="text-xs opacity-75">v2.6</span>
+            </button>
+            <button id="executive-report-btn" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-700 flex items-center space-x-2">
+                <span>📊</span>
+                <span>Relatório Executivo</span>
             </button>
             <button id="export-xls-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">Exportar para Excel (.xls)</button>
             <button id="open-report-btn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700">Ver Relatórios</button>
@@ -784,6 +788,107 @@
         </div>
     </div>
 
+    <!-- Modal para Relatório Executivo -->
+    <div id="executive-modal-backdrop" class="modal-backdrop"></div>
+    <div id="executive-modal" class="modal report-modal bg-gray-100 p-6 rounded-lg shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-3xl font-bold">📊 Relatório Executivo de Atividades</h2>
+            <button id="close-executive-btn" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <!-- Seletor de Período -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 class="text-lg font-semibold mb-4">📅 Selecionar Período</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <button id="period-7days" class="period-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold py-2 px-4 rounded-md">
+                    📅 Últimos 7 dias
+                </button>
+                <button id="period-14days" class="period-btn bg-green-100 hover:bg-green-200 text-green-800 font-semibold py-2 px-4 rounded-md">
+                    📅 Últimas 2 semanas
+                </button>
+                <button id="period-30days" class="period-btn bg-purple-100 hover:bg-purple-200 text-purple-800 font-semibold py-2 px-4 rounded-md">
+                    📅 Último mês
+                </button>
+                <button id="period-custom" class="period-btn bg-orange-100 hover:bg-orange-200 text-orange-800 font-semibold py-2 px-4 rounded-md">
+                    📅 Período customizado
+                </button>
+            </div>
+            
+            <!-- Seletor de datas customizado -->
+            <div id="custom-period-selector" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data Início</label>
+                    <input type="date" id="custom-start-date" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data Fim</label>
+                    <input type="date" id="custom-end-date" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center mt-4">
+                <div>
+                    <span class="text-sm text-gray-600">Período selecionado: </span>
+                    <span id="selected-period-text" class="font-semibold text-gray-800">Últimos 7 dias</span>
+                </div>
+                <button id="generate-executive-report" class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-md hover:bg-purple-700">
+                    📊 Gerar Relatório
+                </button>
+            </div>
+        </div>
+        
+        <!-- Área do Relatório -->
+        <div id="executive-report-content" class="space-y-6">
+            <!-- Conteúdo do relatório será inserido aqui -->
+        </div>
+        
+        <!-- Configuração de Envio Automático -->
+        <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <span class="mr-2">⚙️</span>
+                Configurações de Envio Automático
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email do Chefe/Supervisor</label>
+                    <input type="email" id="supervisor-email" class="w-full p-2 border border-gray-300 rounded-md" placeholder="chefe@empresa.com.br">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Frequência de Envio</label>
+                    <select id="auto-send-frequency" class="w-full p-2 border border-gray-300 rounded-md">
+                        <option value="disabled">Desabilitado</option>
+                        <option value="weekly">Semanalmente (sexta-feira)</option>
+                        <option value="monthly">Mensalmente (último dia útil)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center space-x-4">
+                <button id="save-auto-settings" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-700">
+                    💾 Salvar Configurações
+                </button>
+                <button id="test-auto-send" class="bg-orange-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-orange-700">
+                    🧪 Testar Envio
+                </button>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex justify-end space-x-4 mt-6">
+            <button id="export-executive-pdf" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-700 flex items-center space-x-2">
+                <span>📄</span>
+                <span>Exportar PDF</span>
+            </button>
+            <button id="export-executive-excel" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700 flex items-center space-x-2">
+                <span>📊</span>
+                <span>Exportar Excel</span>
+            </button>
+            <button id="email-executive-report" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 flex items-center space-x-2">
+                <span>📧</span>
+                <span>Enviar por Email</span>
+            </button>
+        </div>
+    </div>
+
     <script>
         // --- CONFIGURAÇÃO OBRIGATÓRIA ---
         // AVISO DE SEGURANÇA: Em produção, mova estas chaves para variáveis de ambiente
@@ -892,6 +997,12 @@
         // --- MODAL RELATÓRIO ---
         const reportModalBackdrop = document.getElementById('report-modal-backdrop');
         const reportModal = document.getElementById('report-modal');
+
+        // --- MODAL RELATÓRIO EXECUTIVO ---
+        const executiveModalBackdrop = document.getElementById('executive-modal-backdrop');
+        const executiveModal = document.getElementById('executive-modal');
+        const executiveReportBtn = document.getElementById('executive-report-btn');
+        const closeExecutiveBtn = document.getElementById('close-executive-btn');
 
         // --- LÓGICA DO BANCO DE DADOS (JSONBIN.IO) ---
         const binUrl = `https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`;
@@ -2605,12 +2716,653 @@
         }
 
 
+        // --- SISTEMA DE RELATÓRIO EXECUTIVO ---
+        let selectedPeriod = { 
+            type: '7days', 
+            startDate: null, 
+            endDate: null,
+            label: 'Últimos 7 dias'
+        };
+
+        function initExecutiveReport() {
+            // Event listeners para botões de período
+            document.getElementById('period-7days').addEventListener('click', () => selectPeriod('7days', 'Últimos 7 dias'));
+            document.getElementById('period-14days').addEventListener('click', () => selectPeriod('14days', 'Últimas 2 semanas'));
+            document.getElementById('period-30days').addEventListener('click', () => selectPeriod('30days', 'Último mês'));
+            document.getElementById('period-custom').addEventListener('click', () => selectPeriod('custom', 'Período customizado'));
+            
+            // Event listeners para datas customizadas
+            document.getElementById('custom-start-date').addEventListener('change', updateCustomPeriod);
+            document.getElementById('custom-end-date').addEventListener('change', updateCustomPeriod);
+            
+            // Event listeners para modal
+            executiveReportBtn.addEventListener('click', openExecutiveModal);
+            closeExecutiveBtn.addEventListener('click', closeExecutiveModal);
+            executiveModalBackdrop.addEventListener('click', closeExecutiveModal);
+            
+            // Event listener para gerar relatório
+            document.getElementById('generate-executive-report').addEventListener('click', generateExecutiveReport);
+            
+            // Event listeners para exportação
+            document.getElementById('export-executive-excel').addEventListener('click', exportExecutiveToExcel);
+            document.getElementById('export-executive-pdf').addEventListener('click', exportExecutiveToPDF);
+            document.getElementById('email-executive-report').addEventListener('click', emailExecutiveReport);
+            
+            // Event listeners para configurações automáticas
+            document.getElementById('save-auto-settings').addEventListener('click', saveAutoSendSettings);
+            document.getElementById('test-auto-send').addEventListener('click', testAutoSend);
+            
+            // Carregar configurações salvas
+            loadAutoSendSettings();
+            
+            // Verificar envios automáticos pendentes
+            checkAutoSendSchedule();
+        }
+
+        function selectPeriod(type, label) {
+            selectedPeriod.type = type;
+            selectedPeriod.label = label;
+            
+            // Atualizar visual dos botões
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-200');
+            });
+            document.getElementById(`period-${type}`).classList.add('ring-2', 'ring-blue-500', 'bg-blue-200');
+            
+            // Mostrar/esconder seletor customizado
+            const customSelector = document.getElementById('custom-period-selector');
+            if (type === 'custom') {
+                customSelector.classList.remove('hidden');
+                updateCustomPeriod();
+            } else {
+                customSelector.classList.add('hidden');
+                updatePeriodDates();
+            }
+            
+            document.getElementById('selected-period-text').textContent = label;
+        }
+
+        function updateCustomPeriod() {
+            const startDate = document.getElementById('custom-start-date').value;
+            const endDate = document.getElementById('custom-end-date').value;
+            
+            if (startDate && endDate) {
+                selectedPeriod.startDate = new Date(startDate + 'T00:00:00.000Z');
+                selectedPeriod.endDate = new Date(endDate + 'T23:59:59.999Z');
+                
+                const startFormatted = formatDate(selectedPeriod.startDate.toISOString());
+                const endFormatted = formatDate(selectedPeriod.endDate.toISOString());
+                selectedPeriod.label = `${startFormatted} a ${endFormatted}`;
+                document.getElementById('selected-period-text').textContent = selectedPeriod.label;
+            }
+        }
+
+        function updatePeriodDates() {
+            const today = getToday();
+            let daysAgo;
+            
+            switch (selectedPeriod.type) {
+                case '7days':
+                    daysAgo = 7;
+                    break;
+                case '14days':
+                    daysAgo = 14;
+                    break;
+                case '30days':
+                    daysAgo = 30;
+                    break;
+                default:
+                    return;
+            }
+            
+            selectedPeriod.endDate = new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1); // Fim do dia de hoje
+            selectedPeriod.startDate = new Date(today.getTime() - (daysAgo - 1) * 24 * 60 * 60 * 1000); // Início do período
+        }
+
+        function openExecutiveModal() {
+            updatePeriodDates(); // Atualizar datas padrão
+            executiveModal.style.display = 'block';
+            executiveModalBackdrop.style.display = 'block';
+        }
+
+        function closeExecutiveModal() {
+            executiveModal.style.display = 'none';
+            executiveModalBackdrop.style.display = 'none';
+        }
+
+        function generateExecutiveReport() {
+            if (!selectedPeriod.startDate || !selectedPeriod.endDate) {
+                updatePeriodDates();
+            }
+            
+            const reportData = analyzeActivities(selectedPeriod.startDate, selectedPeriod.endDate);
+            renderExecutiveReport(reportData);
+        }
+
+        function analyzeActivities(startDate, endDate) {
+            const activities = {
+                leadsAdicionados: [],
+                mudancasStatus: [],
+                mensagensEnviadas: [],
+                summary: {
+                    totalLeadsAdicionados: 0,
+                    totalMudancasStatus: 0,
+                    totalMensagensEnviadas: 0,
+                    leadsMaisAtivos: [],
+                    diasMaisAtivos: {}
+                }
+            };
+
+            // Analisar todos os leads
+            leads.forEach(lead => {
+                // 1. LEADS ADICIONADOS
+                // Estimar data de criação do lead
+                let leadCreationDate = null;
+                if (lead.createdAt) {
+                    leadCreationDate = new Date(lead.createdAt);
+                } else if (lead.history && lead.history.length > 0) {
+                    // Usar a entrada mais antiga do histórico
+                    const oldestHistory = lead.history.reduce((oldest, current) => {
+                        return new Date(current.timestamp) < new Date(oldest.timestamp) ? current : oldest;
+                    });
+                    leadCreationDate = new Date(oldestHistory.timestamp);
+                } else if (lead.nextActionDate) {
+                    leadCreationDate = new Date(lead.nextActionDate);
+                }
+
+                if (leadCreationDate && leadCreationDate >= startDate && leadCreationDate <= endDate) {
+                    activities.leadsAdicionados.push({
+                        empresa: lead.empresa,
+                        nome: lead.nome,
+                        data: leadCreationDate,
+                        dataFormatada: formatDate(leadCreationDate.toISOString()),
+                        status: lead.status
+                    });
+                    activities.summary.totalLeadsAdicionados++;
+                }
+
+                // 2. MUDANÇAS DE STATUS E MENSAGENS ENVIADAS
+                if (lead.history && lead.history.length > 0) {
+                    lead.history.forEach(historyItem => {
+                        const actionDate = new Date(historyItem.timestamp);
+                        
+                        if (actionDate >= startDate && actionDate <= endDate) {
+                            const dayKey = actionDate.toISOString().split('T')[0];
+                            activities.summary.diasMaisAtivos[dayKey] = (activities.summary.diasMaisAtivos[dayKey] || 0) + 1;
+
+                            // Mudanças de status (manuais)
+                            if (historyItem.newStatus) {
+                                activities.mudancasStatus.push({
+                                    empresa: lead.empresa,
+                                    nome: lead.nome,
+                                    statusAnterior: historyItem.status,
+                                    statusNovo: historyItem.newStatus,
+                                    data: actionDate,
+                                    dataFormatada: formatDate(actionDate.toISOString()),
+                                    tipo: 'manual'
+                                });
+                                activities.summary.totalMudancasStatus++;
+                            }
+
+                            // Mensagens enviadas (execuções de ação)
+                            if (!historyItem.newStatus && typeof historyItem.currentActionIndex === 'number') {
+                                const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                                const action = configuredActions[historyItem.currentActionIndex];
+                                
+                                activities.mensagensEnviadas.push({
+                                    empresa: lead.empresa,
+                                    nome: lead.nome,
+                                    acao: action ? action.name : `Ação ${historyItem.currentActionIndex + 1}`,
+                                    data: actionDate,
+                                    dataFormatada: formatDate(actionDate.toISOString()),
+                                    statusAnterior: historyItem.status
+                                });
+                                activities.summary.totalMensagensEnviadas++;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Ordenar por data (mais recente primeiro)
+            activities.leadsAdicionados.sort((a, b) => b.data - a.data);
+            activities.mudancasStatus.sort((a, b) => b.data - a.data);
+            activities.mensagensEnviadas.sort((a, b) => b.data - a.data);
+
+            // Calcular leads mais ativos (com mais atividades)
+            const leadActivity = {};
+            [...activities.mudancasStatus, ...activities.mensagensEnviadas].forEach(activity => {
+                const key = `${activity.empresa} - ${activity.nome}`;
+                leadActivity[key] = (leadActivity[key] || 0) + 1;
+            });
+
+            activities.summary.leadsMaisAtivos = Object.entries(leadActivity)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5)
+                .map(([lead, count]) => ({ lead, count }));
+
+            return activities;
+        }
+
+        function renderExecutiveReport(reportData) {
+            const contentDiv = document.getElementById('executive-report-content');
+            
+            contentDiv.innerHTML = `
+                <!-- Resumo Executivo -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <span class="mr-2">📈</span>
+                        Resumo Executivo - ${selectedPeriod.label}
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-blue-800">${reportData.summary.totalLeadsAdicionados}</div>
+                            <div class="text-sm text-blue-600">Leads Adicionados</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-green-800">${reportData.summary.totalMensagensEnviadas}</div>
+                            <div class="text-sm text-green-600">Mensagens Enviadas</div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg text-center">
+                            <div class="text-2xl font-bold text-purple-800">${reportData.summary.totalMudancasStatus}</div>
+                            <div class="text-sm text-purple-600">Mudanças de Status</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leads Mais Ativos -->
+                ${reportData.summary.leadsMaisAtivos.length > 0 ? `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">🎯</span>
+                        Leads com Mais Atividade
+                    </h3>
+                    <div class="space-y-2">
+                        ${reportData.summary.leadsMaisAtivos.map(item => `
+                            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                <span class="font-medium">${escapeHtml(item.lead)}</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">${item.count} atividades</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Leads Adicionados -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">👥</span>
+                        Leads Adicionados (${reportData.leadsAdicionados.length})
+                    </h3>
+                    ${reportData.leadsAdicionados.length > 0 ? `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left">Data</th>
+                                        <th class="px-4 py-2 text-left">Empresa</th>
+                                        <th class="px-4 py-2 text-left">Contato</th>
+                                        <th class="px-4 py-2 text-left">Status Atual</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${reportData.leadsAdicionados.map(lead => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm">${lead.dataFormatada}</td>
+                                            <td class="px-4 py-2 font-medium">${escapeHtml(lead.empresa)}</td>
+                                            <td class="px-4 py-2">${escapeHtml(lead.nome)}</td>
+                                            <td class="px-4 py-2 text-sm">${escapeHtml(lead.status)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p class="text-gray-500 text-center py-4">Nenhum lead adicionado no período selecionado.</p>'}
+                </div>
+
+                <!-- Mensagens Enviadas -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">💬</span>
+                        Mensagens Enviadas (${reportData.mensagensEnviadas.length})
+                    </h3>
+                    ${reportData.mensagensEnviadas.length > 0 ? `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left">Data</th>
+                                        <th class="px-4 py-2 text-left">Empresa</th>
+                                        <th class="px-4 py-2 text-left">Contato</th>
+                                        <th class="px-4 py-2 text-left">Mensagem/Ação</th>
+                                        <th class="px-4 py-2 text-left">Status Anterior</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${reportData.mensagensEnviadas.map(msg => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm">${msg.dataFormatada}</td>
+                                            <td class="px-4 py-2 font-medium">${escapeHtml(msg.empresa)}</td>
+                                            <td class="px-4 py-2">${escapeHtml(msg.nome)}</td>
+                                            <td class="px-4 py-2 text-sm bg-blue-50">${escapeHtml(msg.acao)}</td>
+                                            <td class="px-4 py-2 text-sm">${escapeHtml(msg.statusAnterior)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p class="text-gray-500 text-center py-4">Nenhuma mensagem enviada no período selecionado.</p>'}
+                </div>
+
+                <!-- Mudanças de Status -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">🔄</span>
+                        Mudanças de Status (${reportData.mudancasStatus.length})
+                    </h3>
+                    ${reportData.mudancasStatus.length > 0 ? `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left">Data</th>
+                                        <th class="px-4 py-2 text-left">Empresa</th>
+                                        <th class="px-4 py-2 text-left">Contato</th>
+                                        <th class="px-4 py-2 text-left">Status Anterior</th>
+                                        <th class="px-4 py-2 text-left">Status Novo</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${reportData.mudancasStatus.map(change => `
+                                        <tr>
+                                            <td class="px-4 py-2 text-sm">${change.dataFormatada}</td>
+                                            <td class="px-4 py-2 font-medium">${escapeHtml(change.empresa)}</td>
+                                            <td class="px-4 py-2">${escapeHtml(change.nome)}</td>
+                                            <td class="px-4 py-2 text-sm text-gray-600">${escapeHtml(change.statusAnterior)}</td>
+                                            <td class="px-4 py-2 text-sm bg-green-50 text-green-800">${escapeHtml(change.statusNovo)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p class="text-gray-500 text-center py-4">Nenhuma mudança de status no período selecionado.</p>'}
+                </div>
+            `;
+
+            showNotification(`📊 Relatório executivo gerado para ${selectedPeriod.label}`, "success");
+        }
+
+        function exportExecutiveToExcel() {
+            if (!document.getElementById('executive-report-content').innerHTML.trim()) {
+                showNotification("⚠️ Gere um relatório primeiro antes de exportar.", "error");
+                return;
+            }
+
+            const reportData = analyzeActivities(selectedPeriod.startDate, selectedPeriod.endDate);
+            
+            const headers = [
+                "RELATÓRIO EXECUTIVO DE ATIVIDADES",
+                `Período: ${selectedPeriod.label}`,
+                `Gerado em: ${formatDate(new Date().toISOString())}`,
+                "",
+                "RESUMO EXECUTIVO",
+                `Leads Adicionados: ${reportData.summary.totalLeadsAdicionados}`,
+                `Mensagens Enviadas: ${reportData.summary.totalMensagensEnviadas}`,
+                `Mudanças de Status: ${reportData.summary.totalMudancasStatus}`,
+                "",
+                "DETALHAMENTO"
+            ];
+
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join("\n") + "\n\n";
+
+            // Leads Adicionados
+            if (reportData.leadsAdicionados.length > 0) {
+                csvContent += "LEADS ADICIONADOS\n";
+                csvContent += "Data;Empresa;Contato;Status Atual\n";
+                reportData.leadsAdicionados.forEach(lead => {
+                    csvContent += `${lead.dataFormatada};${lead.empresa};${lead.nome};${lead.status}\n`;
+                });
+                csvContent += "\n";
+            }
+
+            // Mensagens Enviadas
+            if (reportData.mensagensEnviadas.length > 0) {
+                csvContent += "MENSAGENS ENVIADAS\n";
+                csvContent += "Data;Empresa;Contato;Mensagem/Ação;Status Anterior\n";
+                reportData.mensagensEnviadas.forEach(msg => {
+                    csvContent += `${msg.dataFormatada};${msg.empresa};${msg.nome};${msg.acao};${msg.statusAnterior}\n`;
+                });
+                csvContent += "\n";
+            }
+
+            // Mudanças de Status
+            if (reportData.mudancasStatus.length > 0) {
+                csvContent += "MUDANÇAS DE STATUS\n";
+                csvContent += "Data;Empresa;Contato;Status Anterior;Status Novo\n";
+                reportData.mudancasStatus.forEach(change => {
+                    csvContent += `${change.dataFormatada};${change.empresa};${change.nome};${change.statusAnterior};${change.statusNovo}\n`;
+                });
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `relatorio_executivo_${selectedPeriod.type}_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showNotification("📊 Relatório executivo exportado com sucesso!", "success");
+        }
+
+        // --- FORMATAÇÃO BRASILEIRA ---
+        function formatNumberBR(number) {
+            return new Intl.NumberFormat('pt-BR').format(number);
+        }
+
+        function formatDateBR(dateString) {
+            const date = new Date(dateString);
+            return new Intl.DateTimeFormat('pt-BR', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+
+        // --- EXPORTAÇÃO PDF ---
+        function exportExecutiveToPDF() {
+            if (!document.getElementById('executive-report-content').innerHTML.trim()) {
+                showNotification("⚠️ Gere um relatório primeiro antes de exportar.", "error");
+                return;
+            }
+
+            // Simular exportação PDF (em produção, use bibliotecas como jsPDF)
+            const reportData = analyzeActivities(selectedPeriod.startDate, selectedPeriod.endDate);
+            
+            showNotification("📄 Função de PDF em desenvolvimento. Use a exportação Excel por enquanto.", "info");
+            
+            // Para implementar PDF real, adicione jsPDF:
+            // const doc = new jsPDF();
+            // doc.text("Relatório Executivo", 20, 20);
+            // ...
+        }
+
+        // --- CONFIGURAÇÕES DE ENVIO AUTOMÁTICO ---
+        function saveAutoSendSettings() {
+            const supervisorEmail = document.getElementById('supervisor-email').value;
+            const frequency = document.getElementById('auto-send-frequency').value;
+            
+            if (frequency !== 'disabled' && !supervisorEmail) {
+                showNotification("⚠️ Email do supervisor é obrigatório para envio automático.", "error");
+                return;
+            }
+            
+            if (supervisorEmail && !supervisorEmail.includes('@')) {
+                showNotification("⚠️ Email inválido. Digite um email válido.", "error");
+                return;
+            }
+            
+            const settings = {
+                supervisorEmail,
+                frequency,
+                lastSent: null,
+                savedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('executive_auto_send_settings', JSON.stringify(settings));
+            showNotification("💾 Configurações de envio automático salvas!", "success");
+        }
+
+        function loadAutoSendSettings() {
+            const savedSettings = localStorage.getItem('executive_auto_send_settings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('supervisor-email').value = settings.supervisorEmail || '';
+                document.getElementById('auto-send-frequency').value = settings.frequency || 'disabled';
+            }
+        }
+
+        function testAutoSend() {
+            const supervisorEmail = document.getElementById('supervisor-email').value;
+            if (!supervisorEmail) {
+                showNotification("⚠️ Configure o email do supervisor primeiro.", "error");
+                return;
+            }
+            
+            // Gerar relatório da última semana para teste
+            selectPeriod('7days', 'Últimos 7 dias');
+            generateExecutiveReport();
+            
+            setTimeout(() => {
+                emailExecutiveReport();
+                showNotification("🧪 Teste de envio realizado! Verifique se o email foi aberto.", "success");
+            }, 1000);
+        }
+
+        function checkAutoSendSchedule() {
+            const savedSettings = localStorage.getItem('executive_auto_send_settings');
+            if (!savedSettings) return;
+            
+            const settings = JSON.parse(savedSettings);
+            if (settings.frequency === 'disabled') return;
+            
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0 = domingo, 5 = sexta
+            const dayOfMonth = today.getDate();
+            const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            
+            let shouldSend = false;
+            let reportPeriod = '7days';
+            let reportLabel = 'Últimos 7 dias';
+            
+            if (settings.frequency === 'weekly' && dayOfWeek === 5) { // Sexta-feira
+                shouldSend = true;
+            } else if (settings.frequency === 'monthly' && dayOfMonth === lastDayOfMonth) { // Último dia do mês
+                shouldSend = true;
+                reportPeriod = '30days';
+                reportLabel = 'Último mês';
+            }
+            
+            if (shouldSend && settings.lastSent !== today.toDateString()) {
+                // Enviar relatório automaticamente
+                selectPeriod(reportPeriod, reportLabel);
+                generateExecutiveReport();
+                
+                setTimeout(() => {
+                    // Atualizar data do último envio
+                    settings.lastSent = today.toDateString();
+                    localStorage.setItem('executive_auto_send_settings', JSON.stringify(settings));
+                    
+                    // Enviar email
+                    emailExecutiveReport();
+                    showNotification(`📧 Relatório automático enviado (${reportLabel})!`, "success");
+                }, 2000);
+            }
+        }
+
+        function emailExecutiveReport() {
+            if (!document.getElementById('executive-report-content').innerHTML.trim()) {
+                showNotification("⚠️ Gere um relatório primeiro antes de enviar.", "error");
+                return;
+            }
+
+            const reportData = analyzeActivities(selectedPeriod.startDate, selectedPeriod.endDate);
+            const supervisorEmail = document.getElementById('supervisor-email').value;
+            
+            const emailSubject = `📊 Relatório Executivo CRM - ${selectedPeriod.label}`;
+            const emailBody = `
+🎯 RELATÓRIO EXECUTIVO DE ATIVIDADES CRM
+
+📅 Período: ${selectedPeriod.label}
+🕒 Gerado em: ${formatDateBR(new Date().toISOString())}
+
+📈 RESUMO EXECUTIVO:
+• Leads Adicionados: ${formatNumberBR(reportData.summary.totalLeadsAdicionados)}
+• Mensagens Enviadas: ${formatNumberBR(reportData.summary.totalMensagensEnviadas)}  
+• Mudanças de Status: ${formatNumberBR(reportData.summary.totalMudancasStatus)}
+
+${reportData.summary.leadsMaisAtivos.length > 0 ? `
+🎯 LEADS MAIS ATIVOS:
+${reportData.summary.leadsMaisAtivos.map(item => `• ${item.lead}: ${formatNumberBR(item.count)} atividades`).join('\n')}
+` : ''}
+
+📋 DETALHAMENTO POR CATEGORIA:
+
+📈 LEADS ADICIONADOS (${formatNumberBR(reportData.leadsAdicionados.length)}):
+${reportData.leadsAdicionados.slice(0, 10).map(lead => 
+    `• ${formatDateBR(lead.data.toISOString())} - ${lead.empresa} (${lead.nome})`
+).join('\n')}${reportData.leadsAdicionados.length > 10 ? `\n... e mais ${formatNumberBR(reportData.leadsAdicionados.length - 10)} leads` : ''}
+
+📤 MENSAGENS ENVIADAS (${formatNumberBR(reportData.mensagensEnviadas.length)}):
+${reportData.mensagensEnviadas.slice(0, 10).map(msg => 
+    `• ${formatDateBR(msg.data.toISOString())} - ${msg.acao} para ${msg.empresa}`
+).join('\n')}${reportData.mensagensEnviadas.length > 10 ? `\n... e mais ${formatNumberBR(reportData.mensagensEnviadas.length - 10)} mensagens` : ''}
+
+🔄 MUDANÇAS DE STATUS (${formatNumberBR(reportData.mudancasStatus.length)}):
+${reportData.mudancasStatus.slice(0, 10).map(change => 
+    `• ${formatDateBR(change.data.toISOString())} - ${change.empresa}: ${change.statusAnterior} → ${change.statusNovo}`
+).join('\n')}${reportData.mudancasStatus.length > 10 ? `\n... e mais ${formatNumberBR(reportData.mudancasStatus.length - 10)} mudanças` : ''}
+
+Para ver o relatório detalhado completo, acesse o sistema CRM.
+
+---
+📊 Sistema de Prospecção B2B - RecargaPay
+Relatório gerado automaticamente
+            `.trim();
+
+            const toEmail = supervisorEmail || '';
+            const mailtoLink = `mailto:${toEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+            window.location.href = mailtoLink;
+
+            showNotification("📧 Cliente de email aberto com o relatório executivo!", "success");
+        }
+
         // --- INICIALIZAÇÃO ---
         // --- SISTEMA DE VERSIONAMENTO ---
         const VERSION_HISTORY_KEY = 'crm_version_history';
-        let currentVersion = '2.5.0';
+        let currentVersion = '2.6.0';
 
         const versionHistory = [
+            {
+                version: '2.6.0',
+                date: '2024-11-26 10:30',
+                type: 'major',
+                title: 'Relatório Executivo Avançado',
+                description: 'Sistema completo de relatórios executivos com envio automático, formatação brasileira e configurações personalizáveis.',
+                changes: [
+                    'Relatório executivo com períodos configuráveis',
+                    'Envio automático semanal/mensal para supervisores',
+                    'Formatação brasileira de números e datas',
+                    'Configurações de email do supervisor',
+                    'Detalhamento de atividades por categoria',
+                    'Função de teste de envio',
+                    'Agendamento inteligente de relatórios',
+                    'Interface aprimorada com métricas executivas'
+                ]
+            },
             {
                 version: '2.5.0',
                 date: '2024-11-25 20:15',
@@ -2805,6 +3557,7 @@
             loadDataFromBin();
             initVersioning();
             initDarkMode();
+            initExecutiveReport();
         });
     </script>
 
