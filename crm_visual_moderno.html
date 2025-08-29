@@ -1688,6 +1688,28 @@
                 const actionJustCompleted = configuredActions[leads[leadIndex].currentActionIndex];
                 if (!actionJustCompleted) return;
 
+                const currentActionIndex = leads[leadIndex].currentActionIndex;
+                const currentStatus = leads[leadIndex].status;
+
+                // VALIDAÇÃO: Para primeira ação (índice 0), status deve ser "Lista de Contatos"
+                if (currentActionIndex === 0) {
+                    const validInitialStatuses = [
+                        'Lista de Contatos (ainda não abordado)',
+                        'Lista de Contatos',
+                        'Prospecção (Backlog)',
+                        'Prospecção'
+                    ];
+                    
+                    const isValidInitialStatus = validInitialStatuses.some(validStatus => 
+                        currentStatus?.includes(validStatus) || validStatus.includes(currentStatus || '')
+                    );
+                    
+                    if (!isValidInitialStatus) {
+                        showNotification(`⚠️ Primeira mensagem só pode ser enviada para leads com status "Lista de Contatos". Status atual: "${currentStatus}"`, "error");
+                        return;
+                    }
+                }
+
                 leads[leadIndex].history = leads[leadIndex].history || [];
                 leads[leadIndex].history.push({
                     status: leads[leadIndex].status,
@@ -1696,7 +1718,28 @@
                     timestamp: new Date().toISOString()
                 });
 
-                leads[leadIndex].status = actionJustCompleted.setsStatusTo;
+                // LÓGICA ESPECIAL: Para primeira ação, mudar automaticamente para "Em Contato"
+                if (currentActionIndex === 0) {
+                    // Buscar status "Em Contato" nas opções configuradas
+                    const statusOptions = cadenceConfig.statusOptions || [];
+                    const emContatoStatus = statusOptions.find(status => 
+                        status.includes('Em Contato') || status.includes('Contato em Andamento')
+                    );
+                    
+                    if (emContatoStatus) {
+                        leads[leadIndex].status = emContatoStatus;
+                        showNotification(`✅ ${actionJustCompleted.name} executada! Status alterado automaticamente para "${emContatoStatus}"`, "success");
+                    } else {
+                        // Fallback: usar o status configurado na ação
+                        leads[leadIndex].status = actionJustCompleted.setsStatusTo;
+                        showNotification(`✅ ${actionJustCompleted.name} executada!`, "success");
+                    }
+                } else {
+                    // Para outras ações, usar o status configurado na ação
+                    leads[leadIndex].status = actionJustCompleted.setsStatusTo;
+                    showNotification(`✅ ${actionJustCompleted.name} executada!`, "success");
+                }
+
                 leads[leadIndex].currentActionIndex++;
 
                 const nextAction = configuredActions[leads[leadIndex].currentActionIndex];
