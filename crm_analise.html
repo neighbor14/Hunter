@@ -101,6 +101,43 @@
             cursor: grab;
         }
         
+        /* Funcionalidade de expandir/retrair empresas */
+        .company-header {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            user-select: none;
+        }
+        
+        .company-header:hover {
+            background-color: #e5e7eb !important;
+        }
+        
+        .company-toggle {
+            font-size: 14px;
+            margin-right: 8px;
+            transition: transform 0.2s ease;
+            display: inline-block;
+        }
+        
+        .company-collapsed .company-toggle {
+            transform: rotate(-90deg);
+        }
+        
+        .company-leads {
+            transition: opacity 0.3s ease, max-height 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .company-leads.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        .company-leads.expanded {
+            max-height: none;
+            opacity: 1;
+        }
+        
         /* Melhorias de responsividade mobile */
         @media (max-width: 768px) {
             .container {
@@ -392,6 +429,9 @@
         let leads = [];
         let cadenceConfig = {};
         let database = { leads: [], config: {} };
+        
+        // Estado de empresas expandidas/retraídas (salvo no localStorage)
+        let companyExpandedState = JSON.parse(localStorage.getItem('companyExpandedState') || '{}');
 
         // --- ELEMENTOS DO DOM ---
         const form = document.getElementById('add-lead-form');
@@ -739,10 +779,27 @@
             const today = getToday();
 
             sortedCompanies.forEach(companyName => {
+                // Verificar se a empresa está expandida (padrão: expandida)
+                const isExpanded = companyExpandedState[companyName] !== false;
+                
                 const companyHeader = document.createElement('tr');
-                companyHeader.className = 'bg-gray-100';
-                companyHeader.innerHTML = `<td colspan="5" class="px-6 py-2 font-bold text-gray-800">${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))</td>`;
+                companyHeader.className = `bg-gray-100 company-header ${isExpanded ? '' : 'company-collapsed'}`;
+                companyHeader.innerHTML = `<td colspan="5" class="px-6 py-2 font-bold text-gray-800">
+                    <span class="company-toggle">${isExpanded ? '▼' : '▶'}</span>
+                    ${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))
+                </td>`;
+                
+                // Adicionar evento de clique para expandir/retrair
+                companyHeader.addEventListener('click', () => {
+                    toggleCompany(companyName);
+                });
+                
                 tableBody.appendChild(companyHeader);
+
+                // Container para os leads da empresa
+                const companyLeadsContainer = document.createElement('tbody');
+                companyLeadsContainer.className = `company-leads ${isExpanded ? 'expanded' : 'collapsed'}`;
+                companyLeadsContainer.dataset.company = companyName;
 
                 groupedLeads[companyName].forEach(lead => {
                     const nextActionDate = lead.nextActionDate ? parseDate(lead.nextActionDate) : null;
@@ -817,9 +874,27 @@
                             ${actionButtonsHTML}
                         </td>
                     `;
-                    tableBody.appendChild(row);
+                    companyLeadsContainer.appendChild(row);
                 });
+                
+                // Adicionar o container de leads à tabela principal
+                tableBody.parentNode.appendChild(companyLeadsContainer);
             });
+        };
+        
+        // Função para alternar expansão/retração de empresa
+        const toggleCompany = (companyName) => {
+            const isCurrentlyExpanded = companyExpandedState[companyName] !== false;
+            const newState = !isCurrentlyExpanded;
+            
+            // Atualizar estado
+            companyExpandedState[companyName] = newState;
+            
+            // Salvar no localStorage
+            localStorage.setItem('companyExpandedState', JSON.stringify(companyExpandedState));
+            
+            // Atualizar UI - Re-renderizar a tabela para aplicar as mudanças
+            renderTable();
         };
         
         const renderCardsView = (filteredLeads) => {
@@ -840,11 +915,28 @@
             const today = getToday();
 
             sortedCompanies.forEach(companyName => {
-                // Header da empresa
+                // Verificar se a empresa está expandida (padrão: expandida)
+                const isExpanded = companyExpandedState[companyName] !== false;
+                
+                // Header da empresa com funcionalidade de expandir/retrair
                 const companyHeader = document.createElement('div');
-                companyHeader.className = 'mb-4 pb-2 border-b-2 border-gray-200';
-                companyHeader.innerHTML = `<h3 class="text-lg font-bold text-gray-800">${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))</h3>`;
+                companyHeader.className = `mb-4 pb-2 border-b-2 border-gray-200 company-header cursor-pointer ${isExpanded ? '' : 'company-collapsed'}`;
+                companyHeader.innerHTML = `<h3 class="text-lg font-bold text-gray-800">
+                    <span class="company-toggle">${isExpanded ? '▼' : '▶'}</span>
+                    ${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))
+                </h3>`;
+                
+                // Adicionar evento de clique para expandir/retrair
+                companyHeader.addEventListener('click', () => {
+                    toggleCompany(companyName);
+                });
+                
                 cardsBody.appendChild(companyHeader);
+                
+                // Container para os cards da empresa
+                const companyCardsContainer = document.createElement('div');
+                companyCardsContainer.className = `company-leads ${isExpanded ? 'expanded' : 'collapsed'}`;
+                companyCardsContainer.dataset.company = companyName;
 
                 groupedLeads[companyName].forEach(lead => {
                     const nextActionDate = lead.nextActionDate ? parseDate(lead.nextActionDate) : null;
@@ -890,8 +982,11 @@
                             <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
                         </div>
                     `;
-                    cardsBody.appendChild(card);
+                    companyCardsContainer.appendChild(card);
                 });
+                
+                // Adicionar o container de cards à visualização mobile
+                cardsBody.appendChild(companyCardsContainer);
             });
         };
 
