@@ -145,82 +145,141 @@
         }
         
         /* Melhorias de responsividade mobile */
-        /* Estilos da Agenda */
-        .agenda-day {
+        /* Estilos do Calendário */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .calendar-day {
             background: white;
             border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 1rem;
+            border: 2px solid #e5e7eb;
+            min-height: 180px;
             overflow: hidden;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            position: relative;
         }
 
-        .agenda-day-header {
+        .calendar-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .calendar-day.today {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .calendar-day.has-contacts {
+            border-color: #0ea5e9;
+        }
+
+        .calendar-day.today.has-contacts {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .calendar-day-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 1rem;
+            padding: 0.75rem;
             font-weight: 600;
+            font-size: 0.875rem;
+            text-align: center;
         }
 
-        .agenda-day-header.today {
+        .calendar-day-header.today {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
 
-        .agenda-day-header.weekend {
-            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        .calendar-day-body {
+            padding: 0.5rem;
+            height: calc(100% - 40px);
+            overflow-y: auto;
         }
 
-        .agenda-contact {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.2s ease;
+        .calendar-contact {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.375rem;
+            margin-bottom: 0.375rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .agenda-contact:hover {
-            background-color: #f9fafb;
+        .calendar-contact:hover {
+            background: #e2e8f0;
+            transform: scale(1.02);
         }
 
-        .agenda-contact:last-child {
-            border-bottom: none;
+        .calendar-contact:last-child {
+            margin-bottom: 0;
         }
 
-        .agenda-contact-info {
-            flex-grow: 1;
+        .calendar-contact.overdue {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #991b1b;
         }
 
-        .agenda-contact-company {
+        .calendar-contact-company {
             font-weight: 600;
             color: #374151;
-            font-size: 0.875rem;
+            margin-bottom: 0.125rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .agenda-contact-name {
+        .calendar-contact-name {
             color: #6b7280;
-            font-size: 0.75rem;
-            margin-top: 0.125rem;
+            margin-bottom: 0.125rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .agenda-contact-action {
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        .calendar-contact-action {
+            background: #0ea5e9;
             color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-size: 0.625rem;
             font-weight: 500;
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .agenda-contact-action.overdue {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        .calendar-contact.overdue .calendar-contact-action {
+            background: #ef4444;
         }
 
-        .agenda-empty {
-            padding: 2rem;
+        .calendar-empty {
+            padding: 1rem;
             text-align: center;
             color: #9ca3af;
+            font-size: 0.75rem;
             font-style: italic;
+        }
+
+        .calendar-week-label {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
         }
 
         @media (max-width: 768px) {
@@ -1267,26 +1326,27 @@
                 return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 = segunda, 5 = sexta
             };
 
-            // Função para formatar data em português
-            const formatDatePortuguese = (date) => {
-                const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-                const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                
-                const dayName = days[date.getUTCDay()];
+            // Função para formatar dia da semana curto
+            const formatDayShort = (date) => {
+                const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                return days[date.getUTCDay()];
+            };
+
+            // Função para formatar data curta
+            const formatDateShort = (date) => {
                 const day = date.getUTCDate().toString().padStart(2, '0');
-                const month = months[date.getUTCMonth()];
-                
-                return `${dayName}, ${day} ${month}`;
+                const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+                return `${day}/${month}`;
             };
 
             const today = getToday();
             const workingDays = [];
             
-            // Gerar próximos 14 dias úteis
+            // Gerar próximos 10 dias úteis (2 semanas)
             let currentDate = new Date(today);
             let addedDays = 0;
             
-            while (addedDays < 14) {
+            while (addedDays < 10) {
                 if (isWorkingDay(currentDate)) {
                     workingDays.push(new Date(currentDate));
                     addedDays++;
@@ -1321,70 +1381,156 @@
                 }
             });
 
-            // Renderizar agenda
-            workingDays.forEach(date => {
-                const dateStr = date.toISOString().split('T')[0];
-                const dayLeads = leadsByDate[dateStr] || [];
-                const isToday = date.getTime() === today.getTime();
-                
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'agenda-day';
-                
-                const headerDiv = document.createElement('div');
-                headerDiv.className = `agenda-day-header ${isToday ? 'today' : ''}`;
-                headerDiv.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span>${formatDatePortuguese(date)}</span>
-                        <span class="text-sm opacity-90">${dayLeads.length} contato(s)</span>
-                    </div>
-                `;
-                
-                dayDiv.appendChild(headerDiv);
-                
-                if (dayLeads.length === 0) {
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.className = 'agenda-empty';
-                    emptyDiv.textContent = '📅 Nenhum contato agendado para este dia';
-                    dayDiv.appendChild(emptyDiv);
-                } else {
-                    // Ordenar por empresa
-                    dayLeads.sort((a, b) => a.empresa.localeCompare(b.empresa));
+            // Criar layout de calendário
+            // Primeira semana
+            const week1Label = document.createElement('div');
+            week1Label.className = 'calendar-week-label';
+            week1Label.textContent = 'Semana 1';
+            agendaContainer.appendChild(week1Label);
+
+            const week1Grid = document.createElement('div');
+            week1Grid.className = 'calendar-grid';
+            
+            // Primeira semana (5 dias)
+            for (let i = 0; i < 5; i++) {
+                if (workingDays[i]) {
+                    const date = workingDays[i];
+                    const dateStr = date.toISOString().split('T')[0];
+                    const dayLeads = leadsByDate[dateStr] || [];
+                    const isToday = date.getTime() === today.getTime();
+                    const hasContacts = dayLeads.length > 0;
                     
-                    dayLeads.forEach(lead => {
-                        const contactDiv = document.createElement('div');
-                        contactDiv.className = 'agenda-contact';
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = `calendar-day ${isToday ? 'today' : ''} ${hasContacts ? 'has-contacts' : ''}`;
+                    
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = `calendar-day-header ${isToday ? 'today' : ''}`;
+                    headerDiv.innerHTML = `
+                        <div>${formatDayShort(date)}</div>
+                        <div style="font-size: 0.75rem; opacity: 0.9;">${formatDateShort(date)}</div>
+                    `;
+                    
+                    const bodyDiv = document.createElement('div');
+                    bodyDiv.className = 'calendar-day-body';
+                    
+                    if (dayLeads.length === 0) {
+                        const emptyDiv = document.createElement('div');
+                        emptyDiv.className = 'calendar-empty';
+                        emptyDiv.textContent = '📅 Livre';
+                        bodyDiv.appendChild(emptyDiv);
+                    } else {
+                        // Ordenar por empresa
+                        dayLeads.sort((a, b) => a.empresa.localeCompare(b.empresa));
                         
-                        const isOverdue = parseDate(lead.nextActionDate) < today;
-                        
-                        contactDiv.innerHTML = `
-                            <div class="agenda-contact-info">
-                                <div class="agenda-contact-company">${escapeHtml(lead.empresa)}</div>
-                                <div class="agenda-contact-name">${escapeHtml(lead.nome)} • ${escapeHtml(lead.cargo)}</div>
-                            </div>
-                            <div class="agenda-contact-action ${isOverdue ? 'overdue' : ''}">
-                                ${lead.currentAction ? lead.currentAction.name : 'Sem ação'}
-                            </div>
-                        `;
-                        
-                        // Adicionar clique para executar ação
-                        contactDiv.style.cursor = 'pointer';
-                        contactDiv.addEventListener('click', () => {
-                            if (lead.currentAction) {
-                                if (confirm(`Executar "${lead.currentAction.name}" para ${lead.nome} (${lead.empresa})?`)) {
-                                    window.app.executeAction(lead.id);
-                                    // Fechar modal de relatório e atualizar lista
-                                    document.getElementById('report-modal-backdrop').style.display = 'none';
-                                    document.getElementById('report-modal').style.display = 'none';
+                        dayLeads.forEach(lead => {
+                            const contactDiv = document.createElement('div');
+                            const isOverdue = parseDate(lead.nextActionDate) < today;
+                            contactDiv.className = `calendar-contact ${isOverdue ? 'overdue' : ''}`;
+                            
+                            contactDiv.innerHTML = `
+                                <div class="calendar-contact-company">${escapeHtml(lead.empresa)}</div>
+                                <div class="calendar-contact-name">${escapeHtml(lead.nome)}</div>
+                                <div class="calendar-contact-action">${lead.currentAction ? lead.currentAction.name : 'Sem ação'}</div>
+                            `;
+                            
+                            // Adicionar clique para executar ação
+                            contactDiv.addEventListener('click', () => {
+                                if (lead.currentAction) {
+                                    if (confirm(`Executar "${lead.currentAction.name}" para ${lead.nome} (${lead.empresa})?`)) {
+                                        window.app.executeAction(lead.id);
+                                        // Fechar modal de relatório e atualizar lista
+                                        document.getElementById('report-modal-backdrop').style.display = 'none';
+                                        document.getElementById('report-modal').style.display = 'none';
+                                    }
                                 }
-                            }
+                            });
+                            
+                            bodyDiv.appendChild(contactDiv);
                         });
-                        
-                        dayDiv.appendChild(contactDiv);
-                    });
+                    }
+                    
+                    dayDiv.appendChild(headerDiv);
+                    dayDiv.appendChild(bodyDiv);
+                    week1Grid.appendChild(dayDiv);
                 }
-                
-                agendaContainer.appendChild(dayDiv);
-            });
+            }
+            
+            agendaContainer.appendChild(week1Grid);
+
+            // Segunda semana
+            const week2Label = document.createElement('div');
+            week2Label.className = 'calendar-week-label';
+            week2Label.textContent = 'Semana 2';
+            agendaContainer.appendChild(week2Label);
+
+            const week2Grid = document.createElement('div');
+            week2Grid.className = 'calendar-grid';
+            
+            // Segunda semana (5 dias)
+            for (let i = 5; i < 10; i++) {
+                if (workingDays[i]) {
+                    const date = workingDays[i];
+                    const dateStr = date.toISOString().split('T')[0];
+                    const dayLeads = leadsByDate[dateStr] || [];
+                    const isToday = date.getTime() === today.getTime();
+                    const hasContacts = dayLeads.length > 0;
+                    
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = `calendar-day ${isToday ? 'today' : ''} ${hasContacts ? 'has-contacts' : ''}`;
+                    
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = `calendar-day-header ${isToday ? 'today' : ''}`;
+                    headerDiv.innerHTML = `
+                        <div>${formatDayShort(date)}</div>
+                        <div style="font-size: 0.75rem; opacity: 0.9;">${formatDateShort(date)}</div>
+                    `;
+                    
+                    const bodyDiv = document.createElement('div');
+                    bodyDiv.className = 'calendar-day-body';
+                    
+                    if (dayLeads.length === 0) {
+                        const emptyDiv = document.createElement('div');
+                        emptyDiv.className = 'calendar-empty';
+                        emptyDiv.textContent = '📅 Livre';
+                        bodyDiv.appendChild(emptyDiv);
+                    } else {
+                        // Ordenar por empresa
+                        dayLeads.sort((a, b) => a.empresa.localeCompare(b.empresa));
+                        
+                        dayLeads.forEach(lead => {
+                            const contactDiv = document.createElement('div');
+                            const isOverdue = parseDate(lead.nextActionDate) < today;
+                            contactDiv.className = `calendar-contact ${isOverdue ? 'overdue' : ''}`;
+                            
+                            contactDiv.innerHTML = `
+                                <div class="calendar-contact-company">${escapeHtml(lead.empresa)}</div>
+                                <div class="calendar-contact-name">${escapeHtml(lead.nome)}</div>
+                                <div class="calendar-contact-action">${lead.currentAction ? lead.currentAction.name : 'Sem ação'}</div>
+                            `;
+                            
+                            // Adicionar clique para executar ação
+                            contactDiv.addEventListener('click', () => {
+                                if (lead.currentAction) {
+                                    if (confirm(`Executar "${lead.currentAction.name}" para ${lead.nome} (${lead.empresa})?`)) {
+                                        window.app.executeAction(lead.id);
+                                        // Fechar modal de relatório e atualizar lista
+                                        document.getElementById('report-modal-backdrop').style.display = 'none';
+                                        document.getElementById('report-modal').style.display = 'none';
+                                    }
+                                }
+                            });
+                            
+                            bodyDiv.appendChild(contactDiv);
+                        });
+                    }
+                    
+                    dayDiv.appendChild(headerDiv);
+                    dayDiv.appendChild(bodyDiv);
+                    week2Grid.appendChild(dayDiv);
+                }
+            }
+            
+            agendaContainer.appendChild(week2Grid);
         }
 
         // --- MANIPULADORES DE EVENTOS GLOBAIS ---
