@@ -2192,6 +2192,12 @@
                 showNotification(`📅 Data atualizada para ${formatDate(newDate)}`);
                 saveDataToBin();
                 renderTable(); // Re-renderizar para atualizar as cores de status
+                
+                // Se o modal de relatórios estiver aberto, regenerar todo o relatório
+                const reportModal = document.getElementById('report-modal');
+                if (reportModal && reportModal.style.display === 'block') {
+                    generateReport(); // Regenera todos os relatórios incluindo a agenda
+                }
             },
 
             updateNextAction: (id, newActionIndexStr) => {

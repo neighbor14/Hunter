@@ -412,6 +412,23 @@
             box-shadow: 0 0 0 1px #0ea5e9 !important;
         }
 
+        /* Campo de data editável em dark mode */
+        .dark input[type="date"] {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+            border-color: #0ea5e9 !important;
+        }
+
+        .dark input[type="date"]:hover {
+            background-color: #334155 !important;
+        }
+
+        .dark input[type="date"]:focus {
+            background-color: #1e293b !important;
+            border-color: #0ea5e9 !important;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3) !important;
+        }
+
         .dark .kanban-column {
             background-color: #1e293b !important;
             border-color: #475569 !important;
@@ -2175,6 +2192,12 @@
                 showNotification(`📅 Data atualizada para ${formatDate(newDate)}`);
                 saveDataToBin();
                 renderTable(); // Re-renderizar para atualizar as cores de status
+                
+                // Se o modal de relatórios estiver aberto, regenerar todo o relatório
+                const reportModal = document.getElementById('report-modal');
+                if (reportModal && reportModal.style.display === 'block') {
+                    generateReport(); // Regenera todos os relatórios incluindo a agenda
+                }
             },
 
             updateNextAction: (id, newActionIndexStr) => {
