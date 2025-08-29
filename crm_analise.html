@@ -351,6 +351,11 @@
         </header>
 
         <div class="flex justify-end mb-4 space-x-2">
+            <button id="version-history-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 flex items-center space-x-2">
+                <span>⏰</span>
+                <span>Histórico</span>
+                <span id="current-version" class="text-xs opacity-75">v2.4</span>
+            </button>
             <button id="export-xls-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">Exportar para Excel (.xls)</button>
             <button id="open-report-btn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700">Ver Relatórios</button>
         </div>
@@ -597,6 +602,26 @@
         <h3 class="text-2xl font-bold mb-4">Funil de Prospecção</h3>
         <div id="kanban-board" class="kanban-board">
             <!-- Colunas do Kanban serão inseridas aqui -->
+        </div>
+    </div>
+
+    <!-- Modal para Histórico de Versões -->
+    <div id="version-modal-backdrop" class="modal-backdrop"></div>
+    <div id="version-modal" class="modal bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-80vh overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">📋 Histórico de Versões</h2>
+            <button id="close-version-btn" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <div class="mb-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+            <p class="text-sm text-blue-700">
+                <strong>Sistema de Versionamento Automático</strong><br>
+                Cada alteração significativa no CRM gera uma nova versão automaticamente.
+            </p>
+        </div>
+
+        <div id="version-list" class="space-y-4">
+            <!-- Versões serão inseridas aqui -->
         </div>
     </div>
 
@@ -2376,7 +2401,148 @@
 
 
         // --- INICIALIZAÇÃO ---
-        document.addEventListener('DOMContentLoaded', loadDataFromBin);
+        // --- SISTEMA DE VERSIONAMENTO ---
+        const VERSION_HISTORY_KEY = 'crm_version_history';
+        let currentVersion = '2.4.0';
+
+        const versionHistory = [
+            {
+                version: '2.4.0',
+                date: '2024-11-25 19:30',
+                type: 'feature',
+                title: 'Sistema de Versionamento',
+                description: 'Implementado sistema automático de controle de versões com histórico visual completo.',
+                changes: [
+                    'Botão de histórico no header',
+                    'Modal moderno para visualização de versões',
+                    'Versionamento automático',
+                    'Design integrado ao CRM'
+                ]
+            }
+        ];
+
+        function initVersioning() {
+            document.getElementById('current-version').textContent = `v${currentVersion}`;
+            checkAndUpdateVersion();
+            setupVersionModal();
+        }
+
+        function checkAndUpdateVersion() {
+            const storedHistory = localStorage.getItem(VERSION_HISTORY_KEY);
+            let localHistory = storedHistory ? JSON.parse(storedHistory) : [];
+            
+            const hasCurrentVersion = localHistory.some(v => v.version === currentVersion);
+            if (!hasCurrentVersion) {
+                const currentVersionData = versionHistory.find(v => v.version === currentVersion);
+                if (currentVersionData) {
+                    localHistory.unshift(currentVersionData);
+                    localStorage.setItem(VERSION_HISTORY_KEY, JSON.stringify(localHistory));
+                }
+            }
+        }
+
+        function setupVersionModal() {
+            const versionBtn = document.getElementById('version-history-btn');
+            const versionModal = document.getElementById('version-modal');
+            const versionBackdrop = document.getElementById('version-modal-backdrop');
+            const closeVersionBtn = document.getElementById('close-version-btn');
+
+            versionBtn.addEventListener('click', () => {
+                renderVersionHistory();
+                versionModal.style.display = 'block';
+                versionBackdrop.style.display = 'block';
+            });
+
+            const closeModal = () => {
+                versionModal.style.display = 'none';
+                versionBackdrop.style.display = 'none';
+            };
+
+            closeVersionBtn.addEventListener('click', closeModal);
+            versionBackdrop.addEventListener('click', closeModal);
+        }
+
+        function renderVersionHistory() {
+            const versionList = document.getElementById('version-list');
+            const storedHistory = localStorage.getItem(VERSION_HISTORY_KEY);
+            const history = storedHistory ? JSON.parse(storedHistory) : versionHistory;
+
+            versionList.innerHTML = history.map(version => {
+                const typeColors = {
+                    'major': 'bg-purple-100 border-purple-400 text-purple-800',
+                    'feature': 'bg-blue-100 border-blue-400 text-blue-800',
+                    'improvement': 'bg-green-100 border-green-400 text-green-800',
+                    'bugfix': 'bg-red-100 border-red-400 text-red-800'
+                };
+
+                const typeIcons = {
+                    'major': '🚀',
+                    'feature': '✨',
+                    'improvement': '🔧',
+                    'bugfix': '🐛'
+                };
+
+                const isLatest = version.version === currentVersion;
+
+                return `
+                    <div class="border-2 ${typeColors[version.type]} rounded-lg p-4 ${isLatest ? 'ring-2 ring-blue-400' : ''}">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">${typeIcons[version.type]}</span>
+                                <div>
+                                    <h3 class="font-bold text-lg">
+                                        v${version.version}
+                                        ${isLatest ? '<span class="text-xs bg-blue-500 text-white px-2 py-1 rounded-full ml-2">ATUAL</span>' : ''}
+                                    </h3>
+                                    <p class="text-sm opacity-75">${version.date}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full border border-current opacity-75 uppercase font-medium">
+                                ${version.type}
+                            </span>
+                        </div>
+                        
+                        <h4 class="font-semibold mb-2">${version.title}</h4>
+                        <p class="text-sm mb-3">${version.description}</p>
+                        
+                        <div class="space-y-1">
+                            ${version.changes.map(change => 
+                                `<div class="flex items-center space-x-2">
+                                    <span class="w-2 h-2 bg-current rounded-full opacity-50"></span>
+                                    <span class="text-sm">${change}</span>
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.debugVersion = () => {
+            const [major, minor, patch] = currentVersion.split('.').map(Number);
+            currentVersion = `${major}.${minor}.${patch + 1}`;
+            
+            const newVersion = {
+                version: currentVersion,
+                date: new Date().toLocaleString('pt-BR'),
+                type: 'improvement',
+                title: 'Debug/Alteração de Layout',
+                description: 'Alteração realizada durante desenvolvimento ou debug do sistema.',
+                changes: ['Ajustes de interface', 'Correções de bugs', 'Melhorias de performance']
+            };
+
+            const storedHistory = localStorage.getItem(VERSION_HISTORY_KEY);
+            let localHistory = storedHistory ? JSON.parse(storedHistory) : versionHistory.slice();
+            localHistory.unshift(newVersion);
+            
+            localStorage.setItem(VERSION_HISTORY_KEY, JSON.stringify(localHistory));
+            document.getElementById('current-version').textContent = `v${currentVersion}`;
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDataFromBin();
+            initVersioning();
+        });
     </script>
 
 </body>

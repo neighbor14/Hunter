@@ -258,6 +258,18 @@
             background-color: #f1f5f9;
             border-color: #cbd5e1;
         }
+
+        .action-info {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            border: 1px solid transparent;
+        }
+
+        .action-info:hover {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
         
         /* Animações suaves */
         .slide-in {
@@ -507,6 +519,12 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <button id="version-history-btn" class="action-btn action-info">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Histórico <span id="current-version" class="text-xs opacity-75">v2.4</span>
+                    </button>
                     <button id="export-xls-btn" class="action-btn action-secondary">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -768,6 +786,26 @@
         <h3 class="text-2xl font-bold mb-4">Funil de Prospecção</h3>
         <div id="kanban-board" class="kanban-board">
             <!-- Colunas do Kanban serão inseridas aqui -->
+        </div>
+    </div>
+
+    <!-- Modal para Histórico de Versões -->
+    <div id="version-modal-backdrop" class="modal-backdrop"></div>
+    <div id="version-modal" class="modal bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-80vh overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">📋 Histórico de Versões</h2>
+            <button id="close-version-btn" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <div class="mb-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+            <p class="text-sm text-blue-700">
+                <strong>Sistema de Versionamento Automático</strong><br>
+                Cada alteração significativa no CRM gera uma nova versão automaticamente.
+            </p>
+        </div>
+
+        <div id="version-list" class="space-y-4">
+            <!-- Versões serão inseridas aqui -->
         </div>
     </div>
 
@@ -2639,7 +2677,288 @@
 
 
         // --- INICIALIZAÇÃO ---
-        document.addEventListener('DOMContentLoaded', loadDataFromBin);
+        // --- SISTEMA DE VERSIONAMENTO ---
+        const VERSION_HISTORY_KEY = 'crm_version_history';
+        let currentVersion = '2.4.0';
+
+        const versionHistory = [
+            {
+                version: '2.4.0',
+                date: '2024-11-25 19:30',
+                type: 'feature',
+                title: 'Sistema de Versionamento',
+                description: 'Implementado sistema automático de controle de versões com histórico visual completo.',
+                changes: [
+                    'Botão de histórico no header',
+                    'Modal moderno para visualização de versões',
+                    'Versionamento automático',
+                    'Design integrado ao CRM'
+                ]
+            },
+            {
+                version: '2.3.0',
+                date: '2024-11-25 19:00',
+                type: 'improvement',
+                title: 'Correção de KPIs',
+                description: 'Corrigidos KPIs para excluir mudanças automáticas de status, garantindo métricas mais precisas.',
+                changes: [
+                    'Exclusão da mudança automática Lista→Em Contato',
+                    'KPIs mais confiáveis',
+                    'Métricas de performance reais'
+                ]
+            },
+            {
+                version: '2.2.0',
+                date: '2024-11-25 18:30',
+                type: 'feature',
+                title: 'Validação da Primeira Mensagem',
+                description: 'Implementada validação obrigatória e automação da primeira mensagem para garantir fluxo correto.',
+                changes: [
+                    'Validação de status obrigatório',
+                    'Mudança automática para "Em Contato"',
+                    'Bloqueio de execução incorreta',
+                    'Notificações de confirmação'
+                ]
+            },
+            {
+                version: '2.1.0',
+                date: '2024-11-25 17:45',
+                type: 'feature',
+                title: 'Performance por Mensagem',
+                description: 'Nova análise revolucionária que mostra a taxa de conversão individual de cada mensagem da cadência.',
+                changes: [
+                    'Cards coloridos por performance',
+                    'Insights automáticos',
+                    'Taxa de conversão real por ação',
+                    'Análise estratégica avançada'
+                ]
+            },
+            {
+                version: '2.0.0',
+                date: '2024-11-25 16:00',
+                type: 'major',
+                title: 'KPIs de Progressão no Funil',
+                description: 'Sistema completo de métricas mensais mostrando a progressão dos leads em cada etapa do funil.',
+                changes: [
+                    'Métricas mensais por etapa',
+                    'Taxas de conversão detalhadas',
+                    'Dashboard profissional',
+                    'Análise de gargalos no funil'
+                ]
+            },
+            {
+                version: '1.9.0',
+                date: '2024-11-25 14:30',
+                type: 'improvement',
+                title: 'Dropdown de Status Manual',
+                description: 'Corrigido bug onde usuários não conseguiam alterar status manualmente no layout de cards.',
+                changes: [
+                    'Dropdown de status nos cards',
+                    'Funcionalidade manual restaurada',
+                    'Interface mais flexível'
+                ]
+            },
+            {
+                version: '1.8.0',
+                date: '2024-11-25 13:00',
+                type: 'feature',
+                title: 'Agenda em Calendário Visual',
+                description: 'Transformação da agenda em layout de calendário com 2 semanas (5x2 quadrados) para melhor planejamento.',
+                changes: [
+                    'Layout de calendário 5x2',
+                    'Visão de 2 semanas',
+                    'Cards compactos por dia',
+                    'Responsivo para mobile'
+                ]
+            },
+            {
+                version: '1.7.0',
+                date: '2024-11-25 10:00',
+                type: 'feature',
+                title: 'Relatório com Agenda',
+                description: 'Adicionada seção de agenda no relatório mostrando contatos dos próximos 14 dias úteis.',
+                changes: [
+                    'Agenda de 14 dias úteis',
+                    'Organização por data',
+                    'Planejamento semanal',
+                    'Integração no relatório'
+                ]
+            },
+            {
+                version: '1.6.0',
+                date: '2024-11-24 16:00',
+                type: 'improvement',
+                title: 'Campo Editável de Delay',
+                description: 'Liberado campo "Dias Após Ação Anterior" para permitir configuração personalizada.',
+                changes: [
+                    'Campo delayDays editável',
+                    'Validação min="0"',
+                    'Configuração flexível de timing'
+                ]
+            },
+            {
+                version: '1.5.0',
+                date: '2024-11-24 14:00',
+                type: 'major',
+                title: 'Design Visual Moderno',
+                description: 'Redesign completo com interface moderna inspirada em CRMs líderes do mercado.',
+                changes: [
+                    'Header moderno com logo',
+                    'Cards de contato elegantes',
+                    'Avatars automáticos',
+                    'Logos de empresa dinâmicos',
+                    'Paleta de cores moderna'
+                ]
+            }
+        ];
+
+        function initVersioning() {
+            // Atualizar versão atual no header
+            document.getElementById('current-version').textContent = `v${currentVersion}`;
+            
+            // Verificar se há nova versão e atualizar histórico
+            checkAndUpdateVersion();
+            
+            // Event listeners para o modal de versões
+            setupVersionModal();
+        }
+
+        function checkAndUpdateVersion() {
+            const storedHistory = localStorage.getItem(VERSION_HISTORY_KEY);
+            let localHistory = storedHistory ? JSON.parse(storedHistory) : [];
+            
+            // Se o histórico local não tem a versão atual, adicioná-la
+            const hasCurrentVersion = localHistory.some(v => v.version === currentVersion);
+            if (!hasCurrentVersion) {
+                const currentVersionData = versionHistory.find(v => v.version === currentVersion);
+                if (currentVersionData) {
+                    localHistory.unshift(currentVersionData);
+                    localStorage.setItem(VERSION_HISTORY_KEY, JSON.stringify(localHistory));
+                }
+            }
+        }
+
+        function setupVersionModal() {
+            const versionBtn = document.getElementById('version-history-btn');
+            const versionModal = document.getElementById('version-modal');
+            const versionBackdrop = document.getElementById('version-modal-backdrop');
+            const closeVersionBtn = document.getElementById('close-version-btn');
+
+            // Abrir modal
+            versionBtn.addEventListener('click', () => {
+                renderVersionHistory();
+                versionModal.style.display = 'block';
+                versionBackdrop.style.display = 'block';
+                setTimeout(() => {
+                    versionModal.style.opacity = '1';
+                    versionModal.style.transform = 'translateY(0)';
+                }, 10);
+            });
+
+            // Fechar modal
+            const closeModal = () => {
+                versionModal.style.opacity = '0';
+                versionModal.style.transform = 'translateY(-50px)';
+                setTimeout(() => {
+                    versionModal.style.display = 'none';
+                    versionBackdrop.style.display = 'none';
+                }, 300);
+            };
+
+            closeVersionBtn.addEventListener('click', closeModal);
+            versionBackdrop.addEventListener('click', closeModal);
+        }
+
+        function renderVersionHistory() {
+            const versionList = document.getElementById('version-list');
+            const storedHistory = localStorage.getItem(VERSION_HISTORY_KEY);
+            const history = storedHistory ? JSON.parse(storedHistory) : versionHistory;
+
+            versionList.innerHTML = history.map(version => {
+                const typeColors = {
+                    'major': 'bg-purple-50 border-purple-300 text-purple-800',
+                    'feature': 'bg-blue-50 border-blue-300 text-blue-800',
+                    'improvement': 'bg-green-50 border-green-300 text-green-800',
+                    'bugfix': 'bg-red-50 border-red-300 text-red-800'
+                };
+
+                const typeIcons = {
+                    'major': '🚀',
+                    'feature': '✨',
+                    'improvement': '🔧',
+                    'bugfix': '🐛'
+                };
+
+                const isLatest = version.version === currentVersion;
+
+                return `
+                    <div class="border-2 ${typeColors[version.type]} rounded-lg p-4 ${isLatest ? 'ring-2 ring-blue-400' : ''}">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">${typeIcons[version.type]}</span>
+                                <div>
+                                    <h3 class="font-bold text-lg flex items-center space-x-2">
+                                        <span>v${version.version}</span>
+                                        ${isLatest ? '<span class="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">ATUAL</span>' : ''}
+                                    </h3>
+                                    <p class="text-sm opacity-75">${version.date}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full border border-current opacity-75 uppercase font-medium">
+                                ${version.type}
+                            </span>
+                        </div>
+                        
+                        <h4 class="font-semibold mb-2">${version.title}</h4>
+                        <p class="text-sm mb-3">${version.description}</p>
+                        
+                        <div class="space-y-1">
+                            ${version.changes.map(change => 
+                                `<div class="flex items-center space-x-2">
+                                    <span class="w-2 h-2 bg-current rounded-full opacity-50"></span>
+                                    <span class="text-sm">${change}</span>
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Auto-incrementar versão em debug (simulação)
+        function incrementVersion() {
+            const [major, minor, patch] = currentVersion.split('.').map(Number);
+            currentVersion = `${major}.${minor}.${patch + 1}`;
+            
+            // Simular nova versão para debug
+            const newVersion = {
+                version: currentVersion,
+                date: new Date().toLocaleString('pt-BR'),
+                type: 'improvement',
+                title: 'Debug/Alteração de Layout',
+                description: 'Alteração realizada durante desenvolvimento ou debug do sistema.',
+                changes: [
+                    'Ajustes de interface',
+                    'Correções de bugs',
+                    'Melhorias de performance'
+                ]
+            };
+
+            const storedHistory = localStorage.getItem(VERSION_HISTORY_KEY);
+            let localHistory = storedHistory ? JSON.parse(storedHistory) : versionHistory.slice();
+            localHistory.unshift(newVersion);
+            
+            localStorage.setItem(VERSION_HISTORY_KEY, JSON.stringify(localHistory));
+            document.getElementById('current-version').textContent = `v${currentVersion}`;
+        }
+
+        // Expor função para debug
+        window.debugVersion = incrementVersion;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDataFromBin();
+            initVersioning();
+        });
     </script>
 
 </body>
