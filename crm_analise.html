@@ -1460,7 +1460,13 @@
                                 const previousActionIndex = historyItem.currentActionIndex;
                                 const isPositiveStatusChange = isStatusProgression(historyItem.status, historyItem.newStatus);
                                 
-                                if (isPositiveStatusChange && typeof previousActionIndex === 'number' && actionStats[previousActionIndex]) {
+                                // NÃO contar mudança automática Lista→Em Contato da primeira ação
+                                const isAutomaticFirstAction = previousActionIndex === 0 && 
+                                    (historyItem.status?.includes('Lista') || historyItem.status?.includes('Prospecção')) &&
+                                    (historyItem.newStatus?.includes('Contato') || historyItem.newStatus?.includes('Em Contato'));
+                                
+                                if (isPositiveStatusChange && typeof previousActionIndex === 'number' && 
+                                    actionStats[previousActionIndex] && !isAutomaticFirstAction) {
                                     actionStats[previousActionIndex].conversions++;
                                 }
                             }
@@ -2153,10 +2159,15 @@
                             const fromStatus = h.status;
                             const toStatus = h.newStatus;
 
-                            // Lista → Em Contato
+                            // Lista → Em Contato (APENAS mudanças manuais, não automáticas da primeira ação)
                             if ((fromStatus?.includes('Lista') || fromStatus?.includes('Prospecção')) && 
                                 (toStatus?.includes('Contato') || toStatus?.includes('Em Contato'))) {
-                                toContactMonth++;
+                                // Verificar se foi uma mudança manual (tem newStatus mas não foi execução de ação)
+                                // Se foi automática da primeira ação, não contar como conversão
+                                const wasAutomaticFirstAction = historyItem.currentActionIndex === 0;
+                                if (!wasAutomaticFirstAction) {
+                                    toContactMonth++;
+                                }
                             }
 
                             // Em Contato → Conversando
