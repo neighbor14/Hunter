@@ -135,6 +135,15 @@
             display: table-row;
         }
         
+        /* Controle de visibilidade para containers de cards */
+        .company-leads.collapsed {
+            display: none;
+        }
+        
+        .company-leads.expanded {
+            display: block;
+        }
+        
         /* Melhorias de responsividade mobile */
         @media (max-width: 768px) {
             .container {
@@ -1012,12 +1021,8 @@
             // Salvar no localStorage
             localStorage.setItem('companyExpandedState', JSON.stringify(companyExpandedState));
             
-            // Atualizar UI das linhas da empresa
-            const companyLeads = document.querySelectorAll(`tr[data-company="${companyName}"]`);
-            const companyHeader = Array.from(document.querySelectorAll('.company-header')).find(header => {
-                return header.textContent.includes(companyName);
-            });
-            
+            // Atualizar UI das linhas da empresa (tabela - se existir)
+            const companyLeads = document.querySelectorAll(`tr[data-company="${CSS.escape(companyName)}"]`);
             companyLeads.forEach(row => {
                 if (newState) {
                     row.classList.remove('collapsed');
@@ -1026,6 +1031,23 @@
                     row.classList.remove('expanded');  
                     row.classList.add('collapsed');
                 }
+            });
+            
+            // Atualizar UI dos containers de cards
+            const companyCardsContainers = document.querySelectorAll(`div[data-company="${CSS.escape(companyName)}"].company-leads`);
+            companyCardsContainers.forEach(container => {
+                if (newState) {
+                    container.classList.remove('collapsed');
+                    container.classList.add('expanded');
+                } else {
+                    container.classList.remove('expanded');  
+                    container.classList.add('collapsed');
+                }
+            });
+            
+            // Encontrar header da empresa (tanto tabela quanto cards)
+            const companyHeader = Array.from(document.querySelectorAll('.company-header')).find(header => {
+                return header.textContent.includes(companyName);
             });
             
             // Atualizar ícone do header
