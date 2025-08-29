@@ -829,7 +829,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Dias Após Ação Anterior</label>
-                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" ${index === 0 ? 'disabled title="A primeira ação tem sempre 0 dias de espera."' : ''}>
+                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" min="0">
                         </div>
                         <div class="flex items-end space-x-2">
                             <div class="flex-grow">

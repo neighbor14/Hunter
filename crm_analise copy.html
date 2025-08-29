@@ -135,15 +135,6 @@
             display: table-row;
         }
         
-        /* Controle de visibilidade para containers de cards */
-        .company-leads.collapsed {
-            display: none;
-        }
-        
-        .company-leads.expanded {
-            display: block;
-        }
-        
         /* Melhorias de responsividade mobile */
         @media (max-width: 768px) {
             .container {
@@ -282,8 +273,7 @@
                         <!-- Options will be populated by JS -->
                     </select>
                 </div>
-                <!-- Botão de visualização removido - usando apenas layout de cards -->
-                <div class="md:w-auto" style="display: none;">
+                <div class="md:w-auto">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Visualização</label>
                     <button id="toggle-view-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 md:hidden">
                         📱 Modo Cards
@@ -294,8 +284,8 @@
 
         <!-- Tabela de Leads -->
         <div id="leads-container" class="bg-white rounded-xl shadow-md">
-            <!-- Visualização Desktop (Tabela) - DESABILITADA para evitar layout duplicado -->
-            <div class="table-responsive overflow-x-auto" style="display: none;">
+            <!-- Visualização Desktop (Tabela) -->
+            <div class="table-responsive overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-100">
                         <tr>
@@ -312,8 +302,8 @@
                 </table>
             </div>
             
-            <!-- Visualização de Cards (principal) -->
-            <div class="p-4" style="display: block !important;">
+            <!-- Visualização Mobile (Cards) -->
+            <div class="mobile-card p-4">
                 <div id="leads-cards-body">
                     <!-- Cards mobile serão inseridos aqui via JS -->
                 </div>
@@ -561,27 +551,19 @@
                 showLoader(customMessage);
             }
             try {
-                // Limpar leads duplicados antes de salvar (versão robusta)
+                // Limpar leads duplicados antes de salvar
                 const uniqueLeads = [];
                 const seenIds = new Set();
-                const seenCompaniesEmails = new Set(); // Detectar duplicatas por empresa+nome
                 
                 leads.forEach(lead => {
-                    const leadKey = `${lead.empresa}|${lead.nome}|${lead.linkedin}`;
-                    
-                    if (!seenIds.has(lead.id) && !seenCompaniesEmails.has(leadKey)) {
+                    if (!seenIds.has(lead.id)) {
                         seenIds.add(lead.id);
-                        seenCompaniesEmails.add(leadKey);
                         uniqueLeads.push(lead);
-                    } else {
-                        console.log('🗑️ Lead duplicado removido:', lead.empresa, '-', lead.nome);
                     }
                 });
                 
                 console.log('🧹 Limpeza no save - Leads antes:', leads.length, 'depois:', uniqueLeads.length);
                 
-                // Atualizar array global também
-                leads = uniqueLeads;
                 database.leads = uniqueLeads;
                 database.config = cadenceConfig;
 
@@ -674,7 +656,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Dias Após Ação Anterior</label>
-                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" min="0">
+                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" ${index === 0 ? 'disabled title="A primeira ação tem sempre 0 dias de espera."' : ''}>
                         </div>
                         <div class="flex items-end space-x-2">
                             <div class="flex-grow">
@@ -792,18 +774,7 @@
             return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         };
 
-        // Controle para evitar renderizações muito próximas
-        let lastRenderTime = 0;
-        const RENDER_DEBOUNCE_TIME = 200; // milissegundos
-
         const renderTable = () => {
-            const now = Date.now();
-            if (now - lastRenderTime < RENDER_DEBOUNCE_TIME) {
-                console.log('🔄 Renderização ignorada - muito próxima da anterior');
-                return;
-            }
-            lastRenderTime = now;
-
             const searchTerm = searchInput.value.toLowerCase();
             const selectedStatus = statusFilter.value;
 
@@ -813,13 +784,13 @@
                 return matchesSearch && matchesStatus;
             });
 
-            // Renderizar apenas layout de cards (layout tabela removido para evitar duplicação)
-            // renderTableView(filteredLeads); // REMOVIDO - causava layout duplicado
+            // Renderizar tanto tabela quanto cards
+            renderTableView(filteredLeads);
             renderCardsView(filteredLeads);
         };
         
         const renderTableView = (filteredLeads) => {
-            // Evitar renderizações múltiplas simultâneas com timeout de segurança
+            // Evitar renderizações múltiplas simultâneas
             if (isRendering) {
                 console.log('⚠️ Renderização já em andamento, pulando...');
                 return;
@@ -828,16 +799,12 @@
             isRendering = true;
             console.log('🔄 Iniciando renderização da tabela...');
             
-            // LIMPEZA COMPLETA E ROBUSTA
-            // 1. Limpar innerHTML primeiro (mais rápido)
-            tableBody.innerHTML = '';
-            
-            // 2. Verificar e remover qualquer elemento restante
+            // LIMPEZA AGRESSIVA - remover todos os elementos da tabela
             while (tableBody.firstChild) {
                 tableBody.removeChild(tableBody.firstChild);
             }
             
-            // 3. Limpar qualquer tbody extra que possa ter sido criado
+            // Também limpar qualquer tbody extra que possa ter sido criado
             const allTbodies = tableBody.parentElement.querySelectorAll('tbody');
             allTbodies.forEach((tbody, index) => {
                 if (index > 0) { // Manter apenas o primeiro tbody
@@ -845,9 +812,6 @@
                     tbody.remove();
                 }
             });
-            
-            // 4. Reset adicional para garantir estado limpo
-            tableBody.setAttribute('data-last-render', Date.now());
             
             if (filteredLeads.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</td></tr>`;
@@ -863,35 +827,19 @@
             const sortedCompanies = Object.keys(groupedLeads).sort();
             const today = getToday();
             
-            // Debug com timestamp para rastrear renderizações
-            const renderTimestamp = Date.now();
-            console.log(`🔄 [${renderTimestamp}] Renderizando`, sortedCompanies.length, 'empresas:', sortedCompanies);
-
-            // Armazenar empresas já renderizadas nesta sessão
-            const renderedCompanies = new Set();
+            // Debug simplificado
+            console.log('Renderizando', sortedCompanies.length, 'empresas:', sortedCompanies);
 
             sortedCompanies.forEach(companyName => {
-                // Verificação robusta de duplicação
-                if (renderedCompanies.has(companyName)) {
-                    console.log(`⚠️ [${renderTimestamp}] Empresa já renderizada nesta sessão:`, companyName);
-                    return;
-                }
-                
-                // Verificar se já existe header para esta empresa no DOM
-                const existingHeader = tableBody.querySelector(`[data-company-header="${CSS.escape(companyName)}"]`);
-                if (existingHeader) {
-                    console.log(`⚠️ [${renderTimestamp}] Header duplicado no DOM para:`, companyName, '- removendo antigo');
-                    // Remover header antigo e seus leads
-                    const oldLeads = tableBody.querySelectorAll(`tr[data-company="${CSS.escape(companyName)}"]`);
-                    existingHeader.remove();
-                    oldLeads.forEach(lead => lead.remove());
-                }
-                
-                // Marcar empresa como renderizada
-                renderedCompanies.add(companyName);
-                
                 // Verificar se a empresa está expandida (padrão: expandida)
                 const isExpanded = companyExpandedState[companyName] !== false;
+                
+                // Verificar se já existe header para esta empresa
+                const existingHeader = tableBody.querySelector(`[data-company-header="${companyName}"]`);
+                if (existingHeader) {
+                    console.log('⚠️ Header duplicado detectado para:', companyName, '- pulando esta empresa');
+                    return; // Pular esta empresa se já renderizada
+                }
                 
                 const companyHeader = document.createElement('tr');
                 companyHeader.className = `bg-gray-100 company-header ${isExpanded ? '' : 'company-collapsed'}`;
@@ -1003,11 +951,9 @@
                 });
             });
             
-            // Finalizar renderização com timeout de segurança
-            setTimeout(() => {
-                isRendering = false;
-                console.log(`✅ [${renderTimestamp}] Renderização da tabela concluída - ${renderedCompanies.size} empresas renderizadas`);
-            }, 100); // Pequeno delay para evitar conflitos
+            // Finalizar renderização
+            isRendering = false;
+            console.log('✅ Renderização da tabela concluída');
         };
         
         // Função para alternar expansão/retração de empresa
@@ -1021,8 +967,12 @@
             // Salvar no localStorage
             localStorage.setItem('companyExpandedState', JSON.stringify(companyExpandedState));
             
-            // Atualizar UI das linhas da empresa (tabela - se existir)
-            const companyLeads = document.querySelectorAll(`tr[data-company="${CSS.escape(companyName)}"]`);
+            // Atualizar UI das linhas da empresa
+            const companyLeads = document.querySelectorAll(`tr[data-company="${companyName}"]`);
+            const companyHeader = Array.from(document.querySelectorAll('.company-header')).find(header => {
+                return header.textContent.includes(companyName);
+            });
+            
             companyLeads.forEach(row => {
                 if (newState) {
                     row.classList.remove('collapsed');
@@ -1031,23 +981,6 @@
                     row.classList.remove('expanded');  
                     row.classList.add('collapsed');
                 }
-            });
-            
-            // Atualizar UI dos containers de cards
-            const companyCardsContainers = document.querySelectorAll(`div[data-company="${CSS.escape(companyName)}"].company-leads`);
-            companyCardsContainers.forEach(container => {
-                if (newState) {
-                    container.classList.remove('collapsed');
-                    container.classList.add('expanded');
-                } else {
-                    container.classList.remove('expanded');  
-                    container.classList.add('collapsed');
-                }
-            });
-            
-            // Encontrar header da empresa (tanto tabela quanto cards)
-            const companyHeader = Array.from(document.querySelectorAll('.company-header')).find(header => {
-                return header.textContent.includes(companyName);
             });
             
             // Atualizar ícone do header
@@ -1147,10 +1080,7 @@
                         
                         <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
                             <button onclick="window.app.openNotesModal('${lead.id}')" class="text-gray-500 hover:text-gray-800 text-sm">📝 Notas</button>
-                            <div class="flex space-x-2">
-                                <button onclick="window.app.undoAction('${lead.id}')" class="text-yellow-600 hover:text-yellow-800 text-sm" title="Desfazer Última Ação">↶ Desfazer</button>
-                                <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
-                            </div>
+                            <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
                         </div>
                     `;
                     companyCardsContainer.appendChild(card);
@@ -1203,22 +1133,13 @@
             
             undoAction: (id) => {
                 const leadIndex = leads.findIndex(l => l.id === id);
-                if (leadIndex === -1) {
-                    showNotification("❌ Lead não encontrado.", "error");
-                    return;
-                }
-                
-                if (!leads[leadIndex].history || leads[leadIndex].history.length === 0) {
-                    showNotification("ℹ️ Não há ações para desfazer neste lead.", "info");
-                    return;
-                }
+                if (leadIndex === -1 || !leads[leadIndex].history || leads[leadIndex].history.length === 0) return;
 
                 const previousState = leads[leadIndex].history.pop();
                 leads[leadIndex].status = previousState.status;
                 leads[leadIndex].currentActionIndex = previousState.currentActionIndex;
                 leads[leadIndex].nextActionDate = previousState.nextActionDate;
                 
-                showNotification("✅ Última ação desfeita com sucesso!", "success");
                 saveDataToBin();
             },
 

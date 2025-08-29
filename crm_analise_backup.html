@@ -101,49 +101,6 @@
             cursor: grab;
         }
         
-        /* Funcionalidade de expandir/retrair empresas */
-        .company-header {
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            user-select: none;
-        }
-        
-        .company-header:hover {
-            background-color: #e5e7eb !important;
-        }
-        
-        .company-toggle {
-            font-size: 14px;
-            margin-right: 8px;
-            transition: transform 0.2s ease;
-            display: inline-block;
-        }
-        
-        .company-collapsed .company-toggle {
-            transform: rotate(-90deg);
-        }
-        
-        .company-lead {
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-        
-        .company-lead.collapsed {
-            display: none;
-        }
-        
-        .company-lead.expanded {
-            display: table-row;
-        }
-        
-        /* Controle de visibilidade para containers de cards */
-        .company-leads.collapsed {
-            display: none;
-        }
-        
-        .company-leads.expanded {
-            display: block;
-        }
-        
         /* Melhorias de responsividade mobile */
         @media (max-width: 768px) {
             .container {
@@ -282,8 +239,7 @@
                         <!-- Options will be populated by JS -->
                     </select>
                 </div>
-                <!-- Botão de visualização removido - usando apenas layout de cards -->
-                <div class="md:w-auto" style="display: none;">
+                <div class="md:w-auto">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Visualização</label>
                     <button id="toggle-view-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 md:hidden">
                         📱 Modo Cards
@@ -294,8 +250,8 @@
 
         <!-- Tabela de Leads -->
         <div id="leads-container" class="bg-white rounded-xl shadow-md">
-            <!-- Visualização Desktop (Tabela) - DESABILITADA para evitar layout duplicado -->
-            <div class="table-responsive overflow-x-auto" style="display: none;">
+            <!-- Visualização Desktop (Tabela) -->
+            <div class="table-responsive overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-100">
                         <tr>
@@ -312,8 +268,8 @@
                 </table>
             </div>
             
-            <!-- Visualização de Cards (principal) -->
-            <div class="p-4" style="display: block !important;">
+            <!-- Visualização Mobile (Cards) -->
+            <div class="mobile-card p-4">
                 <div id="leads-cards-body">
                     <!-- Cards mobile serão inseridos aqui via JS -->
                 </div>
@@ -436,9 +392,6 @@
         let leads = [];
         let cadenceConfig = {};
         let database = { leads: [], config: {} };
-        
-        // Estado de empresas expandidas/retraídas (salvo no localStorage)
-        let companyExpandedState = JSON.parse(localStorage.getItem('companyExpandedState') || '{}');
 
         // --- ELEMENTOS DO DOM ---
         const form = document.getElementById('add-lead-form');
@@ -460,9 +413,6 @@
         
         // Variável para controlar visualização mobile
         let isMobileView = false;
-        
-        // Controle para evitar renderizações múltiplas
-        let isRendering = false;
 
         // --- MODAL ---
         const notesModalBackdrop = document.getElementById('notes-modal-backdrop');
@@ -501,7 +451,13 @@
 
             const defaultConfig = {
                 statusOptions: ["Prospecção (Backlog)", "Contato em Andamento", "Conexão/Interesse", "Reunião Agendada", "Negociação", "Parceria Fechada", "Parceria Perdida"],
-                actions: []
+                actions: [
+                    { id: 1, name: "Enviar Convite", delayDays: 0, setsStatusTo: "Contato em Andamento", template: "Olá [NOME], vi seu trabalho na [EMPRESA] e gostaria de me conectar." },
+                    { id: 2, name: "Mensagem 1 (Abertura)", delayDays: 2, setsStatusTo: "Conexão/Interesse", template: "Obrigado por conectar, [NOME]!\n\nNa RecargaPay, ajudamos empresas como a [EMPRESA] a monetizar suas bases de clientes PJ, oferecendo um benefício valioso para eles.\n\nFaz sentido explorarmos essa ideia em 15 minutos na próxima semana?" },
+                    { id: 3, name: "Mensagem 2 (Follow-up)", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "Olá [NOME], só para dar um contexto mais prático: imagine uma campanha exclusiva da [EMPRESA] + RecargaPay, onde o custo é zero para vocês e ainda gera receita por cada novo cliente PJ que ativarmos.\n\nAlgum espaço na agenda para detalhar?" },
+                    { id: 4, name: "Interagir com Conteúdo", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "" },
+                    { id: 5, name: "Mensagem 3 (Final)", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "Olá [NOME],\n\nImagino que sua rotina seja corrida. Como não tive retorno, entendo que uma parceria para aquisição de clientes PJ não seja prioridade agora.\n\nSendo assim, não vou mais insistir. Se algo mudar, será um prazer conversar." }
+                ]
             };
 
             try {
@@ -519,7 +475,7 @@
                     const data = await response.json();
                     database = data.record;
                     // Verifica se o bin está vazio ou com estrutura antiga/inválida
-                    if (!database.config) {
+                    if (!database.config || !database.config.statusOptions || !database.config.actions || database.config.statusOptions.length < 2) {
                         database = { leads: database.leads || [], config: defaultConfig }; // Mantém os leads se existirem
                         needsUpdate = true;
                     }
@@ -529,21 +485,8 @@
                     await saveDataToBin(true); // Salva a estrutura correta no bin
                 }
                 
-                // Remover leads duplicados por ID antes de renderizar
-                const uniqueLeads = [];
-                const seenIds = new Set();
-                
-                database.leads.forEach(lead => {
-                    if (!seenIds.has(lead.id)) {
-                        seenIds.add(lead.id);
-                        uniqueLeads.push(lead);
-                    }
-                });
-                
-                leads = uniqueLeads;
+                leads = database.leads;
                 cadenceConfig = database.config;
-                
-                console.log('Leads originais:', database.leads.length, 'Leads únicos:', uniqueLeads.length);
 
                 renderConfigForm();
                 populateStatusFilter();
@@ -561,28 +504,7 @@
                 showLoader(customMessage);
             }
             try {
-                // Limpar leads duplicados antes de salvar (versão robusta)
-                const uniqueLeads = [];
-                const seenIds = new Set();
-                const seenCompaniesEmails = new Set(); // Detectar duplicatas por empresa+nome
-                
-                leads.forEach(lead => {
-                    const leadKey = `${lead.empresa}|${lead.nome}|${lead.linkedin}`;
-                    
-                    if (!seenIds.has(lead.id) && !seenCompaniesEmails.has(leadKey)) {
-                        seenIds.add(lead.id);
-                        seenCompaniesEmails.add(leadKey);
-                        uniqueLeads.push(lead);
-                    } else {
-                        console.log('🗑️ Lead duplicado removido:', lead.empresa, '-', lead.nome);
-                    }
-                });
-                
-                console.log('🧹 Limpeza no save - Leads antes:', leads.length, 'depois:', uniqueLeads.length);
-                
-                // Atualizar array global também
-                leads = uniqueLeads;
-                database.leads = uniqueLeads;
+                database.leads = leads;
                 database.config = cadenceConfig;
 
                 await fetch(binUrl, {
@@ -674,7 +596,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Dias Após Ação Anterior</label>
-                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" min="0">
+                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" ${index === 0 ? 'disabled title="A primeira ação tem sempre 0 dias de espera."' : ''}>
                         </div>
                         <div class="flex items-end space-x-2">
                             <div class="flex-grow">
@@ -719,6 +641,7 @@
             
             await saveDataToBin(false, "Salvando configurações...");
             populateStatusFilter();
+            renderConfigForm();
             showNotification("✅ Configurações salvas com sucesso!", "success");
         };
 
@@ -792,18 +715,7 @@
             return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         };
 
-        // Controle para evitar renderizações muito próximas
-        let lastRenderTime = 0;
-        const RENDER_DEBOUNCE_TIME = 200; // milissegundos
-
         const renderTable = () => {
-            const now = Date.now();
-            if (now - lastRenderTime < RENDER_DEBOUNCE_TIME) {
-                console.log('🔄 Renderização ignorada - muito próxima da anterior');
-                return;
-            }
-            lastRenderTime = now;
-
             const searchTerm = searchInput.value.toLowerCase();
             const selectedStatus = statusFilter.value;
 
@@ -813,45 +725,15 @@
                 return matchesSearch && matchesStatus;
             });
 
-            // Renderizar apenas layout de cards (layout tabela removido para evitar duplicação)
-            // renderTableView(filteredLeads); // REMOVIDO - causava layout duplicado
+            // Renderizar tanto tabela quanto cards
+            renderTableView(filteredLeads);
             renderCardsView(filteredLeads);
         };
         
         const renderTableView = (filteredLeads) => {
-            // Evitar renderizações múltiplas simultâneas com timeout de segurança
-            if (isRendering) {
-                console.log('⚠️ Renderização já em andamento, pulando...');
-                return;
-            }
-            
-            isRendering = true;
-            console.log('🔄 Iniciando renderização da tabela...');
-            
-            // LIMPEZA COMPLETA E ROBUSTA
-            // 1. Limpar innerHTML primeiro (mais rápido)
             tableBody.innerHTML = '';
-            
-            // 2. Verificar e remover qualquer elemento restante
-            while (tableBody.firstChild) {
-                tableBody.removeChild(tableBody.firstChild);
-            }
-            
-            // 3. Limpar qualquer tbody extra que possa ter sido criado
-            const allTbodies = tableBody.parentElement.querySelectorAll('tbody');
-            allTbodies.forEach((tbody, index) => {
-                if (index > 0) { // Manter apenas o primeiro tbody
-                    console.log('🗑️ Removendo tbody extra:', index);
-                    tbody.remove();
-                }
-            });
-            
-            // 4. Reset adicional para garantir estado limpo
-            tableBody.setAttribute('data-last-render', Date.now());
-            
             if (filteredLeads.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</td></tr>`;
-                isRendering = false;
                 return;
             }
 
@@ -862,68 +744,12 @@
 
             const sortedCompanies = Object.keys(groupedLeads).sort();
             const today = getToday();
-            
-            // Debug com timestamp para rastrear renderizações
-            const renderTimestamp = Date.now();
-            console.log(`🔄 [${renderTimestamp}] Renderizando`, sortedCompanies.length, 'empresas:', sortedCompanies);
-
-            // Armazenar empresas já renderizadas nesta sessão
-            const renderedCompanies = new Set();
 
             sortedCompanies.forEach(companyName => {
-                // Verificação robusta de duplicação
-                if (renderedCompanies.has(companyName)) {
-                    console.log(`⚠️ [${renderTimestamp}] Empresa já renderizada nesta sessão:`, companyName);
-                    return;
-                }
-                
-                // Verificar se já existe header para esta empresa no DOM
-                const existingHeader = tableBody.querySelector(`[data-company-header="${CSS.escape(companyName)}"]`);
-                if (existingHeader) {
-                    console.log(`⚠️ [${renderTimestamp}] Header duplicado no DOM para:`, companyName, '- removendo antigo');
-                    // Remover header antigo e seus leads
-                    const oldLeads = tableBody.querySelectorAll(`tr[data-company="${CSS.escape(companyName)}"]`);
-                    existingHeader.remove();
-                    oldLeads.forEach(lead => lead.remove());
-                }
-                
-                // Marcar empresa como renderizada
-                renderedCompanies.add(companyName);
-                
-                // Verificar se a empresa está expandida (padrão: expandida)
-                const isExpanded = companyExpandedState[companyName] !== false;
-                
                 const companyHeader = document.createElement('tr');
-                companyHeader.className = `bg-gray-100 company-header ${isExpanded ? '' : 'company-collapsed'}`;
-                companyHeader.setAttribute('data-company-header', companyName);
-                
-                const headerCell = document.createElement('td');
-                headerCell.setAttribute('colspan', '5');
-                headerCell.className = 'px-6 py-2 font-bold text-gray-800';
-                
-                const toggleSpan = document.createElement('span');
-                toggleSpan.className = 'company-toggle';
-                toggleSpan.style.marginRight = '8px';
-                toggleSpan.style.fontSize = '16px';
-                toggleSpan.style.cursor = 'pointer';
-                toggleSpan.textContent = isExpanded ? '▼' : '▶';
-                
-                // Debug - forçar exibição
-                console.log('Adicionando ícone:', isExpanded ? '▼' : '▶', 'para empresa:', companyName);
-                
-                headerCell.appendChild(toggleSpan);
-                headerCell.appendChild(document.createTextNode(` ${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))`));
-                
-                companyHeader.appendChild(headerCell);
-                
-                // Adicionar evento de clique para expandir/retrair
-                companyHeader.addEventListener('click', () => {
-                    toggleCompany(companyName);
-                });
-                
+                companyHeader.className = 'bg-gray-100';
+                companyHeader.innerHTML = `<td colspan="5" class="px-6 py-2 font-bold text-gray-800">${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))</td>`;
                 tableBody.appendChild(companyHeader);
-
-                // Container virtual para os leads da empresa (será tratado por classes CSS)
 
                 groupedLeads[companyName].forEach(lead => {
                     const nextActionDate = lead.nextActionDate ? parseDate(lead.nextActionDate) : null;
@@ -973,8 +799,7 @@
 
                     const row = document.createElement('tr');
                     row.dataset.id = lead.id;
-                    row.dataset.company = companyName;
-                    row.className = `${rowClass} company-lead ${isExpanded ? 'expanded' : 'collapsed'}`;
+                    row.className = rowClass;
                     row.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="font-bold text-gray-900">${escapeHtml(lead.empresa)}</div>
@@ -1002,67 +827,6 @@
                     tableBody.appendChild(row);
                 });
             });
-            
-            // Finalizar renderização com timeout de segurança
-            setTimeout(() => {
-                isRendering = false;
-                console.log(`✅ [${renderTimestamp}] Renderização da tabela concluída - ${renderedCompanies.size} empresas renderizadas`);
-            }, 100); // Pequeno delay para evitar conflitos
-        };
-        
-        // Função para alternar expansão/retração de empresa
-        const toggleCompany = (companyName) => {
-            const isCurrentlyExpanded = companyExpandedState[companyName] !== false;
-            const newState = !isCurrentlyExpanded;
-            
-            // Atualizar estado
-            companyExpandedState[companyName] = newState;
-            
-            // Salvar no localStorage
-            localStorage.setItem('companyExpandedState', JSON.stringify(companyExpandedState));
-            
-            // Atualizar UI das linhas da empresa (tabela - se existir)
-            const companyLeads = document.querySelectorAll(`tr[data-company="${CSS.escape(companyName)}"]`);
-            companyLeads.forEach(row => {
-                if (newState) {
-                    row.classList.remove('collapsed');
-                    row.classList.add('expanded');
-                } else {
-                    row.classList.remove('expanded');  
-                    row.classList.add('collapsed');
-                }
-            });
-            
-            // Atualizar UI dos containers de cards
-            const companyCardsContainers = document.querySelectorAll(`div[data-company="${CSS.escape(companyName)}"].company-leads`);
-            companyCardsContainers.forEach(container => {
-                if (newState) {
-                    container.classList.remove('collapsed');
-                    container.classList.add('expanded');
-                } else {
-                    container.classList.remove('expanded');  
-                    container.classList.add('collapsed');
-                }
-            });
-            
-            // Encontrar header da empresa (tanto tabela quanto cards)
-            const companyHeader = Array.from(document.querySelectorAll('.company-header')).find(header => {
-                return header.textContent.includes(companyName);
-            });
-            
-            // Atualizar ícone do header
-            if (companyHeader) {
-                const toggleIcon = companyHeader.querySelector('.company-toggle');
-                if (toggleIcon) {
-                    toggleIcon.textContent = newState ? '▼' : '▶';
-                }
-                
-                if (newState) {
-                    companyHeader.classList.remove('company-collapsed');
-                } else {
-                    companyHeader.classList.add('company-collapsed');
-                }
-            }
         };
         
         const renderCardsView = (filteredLeads) => {
@@ -1083,28 +847,11 @@
             const today = getToday();
 
             sortedCompanies.forEach(companyName => {
-                // Verificar se a empresa está expandida (padrão: expandida)
-                const isExpanded = companyExpandedState[companyName] !== false;
-                
-                // Header da empresa com funcionalidade de expandir/retrair
+                // Header da empresa
                 const companyHeader = document.createElement('div');
-                companyHeader.className = `mb-4 pb-2 border-b-2 border-gray-200 company-header cursor-pointer ${isExpanded ? '' : 'company-collapsed'}`;
-                companyHeader.innerHTML = `<h3 class="text-lg font-bold text-gray-800">
-                    <span class="company-toggle">${isExpanded ? '▼' : '▶'}</span>
-                    ${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))
-                </h3>`;
-                
-                // Adicionar evento de clique para expandir/retrair
-                companyHeader.addEventListener('click', () => {
-                    toggleCompany(companyName);
-                });
-                
+                companyHeader.className = 'mb-4 pb-2 border-b-2 border-gray-200';
+                companyHeader.innerHTML = `<h3 class="text-lg font-bold text-gray-800">${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))</h3>`;
                 cardsBody.appendChild(companyHeader);
-                
-                // Container para os cards da empresa
-                const companyCardsContainer = document.createElement('div');
-                companyCardsContainer.className = `company-leads ${isExpanded ? 'expanded' : 'collapsed'}`;
-                companyCardsContainer.dataset.company = companyName;
 
                 groupedLeads[companyName].forEach(lead => {
                     const nextActionDate = lead.nextActionDate ? parseDate(lead.nextActionDate) : null;
@@ -1147,17 +894,11 @@
                         
                         <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
                             <button onclick="window.app.openNotesModal('${lead.id}')" class="text-gray-500 hover:text-gray-800 text-sm">📝 Notas</button>
-                            <div class="flex space-x-2">
-                                <button onclick="window.app.undoAction('${lead.id}')" class="text-yellow-600 hover:text-yellow-800 text-sm" title="Desfazer Última Ação">↶ Desfazer</button>
-                                <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
-                            </div>
+                            <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
                         </div>
                     `;
-                    companyCardsContainer.appendChild(card);
+                    cardsBody.appendChild(card);
                 });
-                
-                // Adicionar o container de cards à visualização mobile
-                cardsBody.appendChild(companyCardsContainer);
             });
         };
 
@@ -1203,22 +944,13 @@
             
             undoAction: (id) => {
                 const leadIndex = leads.findIndex(l => l.id === id);
-                if (leadIndex === -1) {
-                    showNotification("❌ Lead não encontrado.", "error");
-                    return;
-                }
-                
-                if (!leads[leadIndex].history || leads[leadIndex].history.length === 0) {
-                    showNotification("ℹ️ Não há ações para desfazer neste lead.", "info");
-                    return;
-                }
+                if (leadIndex === -1 || !leads[leadIndex].history || leads[leadIndex].history.length === 0) return;
 
                 const previousState = leads[leadIndex].history.pop();
                 leads[leadIndex].status = previousState.status;
                 leads[leadIndex].currentActionIndex = previousState.currentActionIndex;
                 leads[leadIndex].nextActionDate = previousState.nextActionDate;
                 
-                showNotification("✅ Última ação desfeita com sucesso!", "success");
                 saveDataToBin();
             },
 

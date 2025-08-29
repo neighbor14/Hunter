@@ -3,14 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Prospecção B2B - RecargaPay</title>
+    <title>RecargaPay CRM - Sistema de Prospecção B2B</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-feature-settings: 'cv11', 'ss01';
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .modal-backdrop {
             display: none;
@@ -144,6 +167,114 @@
             display: block;
         }
         
+        /* NOVOS ESTILOS MODERNOS */
+        .company-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px 0 rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Cards de contato modernos */
+        .contact-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+        
+        .contact-card:hover {
+            box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border-color: #d1d5db;
+        }
+        
+        /* Status badges modernos */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Botões de ação modernos */
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .action-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.3);
+        }
+        
+        .action-primary:hover {
+            box-shadow: 0 6px 20px 0 rgba(14, 165, 233, 0.4);
+        }
+        
+        .action-success {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(34, 197, 94, 0.3);
+        }
+        
+        .action-success:hover {
+            box-shadow: 0 6px 20px 0 rgba(34, 197, 94, 0.4);
+        }
+        
+        .action-secondary {
+            background-color: #f8fafc;
+            color: #475569;
+            border-color: #e2e8f0;
+        }
+        
+        .action-secondary:hover {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        
+        /* Animações suaves */
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
         /* Melhorias de responsividade mobile */
         @media (max-width: 768px) {
             .container {
@@ -207,16 +338,40 @@
         <div id="loading-text" class="loading-text">Carregando dados...</div>
     </div>
 
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="mb-8 text-center">
-            <h1 class="text-4xl font-bold text-gray-900">Sistema de Prospecção B2B</h1>
-            <p class="text-lg text-gray-600 mt-2">RecargaPay - Gestão de Leads LinkedIn</p>
-        </header>
-
-        <div class="flex justify-end mb-4 space-x-2">
-            <button id="export-xls-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700">Exportar para Excel (.xls)</button>
-            <button id="open-report-btn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700">Ver Relatórios</button>
+    <!-- Header moderno -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-lg">R</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-semibold text-gray-900">RecargaPay CRM</h1>
+                            <p class="text-sm text-gray-500">Sistema de Prospecção B2B</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="export-xls-btn" class="action-btn action-secondary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Exportar
+                    </button>
+                    <button id="open-report-btn" class="action-btn action-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Relatórios
+                    </button>
+                </div>
+            </div>
         </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <!-- Seção de Configurações -->
         <div class="bg-white p-6 rounded-xl shadow-md mb-8">
@@ -674,7 +829,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Dias Após Ação Anterior</label>
-                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" min="0">
+                            <input type="number" value="${action.delayDays}" class="config-action-delay mt-1 w-full p-2 border rounded-md" ${index === 0 ? 'disabled title="A primeira ação tem sempre 0 dias de espera."' : ''}>
                         </div>
                         <div class="flex items-end space-x-2">
                             <div class="flex-grow">
@@ -1088,11 +1243,36 @@
                 
                 // Header da empresa com funcionalidade de expandir/retrair
                 const companyHeader = document.createElement('div');
-                companyHeader.className = `mb-4 pb-2 border-b-2 border-gray-200 company-header cursor-pointer ${isExpanded ? '' : 'company-collapsed'}`;
-                companyHeader.innerHTML = `<h3 class="text-lg font-bold text-gray-800">
-                    <span class="company-toggle">${isExpanded ? '▼' : '▶'}</span>
-                    ${escapeHtml(companyName)} (${groupedLeads[companyName].length} contato(s))
-                </h3>`;
+                companyHeader.className = `company-header mb-6 p-4`;
+                
+                // Logo da empresa
+                const firstLetter = companyName.charAt(0).toUpperCase();
+                const companyColors = [
+                    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+                ];
+                const colorIndex = companyName.length % companyColors.length;
+                
+                companyHeader.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="company-logo" style="background: ${companyColors[colorIndex]};">
+                                ${firstLetter}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(companyName)}</h3>
+                                <p class="text-sm text-gray-500">${groupedLeads[companyName].length} contato(s) ativo(s)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="company-toggle text-2xl text-gray-400">${isExpanded ? '▼' : '▶'}</span>
+                        </div>
+                    </div>
+                `;
                 
                 // Adicionar evento de clique para expandir/retrair
                 companyHeader.addEventListener('click', () => {
@@ -1120,37 +1300,103 @@
 
                     let actionButton = '';
                     if (currentAction) {
-                        const color = lead.currentActionIndex === 0 ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600';
-                        actionButton = `<button onclick="window.app.executeAction('${lead.id}')" class="${color} text-white text-sm font-bold py-2 px-4 rounded w-full mb-2">${currentAction.name}</button>`;
+                        const buttonClass = lead.currentActionIndex === 0 ? 'action-success' : 'action-primary';
+                        actionButton = `
+                            <button onclick="window.app.executeAction('${lead.id}')" class="action-btn ${buttonClass} text-sm w-full">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                ${currentAction.name}
+                            </button>
+                        `;
                     }
 
                     const card = document.createElement('div');
-                    card.className = `mobile-lead-card border-l-4 ${cardBorderColor}`;
+                    card.className = `contact-card p-6 border-l-4 ${cardBorderColor}`;
+                    
+                    let statusColor = '';
+                    if (nextActionDate && nextActionDate < today) {
+                        statusColor = 'bg-red-100 text-red-800';
+                    } else if (nextActionDate && nextActionDate.getTime() === today.getTime()) {
+                        statusColor = 'bg-yellow-100 text-yellow-800';
+                    } else {
+                        statusColor = 'bg-green-100 text-green-800';
+                    }
+                    
+                    let copyButton = '';
+                    if (currentAction && currentAction.template) {
+                        copyButton = `
+                            <button onclick="window.app.copyTemplate(this, '${lead.id}')" class="action-btn action-secondary text-sm w-full mt-2">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                Copiar Template
+                            </button>
+                        `;
+                    }
+                    
                     card.innerHTML = `
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h4 class="font-bold text-gray-900">${escapeHtml(lead.nome)}</h4>
-                                <p class="text-sm text-gray-600">${escapeHtml(lead.cargo)}</p>
-                                <a href="${isValidUrl(lead.linkedin) ? lead.linkedin : '#'}" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-900">🔗 LinkedIn</a>
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(lead.nome)}&background=random&color=fff&size=48" 
+                                     alt="${lead.nome}" class="w-12 h-12 rounded-full border-2 border-white shadow-md">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 text-lg">${escapeHtml(lead.nome)}</h4>
+                                    <p class="text-sm text-gray-600">${escapeHtml(lead.cargo)}</p>
+                                    <a href="${isValidUrl(lead.linkedin) ? lead.linkedin : '#'}" target="_blank" 
+                                       class="text-sm text-blue-600 hover:text-blue-700 transition-colors inline-flex items-center mt-1">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                        </svg>
+                                        LinkedIn
+                                    </a>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">${escapeHtml(lead.status)}</span>
-                            </div>
+                            <span class="status-badge ${statusColor}">${escapeHtml(lead.status)}</span>
                         </div>
-                        
-                        <div class="mb-3">
-                            <p class="text-sm text-gray-600">Próxima ação: ${currentAction ? currentAction.name : 'Ciclo Finalizado'}</p>
-                            <p class="text-sm text-gray-600">Data: ${formatDate(lead.nextActionDate)}</p>
-                        </div>
-                        
-                        ${actionButton}
-                        
-                        <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
-                            <button onclick="window.app.openNotesModal('${lead.id}')" class="text-gray-500 hover:text-gray-800 text-sm">📝 Notas</button>
-                            <div class="flex space-x-2">
-                                <button onclick="window.app.undoAction('${lead.id}')" class="text-yellow-600 hover:text-yellow-800 text-sm" title="Desfazer Última Ação">↶ Desfazer</button>
-                                <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
+
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">Próxima Ação</span>
+                                <span class="text-xs font-medium ${nextActionDate && nextActionDate < today ? 'text-red-600' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'text-yellow-600' : 'text-green-600'}">
+                                    ${nextActionDate && nextActionDate < today ? 'Atrasado' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'Hoje' : 'No prazo'}
+                                </span>
                             </div>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <div class="w-2 h-2 ${nextActionDate && nextActionDate < today ? 'bg-red-500' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'bg-yellow-500' : 'bg-green-500'} rounded-full"></div>
+                                <span class="text-sm text-gray-900 font-medium">${currentAction ? currentAction.name : 'Ciclo Finalizado'}</span>
+                            </div>
+                            <p class="text-xs text-gray-600">Data: ${formatDate(lead.nextActionDate)}</p>
+                        </div>
+
+                        <div class="space-y-2 mb-4">
+                            ${actionButton}
+                            ${copyButton}
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                            <div class="flex space-x-3">
+                                <button onclick="window.app.openNotesModal('${lead.id}')" 
+                                        class="action-btn action-secondary text-sm" title="Notas">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                ${lead.history && lead.history.length > 0 ? `
+                                <button onclick="window.app.undoAction('${lead.id}')" 
+                                        class="action-btn action-secondary text-yellow-600 text-sm" title="Desfazer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                    </svg>
+                                </button>
+                                ` : ''}
+                            </div>
+                            <button onclick="window.app.deleteLead('${lead.id}')" 
+                                    class="action-btn action-secondary text-red-600 text-sm" title="Excluir">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
                         </div>
                     `;
                     companyCardsContainer.appendChild(card);
