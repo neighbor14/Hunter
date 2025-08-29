@@ -123,19 +123,16 @@
             transform: rotate(-90deg);
         }
         
-        .company-leads {
-            transition: opacity 0.3s ease, max-height 0.3s ease;
-            overflow: hidden;
+        .company-lead {
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
         
-        .company-leads.collapsed {
-            max-height: 0;
-            opacity: 0;
+        .company-lead.collapsed {
+            display: none;
         }
         
-        .company-leads.expanded {
-            max-height: none;
-            opacity: 1;
+        .company-lead.expanded {
+            display: table-row;
         }
         
         /* Melhorias de responsividade mobile */
@@ -796,10 +793,7 @@
                 
                 tableBody.appendChild(companyHeader);
 
-                // Container para os leads da empresa
-                const companyLeadsContainer = document.createElement('tbody');
-                companyLeadsContainer.className = `company-leads ${isExpanded ? 'expanded' : 'collapsed'}`;
-                companyLeadsContainer.dataset.company = companyName;
+                // Container virtual para os leads da empresa (será tratado por classes CSS)
 
                 groupedLeads[companyName].forEach(lead => {
                     const nextActionDate = lead.nextActionDate ? parseDate(lead.nextActionDate) : null;
@@ -849,7 +843,8 @@
 
                     const row = document.createElement('tr');
                     row.dataset.id = lead.id;
-                    row.className = rowClass;
+                    row.dataset.company = companyName;
+                    row.className = `${rowClass} company-lead ${isExpanded ? 'expanded' : 'collapsed'}`;
                     row.innerHTML = `
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="font-bold text-gray-900">${escapeHtml(lead.empresa)}</div>
@@ -874,11 +869,8 @@
                             ${actionButtonsHTML}
                         </td>
                     `;
-                    companyLeadsContainer.appendChild(row);
+                    tableBody.appendChild(row);
                 });
-                
-                // Adicionar o container de leads à tabela principal
-                tableBody.parentNode.appendChild(companyLeadsContainer);
             });
         };
         
@@ -893,8 +885,35 @@
             // Salvar no localStorage
             localStorage.setItem('companyExpandedState', JSON.stringify(companyExpandedState));
             
-            // Atualizar UI - Re-renderizar a tabela para aplicar as mudanças
-            renderTable();
+            // Atualizar UI das linhas da empresa
+            const companyLeads = document.querySelectorAll(`tr[data-company="${companyName}"]`);
+            const companyHeader = Array.from(document.querySelectorAll('.company-header')).find(header => {
+                return header.textContent.includes(companyName);
+            });
+            
+            companyLeads.forEach(row => {
+                if (newState) {
+                    row.classList.remove('collapsed');
+                    row.classList.add('expanded');
+                } else {
+                    row.classList.remove('expanded');  
+                    row.classList.add('collapsed');
+                }
+            });
+            
+            // Atualizar ícone do header
+            if (companyHeader) {
+                const toggleIcon = companyHeader.querySelector('.company-toggle');
+                if (toggleIcon) {
+                    toggleIcon.textContent = newState ? '▼' : '▶';
+                }
+                
+                if (newState) {
+                    companyHeader.classList.remove('company-collapsed');
+                } else {
+                    companyHeader.classList.add('company-collapsed');
+                }
+            }
         };
         
         const renderCardsView = (filteredLeads) => {
