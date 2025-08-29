@@ -451,13 +451,7 @@
 
             const defaultConfig = {
                 statusOptions: ["Prospecção (Backlog)", "Contato em Andamento", "Conexão/Interesse", "Reunião Agendada", "Negociação", "Parceria Fechada", "Parceria Perdida"],
-                actions: [
-                    { id: 1, name: "1️⃣ Enviar Convite", delayDays: 0, setsStatusTo: "Contato em Andamento", template: "Olá [NOME]! 👋\n\nVi seu trabalho na [EMPRESA] e fiquei impressionado com o que vocês têm feito no mercado.\n\nGostaria muito de me conectar e trocar uma ideia sobre como podemos somar forças!\n\nAbraços!" },
-                    { id: 2, name: "2️⃣ Mensagem de Abertura", delayDays: 2, setsStatusTo: "Conexão/Interesse", template: "Oi [NOME]! 🚀\n\nObrigado por aceitar meu convite! Vi que você trabalha na [EMPRESA] e achei incrível o posicionamento de vocês no mercado.\n\nTenho uma proposta que pode gerar receita adicional para a [EMPRESA] sem nenhum investimento inicial. Que tal conversarmos 15 minutinhos sobre isso?\n\nQuando seria melhor para você: manhã ou tarde?" },
-                    { id: 3, name: "3️⃣ Follow-up com Valor", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "Oi [NOME]! 💡\n\nSó para dar um contexto mais prático: imagine uma campanha da [EMPRESA] que não custa nada, mas gera receita a cada novo cliente que vocês nos indicarem.\n\nJá fizemos isso com empresas similares e os resultados foram excelentes. Posso mostrar alguns cases em 10 minutos?\n\nTem algum horário livre esta semana?" },
-                    { id: 4, name: "4️⃣ Última Tentativa", delayDays: 7, setsStatusTo: "Conexão/Interesse", template: "Oi [NOME]! ⏰\n\nSei que sua agenda deve estar corrida, mas não queria perder a oportunidade de apresentar nossa proposta para a [EMPRESA].\n\nÉ literalmente 5 minutos para eu explicar como vocês podem monetizar sua base de clientes sem esforço adicional.\n\nVale uma calls rápida hoje?" },
-                    { id: 5, name: "5️⃣ Mensagem de Encerramento", delayDays: 7, setsStatusTo: "Parceria Perdida", template: "Oi [NOME]! ✋\n\nEntendo que a agenda de vocês deve estar super corrida e uma parceria estratégica pode não ser prioridade agora.\n\nVou parar por aqui para não ser inconveniente. Mas se em algum momento vocês quiserem conhecer nossa proposta, estarei à disposição!\n\nSucesso para a [EMPRESA]! 🎯" }
-                ]
+                actions: []
             };
 
             try {
@@ -475,7 +469,7 @@
                     const data = await response.json();
                     database = data.record;
                     // Verifica se o bin está vazio ou com estrutura antiga/inválida
-                    if (!database.config || !database.config.actions || database.config.actions.length === 0) {
+                    if (!database.config) {
                         database = { leads: database.leads || [], config: defaultConfig }; // Mantém os leads se existirem
                         needsUpdate = true;
                     }
