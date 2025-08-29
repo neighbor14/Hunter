@@ -2196,7 +2196,11 @@
                 // Se o modal de relatórios estiver aberto, regenerar todo o relatório
                 const reportModal = document.getElementById('report-modal');
                 if (reportModal && reportModal.style.display === 'block') {
+                    console.log(`[DEBUG] Regenerando relatório após alterar data para: ${newDate}`);
+                    console.log(`[DEBUG] Lead atualizado:`, leads[leadIndex]);
                     generateReport(); // Regenera todos os relatórios incluindo a agenda
+                } else {
+                    console.log(`[DEBUG] Modal de relatórios não está aberto, não regenerando`);
                 }
             },
 
@@ -2756,17 +2760,23 @@
             // Agrupar leads por data
             const leadsByDate = {};
             
+            console.log(`[DEBUG AGENDA] Gerando agenda para ${workingDays.length} dias úteis:`);
             workingDays.forEach(date => {
                 const dateStr = date.toISOString().split('T')[0];
                 leadsByDate[dateStr] = [];
+                console.log(`[DEBUG AGENDA] Dia útil: ${dateStr} (${formatDateShort(date)})`);
             });
 
             // Organizar leads nas datas correspondentes
+            console.log(`[DEBUG AGENDA] Processando ${leads.length} leads`);
             leads.forEach(lead => {
                 if (lead.nextActionDate) {
                     const leadDate = parseDate(lead.nextActionDate);
                     if (leadDate) {
                         const leadDateStr = leadDate.toISOString().split('T')[0];
+                        console.log(`[DEBUG AGENDA] Lead ${lead.nome}: nextActionDate=${lead.nextActionDate}, parsed=${leadDateStr}`);
+                        console.log(`[DEBUG AGENDA] Datas disponíveis na agenda:`, Object.keys(leadsByDate));
+                        
                         if (leadsByDate[leadDateStr]) {
                             const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
                             const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
@@ -2775,6 +2785,9 @@
                                 ...lead,
                                 currentAction: currentAction
                             });
+                            console.log(`[DEBUG AGENDA] Lead ${lead.nome} adicionado à data ${leadDateStr}`);
+                        } else {
+                            console.log(`[DEBUG AGENDA] Data ${leadDateStr} não está na janela de 10 dias úteis`);
                         }
                     }
                 }
