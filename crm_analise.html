@@ -551,19 +551,27 @@
                 showLoader(customMessage);
             }
             try {
-                // Limpar leads duplicados antes de salvar
+                // Limpar leads duplicados antes de salvar (versão robusta)
                 const uniqueLeads = [];
                 const seenIds = new Set();
+                const seenCompaniesEmails = new Set(); // Detectar duplicatas por empresa+nome
                 
                 leads.forEach(lead => {
-                    if (!seenIds.has(lead.id)) {
+                    const leadKey = `${lead.empresa}|${lead.nome}|${lead.linkedin}`;
+                    
+                    if (!seenIds.has(lead.id) && !seenCompaniesEmails.has(leadKey)) {
                         seenIds.add(lead.id);
+                        seenCompaniesEmails.add(leadKey);
                         uniqueLeads.push(lead);
+                    } else {
+                        console.log('🗑️ Lead duplicado removido:', lead.empresa, '-', lead.nome);
                     }
                 });
                 
                 console.log('🧹 Limpeza no save - Leads antes:', leads.length, 'depois:', uniqueLeads.length);
                 
+                // Atualizar array global também
+                leads = uniqueLeads;
                 database.leads = uniqueLeads;
                 database.config = cadenceConfig;
 
@@ -774,7 +782,18 @@
             return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         };
 
+        // Controle para evitar renderizações muito próximas
+        let lastRenderTime = 0;
+        const RENDER_DEBOUNCE_TIME = 200; // milissegundos
+
         const renderTable = () => {
+            const now = Date.now();
+            if (now - lastRenderTime < RENDER_DEBOUNCE_TIME) {
+                console.log('🔄 Renderização ignorada - muito próxima da anterior');
+                return;
+            }
+            lastRenderTime = now;
+
             const searchTerm = searchInput.value.toLowerCase();
             const selectedStatus = statusFilter.value;
 
@@ -790,7 +809,7 @@
         };
         
         const renderTableView = (filteredLeads) => {
-            // Evitar renderizações múltiplas simultâneas
+            // Evitar renderizações múltiplas simultâneas com timeout de segurança
             if (isRendering) {
                 console.log('⚠️ Renderização já em andamento, pulando...');
                 return;
@@ -799,12 +818,16 @@
             isRendering = true;
             console.log('🔄 Iniciando renderização da tabela...');
             
-            // LIMPEZA AGRESSIVA - remover todos os elementos da tabela
+            // LIMPEZA COMPLETA E ROBUSTA
+            // 1. Limpar innerHTML primeiro (mais rápido)
+            tableBody.innerHTML = '';
+            
+            // 2. Verificar e remover qualquer elemento restante
             while (tableBody.firstChild) {
                 tableBody.removeChild(tableBody.firstChild);
             }
             
-            // Também limpar qualquer tbody extra que possa ter sido criado
+            // 3. Limpar qualquer tbody extra que possa ter sido criado
             const allTbodies = tableBody.parentElement.querySelectorAll('tbody');
             allTbodies.forEach((tbody, index) => {
                 if (index > 0) { // Manter apenas o primeiro tbody
@@ -812,6 +835,9 @@
                     tbody.remove();
                 }
             });
+            
+            // 4. Reset adicional para garantir estado limpo
+            tableBody.setAttribute('data-last-render', Date.now());
             
             if (filteredLeads.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</td></tr>`;
@@ -827,19 +853,35 @@
             const sortedCompanies = Object.keys(groupedLeads).sort();
             const today = getToday();
             
-            // Debug simplificado
-            console.log('Renderizando', sortedCompanies.length, 'empresas:', sortedCompanies);
+            // Debug com timestamp para rastrear renderizações
+            const renderTimestamp = Date.now();
+            console.log(`🔄 [${renderTimestamp}] Renderizando`, sortedCompanies.length, 'empresas:', sortedCompanies);
+
+            // Armazenar empresas já renderizadas nesta sessão
+            const renderedCompanies = new Set();
 
             sortedCompanies.forEach(companyName => {
+                // Verificação robusta de duplicação
+                if (renderedCompanies.has(companyName)) {
+                    console.log(`⚠️ [${renderTimestamp}] Empresa já renderizada nesta sessão:`, companyName);
+                    return;
+                }
+                
+                // Verificar se já existe header para esta empresa no DOM
+                const existingHeader = tableBody.querySelector(`[data-company-header="${CSS.escape(companyName)}"]`);
+                if (existingHeader) {
+                    console.log(`⚠️ [${renderTimestamp}] Header duplicado no DOM para:`, companyName, '- removendo antigo');
+                    // Remover header antigo e seus leads
+                    const oldLeads = tableBody.querySelectorAll(`tr[data-company="${CSS.escape(companyName)}"]`);
+                    existingHeader.remove();
+                    oldLeads.forEach(lead => lead.remove());
+                }
+                
+                // Marcar empresa como renderizada
+                renderedCompanies.add(companyName);
+                
                 // Verificar se a empresa está expandida (padrão: expandida)
                 const isExpanded = companyExpandedState[companyName] !== false;
-                
-                // Verificar se já existe header para esta empresa
-                const existingHeader = tableBody.querySelector(`[data-company-header="${companyName}"]`);
-                if (existingHeader) {
-                    console.log('⚠️ Header duplicado detectado para:', companyName, '- pulando esta empresa');
-                    return; // Pular esta empresa se já renderizada
-                }
                 
                 const companyHeader = document.createElement('tr');
                 companyHeader.className = `bg-gray-100 company-header ${isExpanded ? '' : 'company-collapsed'}`;
@@ -951,9 +993,11 @@
                 });
             });
             
-            // Finalizar renderização
-            isRendering = false;
-            console.log('✅ Renderização da tabela concluída');
+            // Finalizar renderização com timeout de segurança
+            setTimeout(() => {
+                isRendering = false;
+                console.log(`✅ [${renderTimestamp}] Renderização da tabela concluída - ${renderedCompanies.size} empresas renderizadas`);
+            }, 100); // Pequeno delay para evitar conflitos
         };
         
         // Função para alternar expansão/retração de empresa
