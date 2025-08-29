@@ -2893,9 +2893,24 @@
         // --- INICIALIZAÇÃO ---
         // --- SISTEMA DE VERSIONAMENTO ---
         const VERSION_HISTORY_KEY = 'crm_version_history';
-        let currentVersion = '2.4.0';
+        let currentVersion = '2.5.0';
 
         const versionHistory = [
+            {
+                version: '2.5.0',
+                date: '2024-11-25 20:15',
+                type: 'major',
+                title: 'Dark Mode Profissional',
+                description: 'Sistema completo de dark mode com toggle inteligente, paleta de cores profissional e persistência de preferências.',
+                changes: [
+                    'Toggle dark/light mode no header',
+                    'Detecção automática da preferência do sistema',
+                    'Paleta de cores escuras profissional',
+                    'Transições suaves entre temas',
+                    'Persistência no localStorage',
+                    'Todos os elementos adaptados para dark mode'
+                ]
+            },
             {
                 version: '2.4.0',
                 date: '2024-11-25 19:30',
