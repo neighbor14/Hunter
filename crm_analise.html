@@ -1409,8 +1409,11 @@
                             </select>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            <span class="editable-date p-1 rounded-md" onclick="window.app.showDateInput(this, '${lead.id}')">${formatDate(lead.nextActionDate)}</span>
-                            <input type="date" class="hidden" onchange="window.app.updateNextActionDate('${lead.id}', this.value)" onblur="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden')">
+                            <input type="date" 
+                                   value="${lead.nextActionDate}" 
+                                   onchange="window.app.updateActionDate('${lead.id}', this.value)"
+                                   class="text-sm p-1 border border-gray-300 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                                   title="Clique para alterar a data da próxima ação">
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                             ${actionButtonsHTML}
@@ -2136,6 +2139,40 @@
                 }
 
                 saveDataToBin();
+            },
+
+            updateActionDate: (id, newDate) => {
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if (leadIndex === -1) return;
+
+                const oldDate = leads[leadIndex].nextActionDate;
+                if (oldDate === newDate) return;
+
+                // Validar se a data não é anterior ao dia atual
+                const today = getToday();
+                const selectedDate = parseDate(newDate);
+                
+                if (selectedDate < today) {
+                    const confirmPast = confirm(`⚠️ ATENÇÃO: Você está definindo uma data no passado (${formatDate(newDate)}).\n\nIsso pode ser útil para:\n• Ajustar ações que deveriam ter sido feitas\n• Corrigir datas incorretas\n• Reagendar ações atrasadas\n\nDeseja continuar?`);
+                    if (!confirmPast) return;
+                }
+
+                leads[leadIndex].history = leads[leadIndex].history || [];
+                leads[leadIndex].history.push({ 
+                    status: leads[leadIndex].status, 
+                    currentActionIndex: leads[leadIndex].currentActionIndex, 
+                    nextActionDate: oldDate,
+                    timestamp: new Date().toISOString(),
+                    action: 'date_updated',
+                    oldDate: oldDate,
+                    newDate: newDate
+                });
+                
+                leads[leadIndex].nextActionDate = newDate;
+
+                alert(`📅 Data atualizada para ${formatDate(newDate)}`);
+                saveDataToBin();
+                renderTable();
             },
 
             updateNextAction: (id, newActionIndexStr) => {

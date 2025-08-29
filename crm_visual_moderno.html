@@ -1964,7 +1964,14 @@
                                 <div class="w-2 h-2 ${nextActionDate && nextActionDate < today ? 'bg-red-500' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'bg-yellow-500' : 'bg-green-500'} rounded-full"></div>
                                 <span class="text-sm text-gray-900 font-medium">${currentAction ? currentAction.name : 'Ciclo Finalizado'}</span>
                             </div>
-                            <p class="text-xs text-gray-600">Data: ${formatDate(lead.nextActionDate)}</p>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-gray-600">Data:</span>
+                                <input type="date" 
+                                       value="${lead.nextActionDate}" 
+                                       onchange="window.app.updateActionDate('${lead.id}', this.value)"
+                                       class="text-xs p-1 border border-gray-300 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                                       title="Clique para alterar a data da próxima ação">
+                            </div>
                         </div>
 
                         <div class="space-y-2 mb-4">
@@ -2131,6 +2138,40 @@
                 }
 
                 saveDataToBin();
+            },
+
+            updateActionDate: (id, newDate) => {
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if (leadIndex === -1) return;
+
+                const oldDate = leads[leadIndex].nextActionDate;
+                if (oldDate === newDate) return;
+
+                // Validar se a data não é anterior ao dia atual (exceto se for ajuste do mesmo dia)
+                const today = getToday();
+                const selectedDate = parseDate(newDate);
+                
+                if (selectedDate < today) {
+                    const confirmPast = confirm(`⚠️ ATENÇÃO: Você está definindo uma data no passado (${formatDate(newDate)}).\n\nIsso pode ser útil para:\n• Ajustar ações que deveriam ter sido feitas\n• Corrigir datas incorretas\n• Reagendar ações atrasadas\n\nDeseja continuar?`);
+                    if (!confirmPast) return;
+                }
+
+                leads[leadIndex].history = leads[leadIndex].history || [];
+                leads[leadIndex].history.push({ 
+                    status: leads[leadIndex].status, 
+                    currentActionIndex: leads[leadIndex].currentActionIndex, 
+                    nextActionDate: oldDate,
+                    timestamp: new Date().toISOString(),
+                    action: 'date_updated',
+                    oldDate: oldDate,
+                    newDate: newDate
+                });
+                
+                leads[leadIndex].nextActionDate = newDate;
+
+                showNotification(`📅 Data atualizada para ${formatDate(newDate)}`);
+                saveDataToBin();
+                renderTable(); // Re-renderizar para atualizar as cores de status
             },
 
             updateNextAction: (id, newActionIndexStr) => {
