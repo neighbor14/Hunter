@@ -145,6 +145,84 @@
         }
         
         /* Melhorias de responsividade mobile */
+        /* Estilos da Agenda */
+        .agenda-day {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .agenda-day-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        .agenda-day-header.today {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .agenda-day-header.weekend {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        }
+
+        .agenda-contact {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .agenda-contact:hover {
+            background-color: #f9fafb;
+        }
+
+        .agenda-contact:last-child {
+            border-bottom: none;
+        }
+
+        .agenda-contact-info {
+            flex-grow: 1;
+        }
+
+        .agenda-contact-company {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+
+        .agenda-contact-name {
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-top: 0.125rem;
+        }
+
+        .agenda-contact-action {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .agenda-contact-action.overdue {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .agenda-empty {
+            padding: 2rem;
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -358,6 +436,12 @@
                 <h3 class="text-gray-500 text-sm font-medium">Taxa de Conversão (Contato -> Reunião)</h3>
                 <p id="report-conversion-rate" class="text-3xl font-bold mt-1">0%</p>
             </div>
+        </div>
+
+        <!-- Agenda dos Próximos 14 Dias Úteis -->
+        <h3 class="text-2xl font-bold mb-4">📅 Agenda - Próximos 14 Dias Úteis</h3>
+        <div id="agenda-calendar" class="mb-8">
+            <!-- Agenda será inserida aqui -->
         </div>
 
         <!-- Funil Kanban -->
@@ -1173,6 +1257,136 @@
             }
         };
 
+        function generateAgenda() {
+            const agendaContainer = document.getElementById('agenda-calendar');
+            agendaContainer.innerHTML = '';
+
+            // Função para verificar se é dia útil (segunda a sexta)
+            const isWorkingDay = (date) => {
+                const dayOfWeek = date.getUTCDay();
+                return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 = segunda, 5 = sexta
+            };
+
+            // Função para formatar data em português
+            const formatDatePortuguese = (date) => {
+                const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+                const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                
+                const dayName = days[date.getUTCDay()];
+                const day = date.getUTCDate().toString().padStart(2, '0');
+                const month = months[date.getUTCMonth()];
+                
+                return `${dayName}, ${day} ${month}`;
+            };
+
+            const today = getToday();
+            const workingDays = [];
+            
+            // Gerar próximos 14 dias úteis
+            let currentDate = new Date(today);
+            let addedDays = 0;
+            
+            while (addedDays < 14) {
+                if (isWorkingDay(currentDate)) {
+                    workingDays.push(new Date(currentDate));
+                    addedDays++;
+                }
+                currentDate = addDays(currentDate, 1);
+            }
+
+            // Agrupar leads por data
+            const leadsByDate = {};
+            
+            workingDays.forEach(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                leadsByDate[dateStr] = [];
+            });
+
+            // Organizar leads nas datas correspondentes
+            leads.forEach(lead => {
+                if (lead.nextActionDate) {
+                    const leadDate = parseDate(lead.nextActionDate);
+                    if (leadDate) {
+                        const leadDateStr = leadDate.toISOString().split('T')[0];
+                        if (leadsByDate[leadDateStr]) {
+                            const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                            const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
+                            
+                            leadsByDate[leadDateStr].push({
+                                ...lead,
+                                currentAction: currentAction
+                            });
+                        }
+                    }
+                }
+            });
+
+            // Renderizar agenda
+            workingDays.forEach(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                const dayLeads = leadsByDate[dateStr] || [];
+                const isToday = date.getTime() === today.getTime();
+                
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'agenda-day';
+                
+                const headerDiv = document.createElement('div');
+                headerDiv.className = `agenda-day-header ${isToday ? 'today' : ''}`;
+                headerDiv.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span>${formatDatePortuguese(date)}</span>
+                        <span class="text-sm opacity-90">${dayLeads.length} contato(s)</span>
+                    </div>
+                `;
+                
+                dayDiv.appendChild(headerDiv);
+                
+                if (dayLeads.length === 0) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'agenda-empty';
+                    emptyDiv.textContent = '📅 Nenhum contato agendado para este dia';
+                    dayDiv.appendChild(emptyDiv);
+                } else {
+                    // Ordenar por empresa
+                    dayLeads.sort((a, b) => a.empresa.localeCompare(b.empresa));
+                    
+                    dayLeads.forEach(lead => {
+                        const contactDiv = document.createElement('div');
+                        contactDiv.className = 'agenda-contact';
+                        
+                        const isOverdue = parseDate(lead.nextActionDate) < today;
+                        
+                        contactDiv.innerHTML = `
+                            <div class="agenda-contact-info">
+                                <div class="agenda-contact-company">${escapeHtml(lead.empresa)}</div>
+                                <div class="agenda-contact-name">${escapeHtml(lead.nome)} • ${escapeHtml(lead.cargo)}</div>
+                            </div>
+                            <div class="agenda-contact-action ${isOverdue ? 'overdue' : ''}">
+                                ${lead.currentAction ? lead.currentAction.name : 'Sem ação'}
+                            </div>
+                        `;
+                        
+                        // Adicionar clique para executar ação
+                        contactDiv.style.cursor = 'pointer';
+                        contactDiv.addEventListener('click', () => {
+                            if (lead.currentAction) {
+                                if (confirm(`Executar "${lead.currentAction.name}" para ${lead.nome} (${lead.empresa})?`)) {
+                                    window.app.executeAction(lead.id);
+                                    // Fechar modal de relatório e atualizar lista
+                                    document.getElementById('report-modal-backdrop').style.display = 'none';
+                                    document.getElementById('report-modal').style.display = 'none';
+                                }
+                            }
+                        });
+                        
+                        dayDiv.appendChild(contactDiv);
+                    });
+                }
+                
+                agendaContainer.appendChild(dayDiv);
+            });
+        }
+
         // --- MANIPULADORES DE EVENTOS GLOBAIS ---
         window.app = {
             executeAction: (id) => {
@@ -1417,6 +1631,9 @@
             document.getElementById('report-meetings-week').textContent = meetingsLastWeek;
             document.getElementById('report-active-leads').textContent = activeLeads;
             document.getElementById('report-conversion-rate').textContent = `${conversionRate}%`;
+
+            // Agenda dos próximos 14 dias úteis
+            generateAgenda();
 
             // Kanban Board
             const kanbanBoard = document.getElementById('kanban-board');
