@@ -774,6 +774,12 @@
 
             const sortedCompanies = Object.keys(groupedLeads).sort();
             const today = getToday();
+            
+            // Debug - verificar empresas duplicadas
+            console.log('=== DEBUG RENDERIZAÇÃO ===');
+            console.log('Empresas encontradas:', sortedCompanies);
+            console.log('Leads agrupados:', groupedLeads);
+            console.log('Total de leads filtrados:', filteredLeads.length);
 
             sortedCompanies.forEach(companyName => {
                 // Verificar se a empresa está expandida (padrão: expandida)
