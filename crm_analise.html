@@ -2189,7 +2189,7 @@
                                 (toStatus?.includes('Contato') || toStatus?.includes('Em Contato'))) {
                                 // Verificar se foi uma mudança manual (tem newStatus mas não foi execução de ação)
                                 // Se foi automática da primeira ação, não contar como conversão
-                                const wasAutomaticFirstAction = historyItem.currentActionIndex === 0;
+                                const wasAutomaticFirstAction = h.currentActionIndex === 0;
                                 if (!wasAutomaticFirstAction) {
                                     toContactMonth++;
                                 }
