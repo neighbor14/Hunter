@@ -2196,7 +2196,11 @@
                 // Se o modal de relatórios estiver aberto, regenerar todo o relatório
                 const reportModal = document.getElementById('report-modal');
                 if (reportModal && reportModal.style.display === 'block') {
+                    console.log(`[DEBUG] Regenerando relatório após alterar data para: ${newDate}`);
+                    console.log(`[DEBUG] Lead atualizado:`, leads[leadIndex]);
                     generateReport(); // Regenera todos os relatórios incluindo a agenda
+                } else {
+                    console.log(`[DEBUG] Modal de relatórios não está aberto, não regenerando`);
                 }
             },
 
@@ -2741,7 +2745,7 @@
             const today = getToday();
             const workingDays = [];
             
-            // Gerar próximos 10 dias úteis (2 semanas)
+            // Gerar próximos 10 dias úteis (2 semanas) + incluir datas de leads existentes
             let currentDate = new Date(today);
             let addedDays = 0;
             
@@ -2753,20 +2757,44 @@
                 currentDate = addDays(currentDate, 1);
             }
 
+            // CORREÇÃO: Adicionar datas de leads que estão fora da janela padrão
+            leads.forEach(lead => {
+                if (lead.nextActionDate) {
+                    const leadDate = parseDate(lead.nextActionDate);
+                    if (leadDate && isWorkingDay(leadDate)) {
+                        const leadDateStr = leadDate.toISOString().split('T')[0];
+                        const alreadyIncluded = workingDays.some(d => d.toISOString().split('T')[0] === leadDateStr);
+                        if (!alreadyIncluded) {
+                            workingDays.push(new Date(leadDate));
+                            console.log(`[DEBUG AGENDA] Adicionada data extra do lead: ${leadDateStr}`);
+                        }
+                    }
+                }
+            });
+
+            // Ordenar todas as datas
+            workingDays.sort((a, b) => a.getTime() - b.getTime());
+
             // Agrupar leads por data
             const leadsByDate = {};
             
+            console.log(`[DEBUG AGENDA] Gerando agenda para ${workingDays.length} dias úteis:`);
             workingDays.forEach(date => {
                 const dateStr = date.toISOString().split('T')[0];
                 leadsByDate[dateStr] = [];
+                console.log(`[DEBUG AGENDA] Dia útil: ${dateStr} (${formatDateShort(date)})`);
             });
 
             // Organizar leads nas datas correspondentes
+            console.log(`[DEBUG AGENDA] Processando ${leads.length} leads`);
             leads.forEach(lead => {
                 if (lead.nextActionDate) {
                     const leadDate = parseDate(lead.nextActionDate);
                     if (leadDate) {
                         const leadDateStr = leadDate.toISOString().split('T')[0];
+                        console.log(`[DEBUG AGENDA] Lead ${lead.nome}: nextActionDate=${lead.nextActionDate}, parsed=${leadDateStr}`);
+                        console.log(`[DEBUG AGENDA] Datas disponíveis na agenda:`, Object.keys(leadsByDate));
+                        
                         if (leadsByDate[leadDateStr]) {
                             const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
                             const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
@@ -2775,6 +2803,9 @@
                                 ...lead,
                                 currentAction: currentAction
                             });
+                            console.log(`[DEBUG AGENDA] Lead ${lead.nome} adicionado à data ${leadDateStr}`);
+                        } else {
+                            console.log(`[DEBUG AGENDA] Data ${leadDateStr} não está na janela de 10 dias úteis`);
                         }
                     }
                 }
@@ -2790,8 +2821,9 @@
             const week1Grid = document.createElement('div');
             week1Grid.className = 'calendar-grid';
             
-            // Primeira semana (5 dias)
-            for (let i = 0; i < 5; i++) {
+            // Primeira semana (primeiros 5 dias ou menos)
+            const week1Days = Math.min(5, workingDays.length);
+            for (let i = 0; i < week1Days; i++) {
                 if (workingDays[i]) {
                     const date = workingDays[i];
                     const dateStr = date.toISOString().split('T')[0];
@@ -2865,10 +2897,13 @@
             const week2Grid = document.createElement('div');
             week2Grid.className = 'calendar-grid';
             
-            // Segunda semana (5 dias)
-            for (let i = 5; i < 10; i++) {
-                if (workingDays[i]) {
-                    const date = workingDays[i];
+            // Segunda semana (próximos dias disponíveis)
+            const remainingDays = workingDays.length - week1Days;
+            if (remainingDays > 0) {
+                const week2Days = Math.min(5, remainingDays);
+                for (let i = week1Days; i < week1Days + week2Days; i++) {
+                    if (workingDays[i]) {
+                        const date = workingDays[i];
                     const dateStr = date.toISOString().split('T')[0];
                     const dayLeads = leadsByDate[dateStr] || [];
                     const isToday = date.getTime() === today.getTime();
@@ -2926,10 +2961,11 @@
                     dayDiv.appendChild(headerDiv);
                     dayDiv.appendChild(bodyDiv);
                     week2Grid.appendChild(dayDiv);
+                    }
                 }
+                
+                agendaContainer.appendChild(week2Grid);
             }
-            
-            agendaContainer.appendChild(week2Grid);
         }
 
         function generateKanban() {

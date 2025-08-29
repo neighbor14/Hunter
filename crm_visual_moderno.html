@@ -2745,7 +2745,7 @@
             const today = getToday();
             const workingDays = [];
             
-            // Gerar próximos 10 dias úteis (2 semanas)
+            // Gerar próximos 10 dias úteis (2 semanas) + incluir datas de leads existentes
             let currentDate = new Date(today);
             let addedDays = 0;
             
@@ -2756,6 +2756,24 @@
                 }
                 currentDate = addDays(currentDate, 1);
             }
+
+            // CORREÇÃO: Adicionar datas de leads que estão fora da janela padrão
+            leads.forEach(lead => {
+                if (lead.nextActionDate) {
+                    const leadDate = parseDate(lead.nextActionDate);
+                    if (leadDate && isWorkingDay(leadDate)) {
+                        const leadDateStr = leadDate.toISOString().split('T')[0];
+                        const alreadyIncluded = workingDays.some(d => d.toISOString().split('T')[0] === leadDateStr);
+                        if (!alreadyIncluded) {
+                            workingDays.push(new Date(leadDate));
+                            console.log(`[DEBUG AGENDA] Adicionada data extra do lead: ${leadDateStr}`);
+                        }
+                    }
+                }
+            });
+
+            // Ordenar todas as datas
+            workingDays.sort((a, b) => a.getTime() - b.getTime());
 
             // Agrupar leads por data
             const leadsByDate = {};
@@ -2803,8 +2821,9 @@
             const week1Grid = document.createElement('div');
             week1Grid.className = 'calendar-grid';
             
-            // Primeira semana (5 dias)
-            for (let i = 0; i < 5; i++) {
+            // Primeira semana (primeiros 5 dias ou menos)
+            const week1Days = Math.min(5, workingDays.length);
+            for (let i = 0; i < week1Days; i++) {
                 if (workingDays[i]) {
                     const date = workingDays[i];
                     const dateStr = date.toISOString().split('T')[0];
@@ -2878,10 +2897,13 @@
             const week2Grid = document.createElement('div');
             week2Grid.className = 'calendar-grid';
             
-            // Segunda semana (5 dias)
-            for (let i = 5; i < 10; i++) {
-                if (workingDays[i]) {
-                    const date = workingDays[i];
+            // Segunda semana (próximos dias disponíveis)
+            const remainingDays = workingDays.length - week1Days;
+            if (remainingDays > 0) {
+                const week2Days = Math.min(5, remainingDays);
+                for (let i = week1Days; i < week1Days + week2Days; i++) {
+                    if (workingDays[i]) {
+                        const date = workingDays[i];
                     const dateStr = date.toISOString().split('T')[0];
                     const dayLeads = leadsByDate[dateStr] || [];
                     const isToday = date.getTime() === today.getTime();
@@ -2939,10 +2961,11 @@
                     dayDiv.appendChild(headerDiv);
                     dayDiv.appendChild(bodyDiv);
                     week2Grid.appendChild(dayDiv);
+                    }
                 }
+                
+                agendaContainer.appendChild(week2Grid);
             }
-            
-            agendaContainer.appendChild(week2Grid);
         }
 
         function generateKanban() {
