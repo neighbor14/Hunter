@@ -1683,7 +1683,15 @@
                         
                         <div class="mb-3">
                             <p class="text-sm text-gray-600">Próxima ação: ${currentAction ? currentAction.name : 'Ciclo Finalizado'}</p>
-                            <p class="text-sm text-gray-600">Data: ${formatDate(lead.nextActionDate)}</p>
+                            <div class="flex items-center space-x-2 mt-2">
+                                <span class="text-sm text-gray-600">Data:</span>
+                                <input type="date" 
+                                       value="${lead.nextActionDate || ''}" 
+                                       onchange="window.app.updateActionDate('${lead.id}', this.value)"
+                                       class="text-xs p-1 border-2 border-blue-300 rounded bg-blue-50 hover:bg-blue-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 cursor-pointer"
+                                       title="📅 Clique para alterar a data da próxima ação">
+                                <span class="text-xs text-blue-600">✏️</span>
+                            </div>
                         </div>
                         
                         ${actionButton}
