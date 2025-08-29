@@ -516,8 +516,21 @@
                     await saveDataToBin(true); // Salva a estrutura correta no bin
                 }
                 
-                leads = database.leads;
+                // Remover leads duplicados por ID antes de renderizar
+                const uniqueLeads = [];
+                const seenIds = new Set();
+                
+                database.leads.forEach(lead => {
+                    if (!seenIds.has(lead.id)) {
+                        seenIds.add(lead.id);
+                        uniqueLeads.push(lead);
+                    }
+                });
+                
+                leads = uniqueLeads;
                 cadenceConfig = database.config;
+                
+                console.log('Leads originais:', database.leads.length, 'Leads únicos:', uniqueLeads.length);
 
                 renderConfigForm();
                 populateStatusFilter();
@@ -777,20 +790,8 @@
             const sortedCompanies = Object.keys(groupedLeads).sort();
             const today = getToday();
             
-            // Debug - verificar empresas duplicadas
-            console.log('=== DEBUG RENDERIZAÇÃO ===');
-            console.log('Empresas encontradas:', sortedCompanies);
-            console.log('Leads agrupados:', groupedLeads);
-            console.log('Total de leads filtrados:', filteredLeads.length);
-            
-            // Verificar IDs únicos
-            const leadIds = filteredLeads.map(lead => lead.id);
-            const uniqueIds = [...new Set(leadIds)];
-            console.log('Total IDs:', leadIds.length, 'IDs únicos:', uniqueIds.length);
-            if (leadIds.length !== uniqueIds.length) {
-                console.error('🚨 LEADS DUPLICADOS DETECTADOS!');
-                console.log('IDs dos leads:', leadIds);
-            }
+            // Debug simplificado
+            console.log('Renderizando', sortedCompanies.length, 'empresas:', sortedCompanies);
 
             sortedCompanies.forEach(companyName => {
                 // Verificar se a empresa está expandida (padrão: expandida)
