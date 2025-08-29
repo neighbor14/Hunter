@@ -982,7 +982,12 @@
     <div id="report-modal" class="modal report-modal bg-gray-100 p-6 rounded-lg shadow-xl">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold">Relatório de Performance</h2>
-            <button id="close-report-btn" class="text-gray-500 hover:text-gray-800">&times;</button>
+            <div class="flex items-center space-x-4">
+                <button id="refresh-agenda-btn" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600" title="Atualizar agenda com dados mais recentes">
+                    🔄 Atualizar Agenda
+                </button>
+                <button id="close-report-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
         </div>
         
         <!-- KPIs Semanais -->
@@ -2165,7 +2170,11 @@
                 if (leadIndex === -1) return;
 
                 const oldDate = leads[leadIndex].nextActionDate;
-                if (oldDate === newDate) return;
+                console.log(`[DEBUG] updateActionDate chamado para lead ${leads[leadIndex].nome}: ${oldDate} -> ${newDate}`);
+                if (oldDate === newDate) {
+                    console.log(`[DEBUG] Data não mudou, saindo da função`);
+                    return;
+                }
 
                 // Validar se a data não é anterior ao dia atual (exceto se for ajuste do mesmo dia)
                 const today = getToday();
@@ -2188,20 +2197,39 @@
                 });
                 
                 leads[leadIndex].nextActionDate = newDate;
+                console.log(`[DEBUG] Data do lead ${leads[leadIndex].nome} alterada para: ${leads[leadIndex].nextActionDate}`);
 
                 showNotification(`📅 Data atualizada para ${formatDate(newDate)}`);
-                saveDataToBin();
-                renderTable(); // Re-renderizar para atualizar as cores de status
                 
-                // Se o modal de relatórios estiver aberto, regenerar todo o relatório
-                const reportModal = document.getElementById('report-modal');
-                if (reportModal && reportModal.style.display === 'block') {
-                    console.log(`[DEBUG] Regenerando relatório após alterar data para: ${newDate}`);
-                    console.log(`[DEBUG] Lead atualizado:`, leads[leadIndex]);
-                    generateReport(); // Regenera todos os relatórios incluindo a agenda
-                } else {
-                    console.log(`[DEBUG] Modal de relatórios não está aberto, não regenerando`);
-                }
+                // CORREÇÃO: Aguardar salvamento antes de regenerar relatórios
+                saveDataToBin().then(() => {
+                    console.log(`[DEBUG] Dados salvos no JSONBin. Atualizando interfaces...`);
+                    renderTable(); // Re-renderizar para atualizar as cores de status
+                    
+                    // Se o modal de relatórios estiver aberto, regenerar todo o relatório
+                    const reportModal = document.getElementById('report-modal');
+                    if (reportModal && reportModal.style.display === 'block') {
+                        console.log(`[DEBUG] Regenerando relatório após alterar data para: ${newDate}`);
+                        console.log(`[DEBUG] Lead atualizado:`, leads[leadIndex]);
+                        
+                        // Forçar atualização com delay para garantir que dados foram processados
+                        setTimeout(() => {
+                            console.log(`[DEBUG] Forçando regeneração completa da agenda...`);
+                            generateAgenda(); // Regenera especificamente a agenda
+                            generateReport(); // Regenera todos os relatórios incluindo a agenda
+                        }, 100);
+                    } else {
+                        console.log(`[DEBUG] Modal de relatórios não está aberto, não regenerando`);
+                    }
+                }).catch(error => {
+                    console.error('[DEBUG] Erro ao salvar dados:', error);
+                    // Mesmo com erro, tenta regenerar com dados locais
+                    renderTable();
+                    const reportModal = document.getElementById('report-modal');
+                    if (reportModal && reportModal.style.display === 'block') {
+                        generateReport();
+                    }
+                });
             },
 
             updateNextAction: (id, newActionIndexStr) => {
@@ -3006,6 +3034,15 @@
 
         closeReportBtn.addEventListener('click', closeReportModal);
         reportModalBackdrop.addEventListener('click', closeReportModal);
+
+        // Event listener para atualizar agenda manualmente
+        const refreshAgendaBtn = document.getElementById('refresh-agenda-btn');
+        refreshAgendaBtn.addEventListener('click', () => {
+            console.log('[DEBUG] Botão de atualização da agenda clicado');
+            showNotification('🔄 Atualizando agenda...');
+            generateAgenda();
+            showNotification('✅ Agenda atualizada!');
+        });
 
         // --- LÓGICA DE EXPORTAÇÃO ---
         const exportToXLS = () => {
