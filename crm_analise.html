@@ -273,7 +273,8 @@
                         <!-- Options will be populated by JS -->
                     </select>
                 </div>
-                <div class="md:w-auto">
+                <!-- Botão de visualização removido - usando apenas layout de cards -->
+                <div class="md:w-auto" style="display: none;">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Visualização</label>
                     <button id="toggle-view-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 md:hidden">
                         📱 Modo Cards
@@ -284,8 +285,8 @@
 
         <!-- Tabela de Leads -->
         <div id="leads-container" class="bg-white rounded-xl shadow-md">
-            <!-- Visualização Desktop (Tabela) -->
-            <div class="table-responsive overflow-x-auto">
+            <!-- Visualização Desktop (Tabela) - DESABILITADA para evitar layout duplicado -->
+            <div class="table-responsive overflow-x-auto" style="display: none;">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-100">
                         <tr>
@@ -302,8 +303,8 @@
                 </table>
             </div>
             
-            <!-- Visualização Mobile (Cards) -->
-            <div class="mobile-card p-4">
+            <!-- Visualização de Cards (principal) -->
+            <div class="p-4" style="display: block !important;">
                 <div id="leads-cards-body">
                     <!-- Cards mobile serão inseridos aqui via JS -->
                 </div>
@@ -803,8 +804,8 @@
                 return matchesSearch && matchesStatus;
             });
 
-            // Renderizar tanto tabela quanto cards
-            renderTableView(filteredLeads);
+            // Renderizar apenas layout de cards (layout tabela removido para evitar duplicação)
+            // renderTableView(filteredLeads); // REMOVIDO - causava layout duplicado
             renderCardsView(filteredLeads);
         };
         
