@@ -1409,11 +1409,14 @@
                             </select>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            <input type="date" 
-                                   value="${lead.nextActionDate}" 
-                                   onchange="window.app.updateActionDate('${lead.id}', this.value)"
-                                   class="text-sm p-1 border border-gray-300 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
-                                   title="Clique para alterar a data da próxima ação">
+                            <div class="flex items-center space-x-2">
+                                <input type="date" 
+                                       value="${lead.nextActionDate}" 
+                                       onchange="window.app.updateActionDate('${lead.id}', this.value)"
+                                       class="text-sm p-2 border-2 border-blue-300 rounded-md bg-blue-50 hover:bg-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 cursor-pointer"
+                                       title="📅 Clique para alterar a data da próxima ação">
+                                <span class="text-xs text-blue-600 font-medium">✏️</span>
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                             ${actionButtonsHTML}
