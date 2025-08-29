@@ -761,7 +761,9 @@
         };
         
         const renderTableView = (filteredLeads) => {
+            // Limpar completamente a tabela antes de renderizar
             tableBody.innerHTML = '';
+            
             if (filteredLeads.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</td></tr>`;
                 return;
@@ -780,6 +782,15 @@
             console.log('Empresas encontradas:', sortedCompanies);
             console.log('Leads agrupados:', groupedLeads);
             console.log('Total de leads filtrados:', filteredLeads.length);
+            
+            // Verificar IDs únicos
+            const leadIds = filteredLeads.map(lead => lead.id);
+            const uniqueIds = [...new Set(leadIds)];
+            console.log('Total IDs:', leadIds.length, 'IDs únicos:', uniqueIds.length);
+            if (leadIds.length !== uniqueIds.length) {
+                console.error('🚨 LEADS DUPLICADOS DETECTADOS!');
+                console.log('IDs dos leads:', leadIds);
+            }
 
             sortedCompanies.forEach(companyName => {
                 // Verificar se a empresa está expandida (padrão: expandida)
