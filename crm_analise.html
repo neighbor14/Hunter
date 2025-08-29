@@ -1147,7 +1147,10 @@
                         
                         <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
                             <button onclick="window.app.openNotesModal('${lead.id}')" class="text-gray-500 hover:text-gray-800 text-sm">📝 Notas</button>
-                            <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
+                            <div class="flex space-x-2">
+                                <button onclick="window.app.undoAction('${lead.id}')" class="text-yellow-600 hover:text-yellow-800 text-sm" title="Desfazer Última Ação">↶ Desfazer</button>
+                                <button onclick="window.app.deleteLead('${lead.id}')" class="text-red-500 hover:text-red-800 text-sm">🗑️ Excluir</button>
+                            </div>
                         </div>
                     `;
                     companyCardsContainer.appendChild(card);
@@ -1200,13 +1203,22 @@
             
             undoAction: (id) => {
                 const leadIndex = leads.findIndex(l => l.id === id);
-                if (leadIndex === -1 || !leads[leadIndex].history || leads[leadIndex].history.length === 0) return;
+                if (leadIndex === -1) {
+                    showNotification("❌ Lead não encontrado.", "error");
+                    return;
+                }
+                
+                if (!leads[leadIndex].history || leads[leadIndex].history.length === 0) {
+                    showNotification("ℹ️ Não há ações para desfazer neste lead.", "info");
+                    return;
+                }
 
                 const previousState = leads[leadIndex].history.pop();
                 leads[leadIndex].status = previousState.status;
                 leads[leadIndex].currentActionIndex = previousState.currentActionIndex;
                 leads[leadIndex].nextActionDate = previousState.nextActionDate;
                 
+                showNotification("✅ Última ação desfeita com sucesso!", "success");
                 saveDataToBin();
             },
 
