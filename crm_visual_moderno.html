@@ -708,6 +708,25 @@
             </div>
         </div>
 
+        <!-- Performance por Mensagem/Ação -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-3">🎯 Performance por Mensagem (Últimos 30 dias)</h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <p class="text-sm text-gray-600">
+                    <strong>Como funciona:</strong> Quando um lead muda de status positivamente, creditamos a conversão à ação/mensagem anterior que foi executada.
+                </p>
+            </div>
+            <div id="message-performance-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <!-- Cards de performance por mensagem serão inseridos aqui -->
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-800 mb-2">💡 Insights de Performance</h4>
+                <div id="performance-insights" class="space-y-1">
+                    <!-- Insights automáticos serão inseridos aqui -->
+                </div>
+            </div>
+        </div>
+
         <!-- Taxas de Conversão por Etapa -->
         <div class="mb-8">
             <h3 class="text-lg font-semibold mb-3">📈 Taxas de Conversão por Etapa (Últimos 30 dias)</h3>
@@ -2028,8 +2047,211 @@
             document.getElementById('conversion-to-client').textContent = `${conversionToClient}%`;
             document.getElementById('conversion-overall').textContent = `${conversionOverall}%`;
 
+            // ========== ANÁLISE DE PERFORMANCE POR MENSAGEM ==========
+            generateMessagePerformance();
+
             generateAgenda();
             generateKanban();
+        }
+
+        function generateMessagePerformance() {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+            if (configuredActions.length === 0) {
+                document.getElementById('message-performance-grid').innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <p>📭 Nenhuma ação configurada ainda.</p>
+                        <p class="text-sm">Configure suas mensagens em <strong>Configurações</strong> para ver a análise de performance.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Estatísticas por ação
+            const actionStats = {};
+            configuredActions.forEach((action, index) => {
+                actionStats[index] = {
+                    name: action.name,
+                    executions: 0,
+                    conversions: 0,
+                    conversionRate: 0
+                };
+            });
+
+            // Analisar histórico dos leads
+            leads.forEach(lead => {
+                if (lead.history && lead.history.length > 0) {
+                    lead.history.forEach(historyItem => {
+                        const actionDate = new Date(historyItem.timestamp);
+                        if (actionDate >= thirtyDaysAgo) {
+                            // Se foi uma execução de ação (não mudança manual de status)
+                            if (!historyItem.newStatus && typeof historyItem.currentActionIndex === 'number') {
+                                const actionIndex = historyItem.currentActionIndex;
+                                if (actionStats[actionIndex]) {
+                                    actionStats[actionIndex].executions++;
+                                }
+                            }
+                            
+                            // Se foi uma mudança de status positiva, creditar à ação anterior
+                            if (historyItem.newStatus) {
+                                const previousActionIndex = historyItem.currentActionIndex;
+                                const isPositiveStatusChange = isStatusProgression(historyItem.status, historyItem.newStatus);
+                                
+                                if (isPositiveStatusChange && typeof previousActionIndex === 'number' && actionStats[previousActionIndex]) {
+                                    actionStats[previousActionIndex].conversions++;
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Calcular taxas de conversão
+            Object.keys(actionStats).forEach(actionIndex => {
+                const stats = actionStats[actionIndex];
+                if (stats.executions > 0) {
+                    stats.conversionRate = ((stats.conversions / stats.executions) * 100).toFixed(1);
+                }
+            });
+
+            // Renderizar cards de performance
+            const performanceGrid = document.getElementById('message-performance-grid');
+            performanceGrid.innerHTML = '';
+
+            configuredActions.forEach((action, index) => {
+                const stats = actionStats[index];
+                let cardColor = 'bg-gray-50 border-gray-300';
+                let textColor = 'text-gray-700';
+                let iconColor = 'text-gray-500';
+                
+                if (stats.conversionRate >= 20) {
+                    cardColor = 'bg-green-50 border-green-300';
+                    textColor = 'text-green-800';
+                    iconColor = 'text-green-600';
+                } else if (stats.conversionRate >= 10) {
+                    cardColor = 'bg-yellow-50 border-yellow-300';
+                    textColor = 'text-yellow-800';
+                    iconColor = 'text-yellow-600';
+                } else if (stats.executions > 0) {
+                    cardColor = 'bg-red-50 border-red-300';
+                    textColor = 'text-red-800';
+                    iconColor = 'text-red-600';
+                }
+
+                const card = document.createElement('div');
+                card.className = `${cardColor} border-2 p-4 rounded-lg`;
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="${textColor} font-semibold text-sm">${action.name}</h4>
+                        <span class="${iconColor}">
+                            ${stats.conversionRate >= 20 ? '🎯' : stats.conversionRate >= 10 ? '📈' : stats.executions > 0 ? '📉' : '📭'}
+                        </span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-xs text-gray-600">Execuções:</span>
+                            <span class="${textColor} font-bold">${stats.executions}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-gray-600">Conversões:</span>
+                            <span class="${textColor} font-bold">${stats.conversions}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-gray-600">Taxa:</span>
+                            <span class="${textColor} font-bold text-lg">${stats.conversionRate}%</span>
+                        </div>
+                    </div>
+                `;
+                performanceGrid.appendChild(card);
+            });
+
+            // Gerar insights automáticos
+            generatePerformanceInsights(actionStats, configuredActions);
+        }
+
+        function isStatusProgression(fromStatus, toStatus) {
+            // Definir hierarquia de status (do menor para o maior)
+            const statusHierarchy = [
+                'Prospecção',
+                'Lista de Contatos',
+                'Contato em Andamento',
+                'Em Contato',
+                'Conexão/Interesse',
+                'Conversando',
+                'Reunião Agendada',
+                'Negociação',
+                'Parceria Fechada',
+                'Cliente'
+            ];
+
+            const fromIndex = statusHierarchy.findIndex(status => 
+                fromStatus?.includes(status) || status.includes(fromStatus || '')
+            );
+            const toIndex = statusHierarchy.findIndex(status => 
+                toStatus?.includes(status) || status.includes(toStatus || '')
+            );
+
+            // Se ambos os status foram encontrados e o destino é maior que a origem
+            return fromIndex !== -1 && toIndex !== -1 && toIndex > fromIndex;
+        }
+
+        function generatePerformanceInsights(actionStats, configuredActions) {
+            const insightsContainer = document.getElementById('performance-insights');
+            const insights = [];
+
+            // Encontrar melhor e pior performance
+            let bestAction = null;
+            let worstAction = null;
+            let bestRate = -1;
+            let worstRate = 101;
+
+            Object.keys(actionStats).forEach(actionIndex => {
+                const stats = actionStats[actionIndex];
+                if (stats.executions > 0) {
+                    const rate = parseFloat(stats.conversionRate);
+                    if (rate > bestRate) {
+                        bestRate = rate;
+                        bestAction = stats;
+                    }
+                    if (rate < worstRate) {
+                        worstRate = rate;
+                        worstAction = stats;
+                    }
+                }
+            });
+
+            // Gerar insights
+            if (bestAction && bestRate > 0) {
+                insights.push(`🏆 <strong>${bestAction.name}</strong> é sua melhor mensagem com <strong>${bestRate}%</strong> de conversão`);
+            }
+
+            if (worstAction && worstRate < 100 && bestAction !== worstAction) {
+                insights.push(`⚠️ <strong>${worstAction.name}</strong> precisa de atenção com apenas <strong>${worstRate}%</strong> de conversão`);
+            }
+
+            const totalExecutions = Object.values(actionStats).reduce((sum, stats) => sum + stats.executions, 0);
+            const totalConversions = Object.values(actionStats).reduce((sum, stats) => sum + stats.conversions, 0);
+            
+            if (totalExecutions > 0) {
+                const overallRate = ((totalConversions / totalExecutions) * 100).toFixed(1);
+                insights.push(`📊 Taxa geral de conversão por ação: <strong>${overallRate}%</strong>`);
+            }
+
+            // Sugestões baseadas nos dados
+            if (bestRate > 0 && worstRate < bestRate - 10) {
+                insights.push(`💡 Considere ajustar o template da <strong>${worstAction.name}</strong> baseado no sucesso da <strong>${bestAction.name}</strong>`);
+            }
+
+            // Renderizar insights
+            if (insights.length === 0) {
+                insightsContainer.innerHTML = '<p class="text-blue-600 text-sm">📈 Execute mais ações para ver insights personalizados!</p>';
+            } else {
+                insightsContainer.innerHTML = insights.map(insight => 
+                    `<p class="text-blue-700 text-sm">• ${insight}</p>`
+                ).join('');
+            }
         }
 
         function generateAgenda() {
