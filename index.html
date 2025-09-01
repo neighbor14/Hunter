@@ -4702,6 +4702,43 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                     console.log(`🔧 CORREÇÃO FINAL: Nome forçado para segunda coluna "${headers[1]}"`);
                 }
             }
+
+            // CORREÇÃO ULTRA FORÇADA: Se ainda não encontrou, procurar em TODAS as colunas
+            if (mapping.nome === -1) {
+                console.log('🚨 CORREÇÃO ULTRA FORÇADA: Procurando em todas as colunas...');
+                
+                // Procurar por qualquer coluna que possa conter nomes
+                for (let i = 0; i < headers.length; i++) {
+                    const header = headers[i];
+                    const headerLower = header.toLowerCase();
+                    
+                    // Se a coluna não é empresa, data, linkedin, cargo, abordagem, pode ser nome
+                    if (i !== mapping.empresa && 
+                        i !== mapping.dataCriacao && 
+                        i !== mapping.linkedin && 
+                        i !== mapping.cargo && 
+                        i !== mapping.abordagem) {
+                        
+                        // Verificar se a coluna tem dados que parecem nomes (não vazios, não números)
+                        if (row && row[i] && String(row[i]).trim() && !String(row[i]).match(/^\d+$/)) {
+                            mapping.nome = i;
+                            console.log(`🚨 CORREÇÃO ULTRA FORÇADA: Nome mapeado para coluna ${i} (cabeçalho: "${header}")`);
+                            break;
+                        }
+                    }
+                }
+                
+                // ÚLTIMO RECURSO: Usar a primeira coluna disponível que não seja empresa
+                if (mapping.nome === -1) {
+                    for (let i = 0; i < headers.length; i++) {
+                        if (i !== mapping.empresa) {
+                            mapping.nome = i;
+                            console.log(`🚨 ÚLTIMO RECURSO: Nome forçado para coluna ${i} (cabeçalho: "${header}")`);
+                            break;
+                        }
+                    }
+                }
+            }
             
             return mapping;
         }
@@ -4713,6 +4750,15 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             const empresa = getValue(mapping.empresa);
             const nome = getValue(mapping.nome);
             const linkedin = getValue(mapping.linkedin);
+            
+            // DEBUG FORÇADO: Vamos ver exatamente o que está sendo mapeado
+            console.log(`🔍 DEBUG mapRowToLead:`, {
+                empresa: empresa,
+                nome: nome,
+                mapping: mapping,
+                headers: headers,
+                row: row
+            });
             
             // Validação mais flexível - permite nome vazio se tiver empresa
             if (!empresa && !nome) {
