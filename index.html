@@ -4680,6 +4680,28 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                     console.log(`🔧 Auto-mapeamento: Segunda coluna "${headers[1]}" será tratada como Nome`);
                 }
             }
+
+            // CORREÇÃO FORÇADA: Se não encontrou nome, procurar por padrões específicos
+            if (mapping.nome === -1) {
+                console.log('🔧 Tentando correção forçada para coluna Nome...');
+                
+                // Procurar por colunas que contenham "contato" ou "nome" em qualquer posição
+                headers.forEach((header, index) => {
+                    const headerLower = header.toLowerCase();
+                    if (headerLower.includes('contato') || headerLower.includes('nome') || 
+                        headerLower.includes('contact') || headerLower.includes('name')) {
+                        mapping.nome = index;
+                        console.log(`🔧 CORREÇÃO FORÇADA: Nome mapeado para coluna ${index} (cabeçalho: "${header}")`);
+                        return;
+                    }
+                });
+                
+                // Se ainda não encontrou, usar a segunda coluna (assumindo que é nome)
+                if (mapping.nome === -1 && headers.length >= 2) {
+                    mapping.nome = 1;
+                    console.log(`🔧 CORREÇÃO FINAL: Nome forçado para segunda coluna "${headers[1]}"`);
+                }
+            }
             
             return mapping;
         }
