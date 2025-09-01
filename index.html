@@ -4586,8 +4586,11 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             }, 1000);
         }
         
-        // Mapear colunas automaticamente
+        // Mapear colunas automaticamente - SOLUÇÃO DIRETA FORÇADA
         function mapColumns(headers) {
+            console.log('🚨 MAPEAMENTO DIRETO FORÇADO ATIVADO!');
+            console.log('📋 Cabeçalhos encontrados:', headers);
+            
             const mapping = {
                 empresa: -1,
                 dataCriacao: -1,
@@ -4597,149 +4600,45 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 cargo: -1,
                 outrasInfo: []
             };
-            
-            headers.forEach((header, index) => {
-                const h = header.toLowerCase().replace(/[^a-z0-9]/g, ''); // Remove acentos, dois pontos e caracteres especiais
-                const original = header.toLowerCase().trim(); // Manter versão com caracteres para debug
-                
-                console.log(`🔍 Analisando coluna ${index}: "${header}" → "${original}" → "${h}"`);
-                
-                // Mapeamento mais flexível para empresa
-                if (h.includes('empresa') || h.includes('company') || h.includes('organizacao') || h.includes('organization') || h === 'emp') {
-                    mapping.empresa = index;
-                    console.log(`✅ Empresa mapeada para coluna ${index}`);
-                } 
-                // Data de criação com mais variações  
-                else if (h.includes('data') || h.includes('date') || h.includes('created') || h.includes('criacao')) {
-                    mapping.dataCriacao = index;
-                    console.log(`✅ Data de criação mapeada para coluna ${index}`);
-                } 
-                // Abordagem / mensagem
-                else if (h.includes('abordagem') || h.includes('approach') || h.includes('mensagem') || 
-                         h.includes('ciclo') || h.includes('etapa') || h.includes('step') || h.includes('msg') ||
-                         h.includes('contato') && (h.includes('1') || h.includes('2') || h.includes('3'))) {
-                    mapping.abordagem = index;
-                    console.log(`✅ Abordagem mapeada para coluna ${index}`);
-                } 
-                // LinkedIn com mais variações
-                else if (h.includes('linkedin') || h.includes('url') || h.includes('profile') || 
-                         h.includes('perfil') || h.includes('link') || h.includes('correto')) {
-                    mapping.linkedin = index;
-                    console.log(`✅ LinkedIn mapeado para coluna ${index}`);
-                } 
-                // Nome do contato com mais variações - CORRIGIDO
-                else if (original.includes('nome do contato') || original.includes('nome contato') ||
-                         h.includes('nomedocontato') || h.includes('nomecontato') || 
-                         h.includes('nome') || h.includes('contato') || h.includes('name') || 
-                         h.includes('contact') || h.includes('pessoa') || h.includes('person') || h === 'nm') {
-                    mapping.nome = index;
-                    console.log(`✅ Nome mapeado para coluna ${index} (cabeçalho: "${original}")`);
-                    console.log(`🔍 Debug: original="${original}", h="${h}"`);
-                } 
-                // Cargo com mais variações
-                else if (h.includes('cargo') || h.includes('position') || h.includes('job') || 
-                         h.includes('funcao') || h.includes('function') || h.includes('title') || h.includes('titulo')) {
-                    mapping.cargo = index;
-                    console.log(`✅ Cargo mapeado para coluna ${index}`);
-                }
-                // Telefone (vai para outras informações)
-                else if (h.includes('tel') || h.includes('phone') || h.includes('telefone') || h.includes('fone')) {
-                    mapping.outrasInfo.push(index);
-                    console.log(`📝 Telefone adicionado às outras informações (coluna ${index})`);
-                }
-                // Outras informações
-                else {
-                    mapping.outrasInfo.push(index);
-                    console.log(`📝 Coluna ${index} adicionada às outras informações`);
-                }
-            });
-            
-            console.log('🗺️ Mapeamento detalhado:', {
-                empresa: mapping.empresa >= 0 ? headers[mapping.empresa] : 'NÃO ENCONTRADO',
-                nome: mapping.nome >= 0 ? headers[mapping.nome] : 'NÃO ENCONTRADO', 
-                cargo: mapping.cargo >= 0 ? headers[mapping.cargo] : 'opcional',
-                linkedin: mapping.linkedin >= 0 ? headers[mapping.linkedin] : 'opcional',
-                dataCriacao: mapping.dataCriacao >= 0 ? headers[mapping.dataCriacao] : 'opcional',
-                abordagem: mapping.abordagem >= 0 ? headers[mapping.abordagem] : 'opcional',
-                outrasInfo: mapping.outrasInfo.map(i => headers[i])
-            });
-            
-            // Verificar se conseguiu mapear pelo menos uma coluna essencial
-            if (mapping.empresa === -1 && mapping.nome === -1) {
-                console.warn('⚠️ Não foi possível encontrar colunas de Empresa ou Nome');
-                console.log('📋 Cabeçalhos disponíveis:', headers);
-                console.log('💡 Sugestão: Renomeie uma coluna para "Empresa" ou "Nome" no seu arquivo');
-                
-                // Tentar mapear automaticamente usando a primeira coluna como empresa e segunda como nome
-                if (headers.length >= 1) {
-                    mapping.empresa = 0;
-                    console.log(`🔧 Auto-mapeamento: Primeira coluna "${headers[0]}" será tratada como Empresa`);
-                }
-                if (headers.length >= 2) {
-                    mapping.nome = 1; 
-                    console.log(`🔧 Auto-mapeamento: Segunda coluna "${headers[1]}" será tratada como Nome`);
-                }
-            }
 
-            // CORREÇÃO FORÇADA: Se não encontrou nome, procurar por padrões específicos
-            if (mapping.nome === -1) {
-                console.log('🔧 Tentando correção forçada para coluna Nome...');
-                
-                // Procurar por colunas que contenham "contato" ou "nome" em qualquer posição
-                headers.forEach((header, index) => {
-                    const headerLower = header.toLowerCase();
-                    if (headerLower.includes('contato') || headerLower.includes('nome') || 
-                        headerLower.includes('contact') || headerLower.includes('name')) {
-                        mapping.nome = index;
-                        console.log(`🔧 CORREÇÃO FORÇADA: Nome mapeado para coluna ${index} (cabeçalho: "${header}")`);
-                        return;
-                    }
-                });
-                
-                // Se ainda não encontrou, usar a segunda coluna (assumindo que é nome)
-                if (mapping.nome === -1 && headers.length >= 2) {
-                    mapping.nome = 1;
-                    console.log(`🔧 CORREÇÃO FINAL: Nome forçado para segunda coluna "${headers[1]}"`);
-                }
-            }
-
-            // CORREÇÃO ULTRA FORÇADA: Se ainda não encontrou, procurar em TODAS as colunas
-            if (mapping.nome === -1) {
-                console.log('🚨 CORREÇÃO ULTRA FORÇADA: Procurando em todas as colunas...');
-                
-                // Procurar por qualquer coluna que possa conter nomes
-                for (let i = 0; i < headers.length; i++) {
-                    const header = headers[i];
-                    const headerLower = header.toLowerCase();
-                    
-                    // Se a coluna não é empresa, data, linkedin, cargo, abordagem, pode ser nome
-                    if (i !== mapping.empresa && 
-                        i !== mapping.dataCriacao && 
-                        i !== mapping.linkedin && 
-                        i !== mapping.cargo && 
-                        i !== mapping.abordagem) {
-                        
-                        // Verificar se a coluna tem dados que parecem nomes (não vazios, não números)
-                        if (row && row[i] && String(row[i]).trim() && !String(row[i]).match(/^\d+$/)) {
-                            mapping.nome = i;
-                            console.log(`🚨 CORREÇÃO ULTRA FORÇADA: Nome mapeado para coluna ${i} (cabeçalho: "${header}")`);
-                            break;
-                        }
-                    }
-                }
-                
-                // ÚLTIMO RECURSO: Usar a primeira coluna disponível que não seja empresa
-                if (mapping.nome === -1) {
-                    for (let i = 0; i < headers.length; i++) {
-                        if (i !== mapping.empresa) {
-                            mapping.nome = i;
-                            console.log(`🚨 ÚLTIMO RECURSO: Nome forçado para coluna ${i} (cabeçalho: "${header}")`);
-                            break;
-                        }
-                    }
-                }
+            // MAPEAMENTO DIRETO FORÇADO - Baseado na estrutura conhecida do arquivo
+            if (headers.length >= 1) {
+                mapping.empresa = 0;
+                console.log(`🚨 FORÇADO: Empresa = coluna 0 ("${headers[0]}")`);
             }
             
+            if (headers.length >= 2) {
+                mapping.nome = 1;
+                console.log(`🚨 FORÇADO: Nome = coluna 1 ("${headers[1]}")`);
+            }
+            
+            if (headers.length >= 3) {
+                mapping.cargo = 2;
+                console.log(`🚨 FORÇADO: Cargo = coluna 2 ("${headers[2]}")`);
+            }
+            
+            if (headers.length >= 4) {
+                mapping.linkedin = 3;
+                console.log(`🚨 FORÇADO: LinkedIn = coluna 3 ("${headers[3]}")`);
+            }
+            
+            if (headers.length >= 5) {
+                mapping.dataCriacao = 4;
+                console.log(`🚨 FORÇADO: Data = coluna 4 ("${headers[4]}")`);
+            }
+            
+            if (headers.length >= 6) {
+                mapping.abordagem = 5;
+                console.log(`🚨 FORÇADO: Abordagem = coluna 5 ("${headers[5]}")`);
+            }
+            
+            // Adicionar colunas restantes como outras informações
+            for (let i = 6; i < headers.length; i++) {
+                mapping.outrasInfo.push(i);
+                console.log(`🚨 FORÇADO: Outras info = coluna ${i} ("${headers[i]}")`);
+            }
+            
+            console.log('🚨 MAPEAMENTO DIRETO APLICADO:', mapping);
             return mapping;
         }
         
