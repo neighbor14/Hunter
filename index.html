@@ -4463,9 +4463,15 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 importedLeadsData = importedLeadsData.slice(0, 1000);
             }
             
-            console.log('🎯 Chamando showImportPreview...');
+            console.log('🎯 Pulando modal e importando diretamente...');
             console.log('📋 Parâmetros:', { filename, successCount, errors: errors.length });
-            showImportPreview(filename, successCount, errors);
+            
+            // SOLUÇÃO DIRETA: Importar automaticamente sem modal
+            showNotification(`✅ ${importedLeadsData.length} leads processados com sucesso! Importando...`, "success");
+            
+            setTimeout(() => {
+                importLeads();
+            }, 1000);
         }
         
         // Mapear colunas automaticamente
@@ -4897,28 +4903,17 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             console.log('✅ Modal alternativo criado e exibido');
         }
         
-        // Fechar preview de importação
+        // Limpar dados de importação
         function closeImportPreview() {
-            // Fechar modal original
-            const originalModal = document.getElementById('import-preview-modal');
-            if (originalModal) {
-                originalModal.style.display = 'none';
-            }
+            console.log('🧹 Limpando dados de importação...');
             
-            // Fechar modal alternativo se existir
-            const altModal = document.getElementById('alternative-modal');
-            if (altModal) {
-                altModal.remove();
-            }
-            
-            // Limpar dados
-            importedLeadsData = [];
+            // Limpar apenas dados - não há modais para fechar
             const fileInput = document.getElementById('file-input');
             if (fileInput) {
                 fileInput.value = '';
             }
             
-            console.log('✅ Modais fechados e dados limpos');
+            console.log('✅ Dados de importação limpos');
         }
         
         // Importar leads para o sistema
@@ -4973,6 +4968,9 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                     : `✅ ${importedLeadsData.length} leads importados com sucesso!`;
                 
                 showNotification(message, "success");
+                
+                // Limpar dados de importação
+                closeImportPreview();
                 
             } catch (error) {
                 console.error('Erro ao importar leads:', error);
