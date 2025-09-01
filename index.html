@@ -4602,7 +4602,7 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 const h = header.toLowerCase().replace(/[^a-z0-9]/g, ''); // Remove acentos, dois pontos e caracteres especiais
                 const original = header.toLowerCase().trim(); // Manter versão com caracteres para debug
                 
-                console.log(`🔍 Analisando coluna ${index}: "${original}" → "${h}"`);
+                console.log(`🔍 Analisando coluna ${index}: "${header}" → "${original}" → "${h}"`);
                 
                 // Mapeamento mais flexível para empresa
                 if (h.includes('empresa') || h.includes('company') || h.includes('organizacao') || h.includes('organization') || h === 'emp') {
@@ -4634,6 +4634,7 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                          h.includes('contact') || h.includes('pessoa') || h.includes('person') || h === 'nm') {
                     mapping.nome = index;
                     console.log(`✅ Nome mapeado para coluna ${index} (cabeçalho: "${original}")`);
+                    console.log(`🔍 Debug: original="${original}", h="${h}"`);
                 } 
                 // Cargo com mais variações
                 else if (h.includes('cargo') || h.includes('position') || h.includes('job') || 
