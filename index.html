@@ -1451,6 +1451,10 @@
                 
                 database.leads.forEach(lead => {
                     if (!seenIds.has(lead.id)) {
+                        // Garantir compatibilidade com leads existentes
+                        if (lead.ativo === undefined) {
+                            lead.ativo = true; // Leads existentes são ativos por padrão
+                        }
                         seenIds.add(lead.id);
                         uniqueLeads.push(lead);
                     }
@@ -1785,7 +1789,8 @@
                 const matchesSearch = empresa.includes(searchTerm) || nome.includes(searchTerm);
                 const matchesStatus = selectedStatus === 'all' || lead.status === selectedStatus;
                 
-                console.log(`🔍 Filtrando lead: ${lead.empresa} - ${lead.nome} | Busca: ${matchesSearch} | Status: ${matchesStatus}`);
+                // Mostrar leads ativos e inativos, mas destacar visualmente
+                console.log(`🔍 Filtrando lead: ${lead.empresa} - ${lead.nome} | Busca: ${matchesSearch} | Status: ${matchesStatus} | Ativo: ${lead.ativo !== false}`);
                 
                 return matchesSearch && matchesStatus;
             });
@@ -2145,7 +2150,9 @@
                     }
 
                     const card = document.createElement('div');
-                    card.className = `contact-card p-6 border-l-4 ${cardBorderColor}`;
+                    const isActive = lead.ativo !== false;
+                    const inactiveClass = !isActive ? 'opacity-60 bg-gray-50' : '';
+                    card.className = `contact-card p-6 border-l-4 ${cardBorderColor} ${inactiveClass}`;
                     
                     let statusColor = '';
                     if (nextActionDate && nextActionDate < today) {
@@ -2243,6 +2250,17 @@
                                 </button>
                                 ` : ''}
                             </div>
+                            <button onclick="window.app.toggleLeadActive('${lead.id}')" 
+                                    class="action-btn ${lead.ativo !== false ? 'action-success' : 'action-neutral'} text-sm" 
+                                    title="${lead.ativo !== false ? 'Lead Ativo - Clique para Desativar' : 'Lead Inativo - Clique para Ativar'}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    ${lead.ativo !== false ? 
+                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>' : 
+                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+                                    }
+                                </svg>
+                                <span class="hidden sm:inline">${lead.ativo !== false ? 'Ativo' : 'Inativo'}</span>
+                            </button>
                             <button onclick="window.app.deleteLead('${lead.id}')" 
                                     class="action-btn action-secondary text-red-600 text-sm" title="Excluir">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2500,6 +2518,20 @@
                     saveDataToBin();
                 }
             },
+
+            toggleLeadActive: (id) => {
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if (leadIndex === -1) return;
+                
+                // Alternar status ativo
+                leads[leadIndex].ativo = !leads[leadIndex].ativo;
+                
+                const status = leads[leadIndex].ativo ? 'ativo' : 'inativo';
+                const emoji = leads[leadIndex].ativo ? '✅' : '⏸️';
+                
+                showNotification(`${emoji} Lead ${leads[leadIndex].nome} agora está ${status}`, "success");
+                saveDataToBin();
+            },
             
             openNotesModal: (id) => {
                 currentLeadIdForModal = id;
@@ -2546,7 +2578,8 @@
                 nextActionDate: getToday().toISOString(),
                 notes: '',
                 history: [],
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                ativo: true // Novos leads são ativos por padrão
             };
             leads.push(newLead);
             saveDataToBin();
@@ -2619,10 +2652,10 @@
                 }
             });
 
-            const activeLeads = leads.filter(l => l.status !== "Parceria Fechada" && l.status !== "Parceria Perdida").length;
+            const activeLeads = leads.filter(l => l.ativo !== false && l.status !== "Parceria Fechada" && l.status !== "Parceria Perdida").length;
             
-            const leadsReachedContact = leads.filter(l => l.history && l.history.some(h => h.status === "Contato em Andamento")).length;
-            const leadsReachedMeeting = leads.filter(l => l.status === "Reunião Agendada" || l.status === "Negociação" || l.status === "Parceria Fechada").length;
+            const leadsReachedContact = leads.filter(l => l.ativo !== false && l.history && l.history.some(h => h.status === "Contato em Andamento")).length;
+            const leadsReachedMeeting = leads.filter(l => l.ativo !== false && (l.status === "Reunião Agendada" || l.status === "Negociação" || l.status === "Parceria Fechada")).length;
             const conversionRate = leadsReachedContact > 0 ? ((leadsReachedMeeting / leadsReachedContact) * 100).toFixed(1) : 0;
 
             // ========== MÉTRICAS MENSAIS - PROGRESSÃO NO FUNIL ==========
@@ -3035,11 +3068,12 @@
                 console.log(`[DEBUG AGENDA] Dia útil: ${dateStr} (${formatDateShort(date)})`);
             });
 
-            // Organizar leads nas datas correspondentes
-            console.log(`[DEBUG AGENDA] Processando ${leads.length} leads`);
-            console.log(`[DEBUG AGENDA] Array completo de leads:`, leads.map(l => ({nome: l.nome, nextActionDate: l.nextActionDate})));
+            // Filtrar apenas leads ativos para a agenda
+            const activeLeads = leads.filter(lead => lead.ativo !== false);
+            console.log(`[DEBUG AGENDA] Processando ${activeLeads.length} leads ativos de ${leads.length} totais`);
+            console.log(`[DEBUG AGENDA] Leads ativos:`, activeLeads.map(l => ({nome: l.nome, ativo: l.ativo, nextActionDate: l.nextActionDate})));
             
-            leads.forEach(lead => {
+            activeLeads.forEach(lead => {
                 console.log(`[DEBUG AGENDA] Processando lead: ${lead.nome}, nextActionDate: ${lead.nextActionDate}`);
                 if (lead.nextActionDate) {
                     // CORREÇÃO: Usar diretamente a data string em formato YYYY-MM-DD
@@ -4590,7 +4624,8 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 nextActionDate: currentActionIndex < (cadenceConfig.actions?.length || 0) ? getToday().toISOString() : null,
                 notes: outrasInfo.join('\n'),
                 history: [],
-                createdAt
+                createdAt,
+                ativo: true // Leads importados são ativos por padrão
             };
         }
         
