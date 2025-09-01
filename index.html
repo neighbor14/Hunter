@@ -4744,20 +4744,27 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             modal.style.position = 'fixed';
             modal.style.top = '0';
             modal.style.left = '0';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.zIndex = '9999';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.zIndex = '999999';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            modal.style.overflow = 'auto';
+            modal.style.pointerEvents = 'auto';
             
             // Centralizar o modal interno
             const modalContent = modal.querySelector('.modal');
             if (modalContent) {
-                modalContent.style.position = 'absolute';
+                modalContent.style.position = 'fixed';
                 modalContent.style.top = '50%';
                 modalContent.style.left = '50%';
                 modalContent.style.transform = 'translate(-50%, -50%)';
-                modalContent.style.zIndex = '10000';
-                console.log('✅ Modal interno centralizado');
+                modalContent.style.zIndex = '1000000';
+                modalContent.style.maxWidth = '90vw';
+                modalContent.style.maxHeight = '90vh';
+                modalContent.style.backgroundColor = 'white';
+                modalContent.style.boxShadow = '0 25px 50px rgba(0,0,0,0.5)';
+                modalContent.style.borderRadius = '12px';
+                console.log('✅ Modal interno centralizado e estilizado');
             }
             
             console.log('👁️ Modal exibido! Style display:', modal.style.display);
@@ -4787,24 +4794,107 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 console.log('🔍 Modal é visível após timeout:', isVisible);
                 
                 if (!isVisible) {
-                    console.log('⚠️ Modal não está visível, usando fallback...');
-                    const confirmImport = confirm(
-                        `Modal não apareceu, mas ${importedLeadsData.length} leads foram processados com sucesso!\n\n` +
-                        `Deseja importar todos os ${importedLeadsData.length} leads agora?\n\n` +
-                        `Clique OK para importar ou Cancelar para tentar novamente.`
-                    );
-                    
-                    if (confirmImport) {
-                        console.log('✅ Usuário confirmou importação via fallback');
-                        importLeads();
-                    } else {
-                        console.log('❌ Usuário cancelou importação');
-                        importedLeadsData = [];
-                    }
+                    console.log('⚠️ Modal não está visível, criando modal alternativo...');
+                    createAlternativeModal();
                 }
             }, 1000);
             
             console.log('✅ showImportPreview concluída com sucesso!');
+        }
+        
+        // Criar modal alternativo quando o original não funciona
+        function createAlternativeModal() {
+            console.log('🔧 Criando modal alternativo...');
+            
+            // Remover modal existente se houver
+            const existingAlt = document.getElementById('alternative-modal');
+            if (existingAlt) existingAlt.remove();
+            
+            // Criar novo modal do zero
+            const altModal = document.createElement('div');
+            altModal.id = 'alternative-modal';
+            altModal.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0,0,0,0.9) !important;
+                z-index: 2147483647 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-family: Arial, sans-serif !important;
+            `;
+            
+            altModal.innerHTML = `
+                <div style="
+                    background: white !important;
+                    padding: 30px !important;
+                    border-radius: 12px !important;
+                    max-width: 600px !important;
+                    max-height: 80vh !important;
+                    overflow-y: auto !important;
+                    box-shadow: 0 25px 50px rgba(0,0,0,0.8) !important;
+                    text-align: center !important;
+                ">
+                    <h2 style="color: #1f2937 !important; margin-bottom: 20px !important; font-size: 24px !important;">
+                        🎉 Importação Pronta!
+                    </h2>
+                    <p style="color: #4b5563 !important; font-size: 16px !important; margin-bottom: 20px !important;">
+                        <strong>${importedLeadsData.length} leads</strong> foram processados com sucesso e estão prontos para importação.
+                    </p>
+                    <div style="background: #f3f4f6 !important; padding: 15px !important; border-radius: 8px !important; margin-bottom: 20px !important;">
+                        <p style="color: #374151 !important; font-size: 14px !important; margin: 0 !important;">
+                            ✅ Empresas mapeadas<br>
+                            ✅ Nomes de contato criados<br>
+                            ✅ Dados validados
+                        </p>
+                    </div>
+                    <div style="display: flex !important; gap: 15px !important; justify-content: center !important;">
+                        <button id="alt-import-btn" style="
+                            background: #10b981 !important;
+                            color: white !important;
+                            padding: 12px 24px !important;
+                            border: none !important;
+                            border-radius: 6px !important;
+                            font-size: 16px !important;
+                            font-weight: 600 !important;
+                            cursor: pointer !important;
+                        ">
+                            Importar ${importedLeadsData.length} Leads
+                        </button>
+                        <button id="alt-cancel-btn" style="
+                            background: #6b7280 !important;
+                            color: white !important;
+                            padding: 12px 24px !important;
+                            border: none !important;
+                            border-radius: 6px !important;
+                            font-size: 16px !important;
+                            cursor: pointer !important;
+                        ">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(altModal);
+            
+            // Event listeners
+            document.getElementById('alt-import-btn').addEventListener('click', () => {
+                console.log('✅ Usuário confirmou importação via modal alternativo');
+                altModal.remove();
+                importLeads();
+            });
+            
+            document.getElementById('alt-cancel-btn').addEventListener('click', () => {
+                console.log('❌ Usuário cancelou importação via modal alternativo');
+                altModal.remove();
+                importedLeadsData = [];
+            });
+            
+            console.log('✅ Modal alternativo criado e exibido');
         }
         
         // Fechar preview de importação
