@@ -303,6 +303,18 @@
             box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
 
+        .action-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: 1px solid transparent;
+        }
+
+        .action-success:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
         .action-neutral {
             background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
             color: white;
@@ -861,6 +873,13 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <!-- Botão Importar Leads Discreto -->
+                    <button id="import-leads-btn" class="action-btn action-success" title="Importar leads em lote">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Importar</span>
+                    </button>
                     <button id="dark-mode-toggle" class="action-btn action-neutral">
                         <svg id="sun-icon" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -961,73 +980,8 @@
             </form>
         </div>
 
-        <!-- Seção para Importar Leads -->
-        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h2 class="text-2xl font-semibold mb-4 flex items-center">
-                <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                </svg>
-                Importar Leads em Lote
-            </h2>
-            
-            <!-- Área de Drag & Drop -->
-            <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-green-400 hover:bg-green-50 transition-colors cursor-pointer">
-                <div class="flex flex-col items-center">
-                    <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                    </svg>
-                    <p class="text-lg font-medium text-gray-700 mb-2">Arraste seu arquivo Excel aqui</p>
-                    <p class="text-sm text-gray-500 mb-4">ou clique para selecionar</p>
-                    <input type="file" id="file-input" class="hidden" accept=".xlsx,.xls,.csv" />
-                    <button onclick="document.getElementById('file-input').click()" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors">
-                        Selecionar Arquivo
-                    </button>
-                </div>
-                <div class="mt-4 text-xs text-gray-500">
-                    <p>Formatos suportados: Excel (.xlsx, .xls) e CSV (.csv)</p>
-                    <p>Máximo: 1000 leads por importação</p>
-                </div>
-            </div>
-
-            <!-- Informações sobre o mapeamento de colunas -->
-            <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 class="font-medium text-blue-800 mb-2">📋 Mapeamento de Colunas</h3>
-                <div class="text-sm text-blue-700 space-y-1">
-                    <p><strong>Empresa:</strong> Nome da empresa do lead</p>
-                    <p><strong>Data de Criação:</strong> Data de criação do lead (formato: DD/MM/AAAA)</p>
-                    <p><strong>Abordagem:</strong> Número da mensagem no ciclo (1-5)</p>
-                    <p><strong>Link LinkedIn:</strong> URL do perfil LinkedIn</p>
-                    <p><strong>Nome do Contato:</strong> Nome completo do lead</p>
-                    <p><strong>Cargo:</strong> Posição do contato na empresa</p>
-                    <p><strong>Demais informações:</strong> Serão importadas no campo de notas</p>
-                </div>
-            </div>
-
-            <!-- Modal de Preview da Importação -->
-            <div id="import-preview-modal" class="modal-backdrop" style="display: none;">
-                <div class="modal bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-                    <div class="p-6 border-b border-gray-200">
-                        <h3 class="text-xl font-semibold text-gray-900">Preview da Importação</h3>
-                        <p class="text-sm text-gray-600 mt-1">Verifique os dados antes de importar</p>
-                    </div>
-                    
-                    <div class="p-6 overflow-y-auto max-h-[60vh]">
-                        <div id="import-preview-content"></div>
-                    </div>
-                    
-                    <div class="p-6 border-t border-gray-200 flex justify-between">
-                        <button onclick="closeImportPreview()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                            Cancelar
-                        </button>
-                        <div class="space-x-3">
-                            <button onclick="importLeads()" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700">
-                                Importar <span id="import-count">0</span> Leads
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Input de importação escondido -->
+        <input type="file" id="file-input" class="hidden" accept=".xlsx,.xls,.csv" />
 
         <!-- Filtros e Busca -->
         <div class="bg-white p-4 rounded-xl shadow-md mb-8">
@@ -4241,43 +4195,28 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
         
         let importedLeadsData = [];
         
-        // Inicializar drag & drop
+        // Inicializar importação discreta
         function initDragDrop() {
-            const dropZone = document.getElementById('drop-zone');
+            const importBtn = document.getElementById('import-leads-btn');
             const fileInput = document.getElementById('file-input');
             
-            // Eventos de drag & drop
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('border-green-400', 'bg-green-50');
-            });
-            
-            dropZone.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('border-green-400', 'bg-green-50');
-            });
-            
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('border-green-400', 'bg-green-50');
-                
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    handleFileUpload(files[0]);
-                }
-            });
-            
-            // Click no drop zone para abrir seletor
-            dropZone.addEventListener('click', () => {
-                fileInput.click();
-            });
+            // Botão de importação no header
+            if (importBtn) {
+                importBtn.addEventListener('click', () => {
+                    fileInput.click();
+                });
+            }
             
             // Seleção de arquivo
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handleFileUpload(e.target.files[0]);
-                }
-            });
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        handleFileUpload(e.target.files[0]);
+                    }
+                });
+            }
+            
+            console.log('✅ Sistema de importação discreta inicializado');
         }
         
         // Processar arquivo carregado
