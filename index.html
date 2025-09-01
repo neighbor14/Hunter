@@ -873,6 +873,13 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <!-- Botão Limpar Leads (Temporário) -->
+                    <button id="clear-leads-btn" class="action-btn" style="background: #dc2626; color: white;" title="Limpar todos os leads">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Limpar</span>
+                    </button>
                     <!-- Botão Importar Leads Discreto -->
                     <button id="import-leads-btn" class="action-btn action-success" title="Importar leads em lote">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1451,10 +1458,6 @@
                 
                 database.leads.forEach(lead => {
                     if (!seenIds.has(lead.id)) {
-                        // Garantir compatibilidade com leads existentes
-                        if (lead.ativo === undefined) {
-                            lead.ativo = true; // Leads existentes são ativos por padrão
-                        }
                         seenIds.add(lead.id);
                         uniqueLeads.push(lead);
                     }
@@ -1789,8 +1792,7 @@
                 const matchesSearch = empresa.includes(searchTerm) || nome.includes(searchTerm);
                 const matchesStatus = selectedStatus === 'all' || lead.status === selectedStatus;
                 
-                // Mostrar leads ativos e inativos, mas destacar visualmente
-                console.log(`🔍 Filtrando lead: ${lead.empresa} - ${lead.nome} | Busca: ${matchesSearch} | Status: ${matchesStatus} | Ativo: ${lead.ativo !== false}`);
+                console.log(`🔍 Filtrando lead: ${lead.empresa} - ${lead.nome} | Busca: ${matchesSearch} | Status: ${matchesStatus}`);
                 
                 return matchesSearch && matchesStatus;
             });
@@ -2150,9 +2152,7 @@
                     }
 
                     const card = document.createElement('div');
-                    const isActive = lead.ativo !== false;
-                    const inactiveClass = !isActive ? 'opacity-60 bg-gray-50' : '';
-                    card.className = `contact-card p-6 border-l-4 ${cardBorderColor} ${inactiveClass}`;
+                    card.className = `contact-card p-6 border-l-4 ${cardBorderColor}`;
                     
                     let statusColor = '';
                     if (nextActionDate && nextActionDate < today) {
@@ -2250,17 +2250,6 @@
                                 </button>
                                 ` : ''}
                             </div>
-                            <button onclick="window.app.toggleLeadActive('${lead.id}')" 
-                                    class="action-btn ${lead.ativo !== false ? 'action-success' : 'action-neutral'} text-sm" 
-                                    title="${lead.ativo !== false ? 'Lead Ativo - Clique para Desativar' : 'Lead Inativo - Clique para Ativar'}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    ${lead.ativo !== false ? 
-                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>' : 
-                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
-                                    }
-                                </svg>
-                                <span class="hidden sm:inline">${lead.ativo !== false ? 'Ativo' : 'Inativo'}</span>
-                            </button>
                             <button onclick="window.app.deleteLead('${lead.id}')" 
                                     class="action-btn action-secondary text-red-600 text-sm" title="Excluir">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2518,20 +2507,6 @@
                     saveDataToBin();
                 }
             },
-
-            toggleLeadActive: (id) => {
-                const leadIndex = leads.findIndex(l => l.id === id);
-                if (leadIndex === -1) return;
-                
-                // Alternar status ativo
-                leads[leadIndex].ativo = !leads[leadIndex].ativo;
-                
-                const status = leads[leadIndex].ativo ? 'ativo' : 'inativo';
-                const emoji = leads[leadIndex].ativo ? '✅' : '⏸️';
-                
-                showNotification(`${emoji} Lead ${leads[leadIndex].nome} agora está ${status}`, "success");
-                saveDataToBin();
-            },
             
             openNotesModal: (id) => {
                 currentLeadIdForModal = id;
@@ -2578,8 +2553,7 @@
                 nextActionDate: getToday().toISOString(),
                 notes: '',
                 history: [],
-                createdAt: new Date().toISOString(),
-                ativo: true // Novos leads são ativos por padrão
+                createdAt: new Date().toISOString()
             };
             leads.push(newLead);
             saveDataToBin();
@@ -2652,10 +2626,10 @@
                 }
             });
 
-            const activeLeads = leads.filter(l => l.ativo !== false && l.status !== "Parceria Fechada" && l.status !== "Parceria Perdida").length;
+            const activeLeads = leads.filter(l => l.status !== "Parceria Fechada" && l.status !== "Parceria Perdida").length;
             
-            const leadsReachedContact = leads.filter(l => l.ativo !== false && l.history && l.history.some(h => h.status === "Contato em Andamento")).length;
-            const leadsReachedMeeting = leads.filter(l => l.ativo !== false && (l.status === "Reunião Agendada" || l.status === "Negociação" || l.status === "Parceria Fechada")).length;
+            const leadsReachedContact = leads.filter(l => l.history && l.history.some(h => h.status === "Contato em Andamento")).length;
+            const leadsReachedMeeting = leads.filter(l => l.status === "Reunião Agendada" || l.status === "Negociação" || l.status === "Parceria Fechada").length;
             const conversionRate = leadsReachedContact > 0 ? ((leadsReachedMeeting / leadsReachedContact) * 100).toFixed(1) : 0;
 
             // ========== MÉTRICAS MENSAIS - PROGRESSÃO NO FUNIL ==========
@@ -3068,12 +3042,11 @@
                 console.log(`[DEBUG AGENDA] Dia útil: ${dateStr} (${formatDateShort(date)})`);
             });
 
-            // Filtrar apenas leads ativos para a agenda
-            const activeLeads = leads.filter(lead => lead.ativo !== false);
-            console.log(`[DEBUG AGENDA] Processando ${activeLeads.length} leads ativos de ${leads.length} totais`);
-            console.log(`[DEBUG AGENDA] Leads ativos:`, activeLeads.map(l => ({nome: l.nome, ativo: l.ativo, nextActionDate: l.nextActionDate})));
+            // Organizar leads nas datas correspondentes
+            console.log(`[DEBUG AGENDA] Processando ${leads.length} leads`);
+            console.log(`[DEBUG AGENDA] Array completo de leads:`, leads.map(l => ({nome: l.nome, nextActionDate: l.nextActionDate})));
             
-            activeLeads.forEach(lead => {
+            leads.forEach(lead => {
                 console.log(`[DEBUG AGENDA] Processando lead: ${lead.nome}, nextActionDate: ${lead.nextActionDate}`);
                 if (lead.nextActionDate) {
                     // CORREÇÃO: Usar diretamente a data string em formato YYYY-MM-DD
@@ -4232,12 +4205,22 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
         // Inicializar importação discreta
         function initDragDrop() {
             const importBtn = document.getElementById('import-leads-btn');
+            const clearBtn = document.getElementById('clear-leads-btn');
             const fileInput = document.getElementById('file-input');
             
             // Botão de importação no header
             if (importBtn) {
                 importBtn.addEventListener('click', () => {
                     fileInput.click();
+                });
+            }
+            
+            // Botão de limpar leads
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    if (confirm(`Tem certeza que deseja limpar todos os ${leads.length} leads?\n\nEsta ação não pode ser desfeita!`)) {
+                        clearAllLeads();
+                    }
                 });
             }
             
@@ -4251,6 +4234,24 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             }
             
             console.log('✅ Sistema de importação discreta inicializado');
+        }
+        
+        // Limpar todos os leads
+        async function clearAllLeads() {
+            console.log('🗑️ Limpando todos os leads...');
+            showLoader("Limpando todos os leads...");
+            
+            try {
+                leads = [];
+                await saveDataToBin(false, "Salvando sistema limpo...");
+                renderTable();
+                showNotification("✅ Todos os leads foram removidos com sucesso!", "success");
+            } catch (error) {
+                console.error('Erro ao limpar leads:', error);
+                showNotification("❌ Erro ao limpar leads. Tente novamente.", "error");
+            } finally {
+                hideLoader();
+            }
         }
         
         // Processar arquivo carregado
@@ -4488,8 +4489,9 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                     mapping.linkedin = index;
                     console.log(`✅ LinkedIn mapeado para coluna ${index}`);
                 } 
-                // Nome do contato com mais variações
-                else if (h.includes('nomedocontato') || h.includes('nomecontato') || 
+                // Nome do contato com mais variações - CORRIGIDO
+                else if (original.includes('nome do contato') || original.includes('nome contato') ||
+                         h.includes('nomedocontato') || h.includes('nomecontato') || 
                          h.includes('nome') || h.includes('contato') || h.includes('name') || 
                          h.includes('contact') || h.includes('pessoa') || h.includes('person') || h === 'nm') {
                     mapping.nome = index;
@@ -4624,8 +4626,7 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 nextActionDate: currentActionIndex < (cadenceConfig.actions?.length || 0) ? getToday().toISOString() : null,
                 notes: outrasInfo.join('\n'),
                 history: [],
-                createdAt,
-                ativo: true // Leads importados são ativos por padrão
+                createdAt
             };
         }
         
