@@ -4586,9 +4586,9 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             }, 1000);
         }
         
-        // Mapear colunas automaticamente - AJUSTADO PARA COLUNA "NOME" PRIMEIRA
+        // Mapear colunas automaticamente - ESTRUTURA CORRETA DO ARQUIVO
         function mapColumns(headers) {
-            console.log('🎯 MAPEAMENTO AJUSTADO PARA COLUNA "NOME" PRIMEIRA!');
+            console.log('🎯 MAPEAMENTO PARA ESTRUTURA CORRETA DO ARQUIVO!');
             console.log('📋 Cabeçalhos encontrados:', headers);
             
             const mapping = {
@@ -4601,56 +4601,52 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 outrasInfo: []
             };
 
-            // PROCURAR ESPECIFICAMENTE pela coluna "Nome" primeiro
-            headers.forEach((header, index) => {
-                const headerLower = header.toLowerCase().trim();
-                console.log(`🔍 Verificando coluna ${index}: "${header}" → "${headerLower}"`);
-                
-                if (headerLower === 'nome') {
-                    mapping.nome = index;
-                    console.log(`✅ NOME ENCONTRADO na coluna ${index}!`);
-                }
-            });
+            // MAPEAMENTO DIRETO PELA ESTRUTURA CORRETA:
+            // A = Nome, B = Empresa, C = Data, D = Abordagem, E = LinkedIn, F = Telefone, G = Cargo
             
-            // Se não encontrou "Nome", usar a primeira coluna
-            if (mapping.nome === -1) {
-                mapping.nome = 0;
-                console.log(`⚠️ Nome não encontrado, usando primeira coluna (${headers[0]})`);
+            if (headers.length >= 1) {
+                mapping.nome = 0; // Coluna A - Nome
+                console.log(`✅ Nome = coluna 0 (A): "${headers[0]}"`);
             }
             
-            // Mapear outras colunas por posição relativa
             if (headers.length >= 2) {
-                mapping.empresa = 1;
-                console.log(`📊 Empresa = coluna 1 ("${headers[1]}")`);
+                mapping.empresa = 1; // Coluna B - Empresa
+                console.log(`✅ Empresa = coluna 1 (B): "${headers[1]}"`);
             }
             
             if (headers.length >= 3) {
-                mapping.cargo = 2;
-                console.log(`📊 Cargo = coluna 2 ("${headers[2]}")`);
+                mapping.dataCriacao = 2; // Coluna C - Data de adicionar
+                console.log(`✅ Data = coluna 2 (C): "${headers[2]}"`);
             }
             
             if (headers.length >= 4) {
-                mapping.linkedin = 3;
-                console.log(`📊 LinkedIn = coluna 3 ("${headers[3]}")`);
+                mapping.abordagem = 3; // Coluna D - Abordagem (número da mensagem)
+                console.log(`✅ Abordagem = coluna 3 (D): "${headers[3]}"`);
             }
             
             if (headers.length >= 5) {
-                mapping.dataCriacao = 4;
-                console.log(`📊 Data = coluna 4 ("${headers[4]}")`);
+                mapping.linkedin = 4; // Coluna E - LinkedIn
+                console.log(`✅ LinkedIn = coluna 4 (E): "${headers[4]}"`);
             }
             
             if (headers.length >= 6) {
-                mapping.abordagem = 5;
-                console.log(`📊 Abordagem = coluna 5 ("${headers[5]}")`);
+                // Coluna F - Telefone (vai para notas)
+                mapping.outrasInfo.push(5);
+                console.log(`📝 Telefone = coluna 5 (F): "${headers[5]}" - adicionado às notas`);
+            }
+            
+            if (headers.length >= 7) {
+                mapping.cargo = 6; // Coluna G - Cargo
+                console.log(`✅ Cargo = coluna 6 (G): "${headers[6]}"`);
             }
             
             // Adicionar colunas restantes como outras informações
-            for (let i = 6; i < headers.length; i++) {
+            for (let i = 7; i < headers.length; i++) {
                 mapping.outrasInfo.push(i);
-                console.log(`📝 Outras info = coluna ${i} ("${headers[i]}")`);
+                console.log(`📝 Outras info = coluna ${i}: "${headers[i]}"`);
             }
             
-            console.log('🎯 MAPEAMENTO FINAL:', mapping);
+            console.log('🎯 MAPEAMENTO FINAL APLICADO:', mapping);
             return mapping;
         }
         
