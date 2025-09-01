@@ -4437,6 +4437,18 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 erros: errors.length
             });
             
+            // Log detalhado dos primeiros 3 leads criados
+            console.log('🔍 Primeiros 3 leads criados:');
+            importedLeadsData.slice(0, 3).forEach((lead, index) => {
+                console.log(`Lead ${index + 1}:`, {
+                    id: lead.id,
+                    empresa: lead.empresa,
+                    nome: lead.nome,
+                    status: lead.status,
+                    cargo: lead.cargo
+                });
+            });
+            
             if (importedLeadsData.length === 0) {
                 console.log('❌ Detalhes dos erros:', errors);
                 const errorMessage = errors.length > 0 
@@ -4451,6 +4463,8 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 importedLeadsData = importedLeadsData.slice(0, 1000);
             }
             
+            console.log('🎯 Chamando showImportPreview...');
+            console.log('📋 Parâmetros:', { filename, successCount, errors: errors.length });
             showImportPreview(filename, successCount, errors);
         }
         
@@ -4637,11 +4651,26 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
         
         // Mostrar preview da importação
         function showImportPreview(filename, successCount, errors) {
+            console.log('🎬 showImportPreview executada!');
+            console.log('📊 Dados recebidos:', { filename, successCount, errorsCount: errors.length, totalLeads: importedLeadsData.length });
+            
             const modal = document.getElementById('import-preview-modal');
             const content = document.getElementById('import-preview-content');
             const countElement = document.getElementById('import-count');
             
+            console.log('🔍 Elementos DOM encontrados:', {
+                modal: !!modal,
+                content: !!content,
+                countElement: !!countElement
+            });
+            
+            if (!modal || !content || !countElement) {
+                console.error('❌ Elementos DOM do modal não encontrados!');
+                return;
+            }
+            
             countElement.textContent = importedLeadsData.length;
+            console.log('✅ Count element atualizado:', countElement.textContent);
             
             let html = `
                 <div class="mb-6">
@@ -4709,7 +4738,11 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             `;
             
             content.innerHTML = html;
+            console.log('🎨 HTML do modal gerado, tamanho:', html.length);
+            
             modal.style.display = 'block';
+            console.log('👁️ Modal exibido! Style display:', modal.style.display);
+            console.log('✅ showImportPreview concluída com sucesso!');
         }
         
         // Fechar preview de importação
