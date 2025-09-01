@@ -1809,6 +1809,8 @@
         const RENDER_DEBOUNCE_TIME = 200; // milissegundos
 
         const renderTable = () => {
+            console.log('🔄 renderTable() chamado - Total leads:', leads.length);
+            
             const now = Date.now();
             if (now - lastRenderTime < RENDER_DEBOUNCE_TIME) {
                 console.log('🔄 Renderização ignorada - muito próxima da anterior');
@@ -1819,11 +1821,15 @@
             const searchTerm = searchInput.value.toLowerCase();
             const selectedStatus = statusFilter.value;
 
+            console.log('🔍 Filtros aplicados:', { searchTerm, selectedStatus });
+
             const filteredLeads = leads.filter(lead => {
                 const matchesSearch = lead.empresa.toLowerCase().includes(searchTerm) || lead.nome.toLowerCase().includes(searchTerm);
                 const matchesStatus = selectedStatus === 'all' || lead.status === selectedStatus;
                 return matchesSearch && matchesStatus;
             });
+
+            console.log('📊 Leads filtrados:', filteredLeads.length, 'de', leads.length);
 
             // Renderizar apenas layout de cards (layout tabela removido para evitar duplicação)
             // renderTableView(filteredLeads); // REMOVIDO - causava layout duplicado
@@ -2078,13 +2084,22 @@
         };
         
         const renderCardsView = (filteredLeads) => {
-            if (!cardsBody) return;
+            console.log('🎴 Renderizando visualização em cards...');
+            console.log('📋 Leads para renderizar:', filteredLeads.length);
+            
+            if (!cardsBody) {
+                console.error('❌ cardsBody não encontrado!');
+                return;
+            }
             
             cardsBody.innerHTML = '';
             if (filteredLeads.length === 0) {
+                console.log('⚠️ Nenhum lead para mostrar');
                 cardsBody.innerHTML = `<div class="text-center py-10 text-gray-500">Nenhum lead encontrado com os filtros atuais.</div>`;
                 return;
             }
+            
+            console.log('✅ Processando leads para exibição...');
 
             const groupedLeads = filteredLeads.reduce((acc, lead) => {
                 (acc[lead.empresa] = acc[lead.empresa] || []).push(lead);
@@ -4708,14 +4723,43 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 // Verificar duplicatas com leads existentes
                 const duplicateCount = checkForDuplicates();
                 
+                console.log('➕ Adicionando leads ao sistema...');
+                console.log('📊 Leads antes da adição:', leads.length);
+                console.log('📋 Leads a serem adicionados:', importedLeadsData.length);
+                
                 // Adicionar leads ao sistema
                 leads.push(...importedLeadsData);
                 
+                console.log('📊 Leads após adição:', leads.length);
+                console.log('✅ Leads adicionados com sucesso à variável global');
+                
                 // Salvar no JSONBin
-                await saveDataToBin(false, "Salvando leads importados...");
+                try {
+                    console.log('💾 Iniciando salvamento no JSONBin...');
+                    await saveDataToBin(false, "Salvando leads importados...");
+                    console.log('✅ Salvamento no JSONBin concluído');
+                } catch (saveError) {
+                    console.error('❌ Erro ao salvar no JSONBin:', saveError);
+                    // Continuar mesmo com erro de salvamento
+                    showNotification("⚠️ Leads importados localmente, mas erro ao salvar online", "warning");
+                }
                 
                 closeImportPreview();
+                
+                console.log('🎯 Finalizando importação...');
                 hideLoader();
+                
+                console.log('🔄 Verificação final da interface...');
+                console.log('📊 Total de leads finais:', leads.length);
+                
+                // Verificação final da renderização
+                setTimeout(() => {
+                    console.log('🔄 Verificação final após 500ms...');
+                    if (leads.length > 0) {
+                        console.log('✅ Sistema tem leads, forçando última renderização...');
+                        renderTable();
+                    }
+                }, 500);
                 
                 const message = duplicateCount > 0 
                     ? `✅ ${importedLeadsData.length} leads importados com sucesso! (${duplicateCount} duplicatas ignoradas)`
@@ -4724,7 +4768,18 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 showNotification(message, "success");
                 
                 // Atualizar interface
+                console.log('🔄 Chamando renderTable após importação...');
+                console.log('📊 Total de leads no sistema:', leads.length);
+                console.log('📋 Leads importados:', importedLeadsData.length);
+                
+                // Forçar atualização da interface
                 renderTable();
+                
+                // Se não mostrar, tentar novamente após delay
+                setTimeout(() => {
+                    console.log('🔄 Renderização adicional (backup)...');
+                    renderTable();
+                }, 100);
                 
             } catch (error) {
                 console.error('Erro ao importar leads:', error);
