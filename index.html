@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RecargaPay CRM - Sistema de Prospecção B2B</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -122,6 +124,26 @@
         }
         .handle {
             cursor: grab;
+        }
+        
+        /* Sortable drag & drop styles */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #e5e7eb !important;
+        }
+        
+        .sortable-chosen {
+            background-color: #dbeafe !important;
+        }
+        
+        .sortable-drag {
+            opacity: 0.8;
+            transform: rotate(2deg);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .handle:active {
+            cursor: grabbing;
         }
         
         /* Funcionalidade de expandir/retrair empresas */
@@ -257,6 +279,16 @@
         .action-secondary:hover {
             background-color: #f1f5f9;
             border-color: #cbd5e1;
+        }
+
+        .action-accent {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.3);
+        }
+        
+        .action-accent:hover {
+            box-shadow: 0 6px 20px 0 rgba(139, 92, 246, 0.4);
         }
 
         .action-info {
@@ -844,6 +876,12 @@
                         </svg>
                         Histórico <span id="current-version" class="text-xs opacity-75">v2.4</span>
                     </button>
+                    <button id="executive-report-btn" class="action-btn action-accent">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Relatório Executivo
+                    </button>
                     <button id="export-xls-btn" class="action-btn action-secondary">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -869,11 +907,20 @@
                 <summary class="text-xl font-semibold cursor-pointer">Configurações</summary>
                 
                 <div class="mt-6 border-t pt-6">
-                    <h3 class="text-lg font-semibold mb-2">Gerenciar Status do Funil</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">Gerenciar Status do Funil</h3>
+                        <div class="text-sm text-gray-500 flex items-center">
+                            <span class="mr-2">💡</span>
+                            <span>Arraste ☰ para reordenar</span>
+                        </div>
+                    </div>
                     <div id="status-config-container" class="space-y-2">
                         <!-- Status configuráveis serão inseridos aqui -->
                     </div>
-                    <button id="add-status-btn" class="mt-2 text-sm bg-gray-200 text-gray-800 font-semibold py-1 px-3 rounded-md hover:bg-gray-300">Adicionar Status</button>
+                    <button id="add-status-btn" class="mt-4 text-sm bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 flex items-center space-x-2">
+                        <span>➕</span>
+                        <span>Adicionar Status</span>
+                    </button>
                 </div>
 
                 <div class="mt-6 border-t pt-6">
@@ -912,6 +959,74 @@
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Adicionar Lead</button>
             </form>
+        </div>
+
+        <!-- Seção para Importar Leads -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h2 class="text-2xl font-semibold mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                Importar Leads em Lote
+            </h2>
+            
+            <!-- Área de Drag & Drop -->
+            <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-green-400 hover:bg-green-50 transition-colors cursor-pointer">
+                <div class="flex flex-col items-center">
+                    <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <p class="text-lg font-medium text-gray-700 mb-2">Arraste seu arquivo Excel aqui</p>
+                    <p class="text-sm text-gray-500 mb-4">ou clique para selecionar</p>
+                    <input type="file" id="file-input" class="hidden" accept=".xlsx,.xls,.csv" />
+                    <button onclick="document.getElementById('file-input').click()" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors">
+                        Selecionar Arquivo
+                    </button>
+                </div>
+                <div class="mt-4 text-xs text-gray-500">
+                    <p>Formatos suportados: Excel (.xlsx, .xls) e CSV (.csv)</p>
+                    <p>Máximo: 1000 leads por importação</p>
+                </div>
+            </div>
+
+            <!-- Informações sobre o mapeamento de colunas -->
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 class="font-medium text-blue-800 mb-2">📋 Mapeamento de Colunas</h3>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p><strong>Empresa:</strong> Nome da empresa do lead</p>
+                    <p><strong>Data de Criação:</strong> Data de criação do lead (formato: DD/MM/AAAA)</p>
+                    <p><strong>Abordagem:</strong> Número da mensagem no ciclo (1-5)</p>
+                    <p><strong>Link LinkedIn:</strong> URL do perfil LinkedIn</p>
+                    <p><strong>Nome do Contato:</strong> Nome completo do lead</p>
+                    <p><strong>Cargo:</strong> Posição do contato na empresa</p>
+                    <p><strong>Demais informações:</strong> Serão importadas no campo de notas</p>
+                </div>
+            </div>
+
+            <!-- Modal de Preview da Importação -->
+            <div id="import-preview-modal" class="modal-backdrop" style="display: none;">
+                <div class="modal bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-900">Preview da Importação</h3>
+                        <p class="text-sm text-gray-600 mt-1">Verifique os dados antes de importar</p>
+                    </div>
+                    
+                    <div class="p-6 overflow-y-auto max-h-[60vh]">
+                        <div id="import-preview-content"></div>
+                    </div>
+                    
+                    <div class="p-6 border-t border-gray-200 flex justify-between">
+                        <button onclick="closeImportPreview()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                            Cancelar
+                        </button>
+                        <div class="space-x-3">
+                            <button onclick="importLeads()" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700">
+                                Importar <span id="import-count">0</span> Leads
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Filtros e Busca -->
@@ -1113,6 +1228,81 @@
         </div>
     </div>
 
+    <!-- Modal para Relatório Executivo -->
+    <div id="executive-modal-backdrop" class="modal-backdrop"></div>
+    <div id="executive-modal" class="modal report-modal bg-gray-100 p-6 rounded-lg shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-3xl font-bold">📊 Relatório Executivo de Atividades</h2>
+            <button id="close-executive-btn" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <!-- Seletor de Período -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h3 class="text-lg font-semibold mb-4">📅 Selecionar Período</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <button id="period-7days" class="period-btn action-btn action-info ring-2 ring-blue-500">
+                    📅 Últimos 7 dias
+                </button>
+                <button id="period-14days" class="period-btn action-btn action-secondary">
+                    📅 Últimas 2 semanas
+                </button>
+                <button id="period-30days" class="period-btn action-btn action-secondary">
+                    📅 Último mês
+                </button>
+                <button id="period-custom" class="period-btn action-btn action-secondary">
+                    📅 Período customizado
+                </button>
+            </div>
+            
+            <!-- Seletor de datas customizado -->
+            <div id="custom-period-selector" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data Início</label>
+                    <input type="date" id="custom-start-date" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Data Fim</label>
+                    <input type="date" id="custom-end-date" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center mt-4">
+                <div>
+                    <span class="text-sm text-gray-600">Período selecionado: </span>
+                    <span id="selected-period-text" class="font-semibold text-gray-800">Últimos 7 dias</span>
+                </div>
+                <button id="generate-executive-report" class="action-btn action-accent">
+                    📊 Gerar Relatório
+                </button>
+            </div>
+        </div>
+        
+        <!-- Área do Relatório -->
+        <div id="executive-report-content" class="space-y-6">
+            <div class="bg-white p-8 rounded-lg shadow-md text-center">
+                <div class="text-gray-500 text-lg">
+                    📊 Selecione um período e clique em "Gerar Relatório" para visualizar as atividades realizadas.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Botões de Ação -->
+        <div class="flex justify-end space-x-4 mt-6">
+            <button id="export-executive-excel" class="action-btn action-success">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Exportar Excel
+            </button>
+            <button id="email-executive-report" class="action-btn action-primary">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                Enviar por Email
+            </button>
+        </div>
+    </div>
+
     <!-- Modal para Histórico de Versões -->
     <div id="version-modal-backdrop" class="modal-backdrop"></div>
     <div id="version-modal" class="modal bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-1/2 max-h-80vh overflow-y-auto">
@@ -1241,6 +1431,12 @@
         // --- MODAL RELATÓRIO ---
         const reportModalBackdrop = document.getElementById('report-modal-backdrop');
         const reportModal = document.getElementById('report-modal');
+
+        // --- MODAL RELATÓRIO EXECUTIVO ---
+        const executiveModalBackdrop = document.getElementById('executive-modal-backdrop');
+        const executiveModal = document.getElementById('executive-modal');
+        const executiveReportBtn = document.getElementById('executive-report-btn');
+        const closeExecutiveBtn = document.getElementById('close-executive-btn');
 
         // --- LÓGICA DO BANCO DE DADOS (JSONBIN.IO) ---
         const binUrl = `https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`;
@@ -1410,14 +1606,18 @@
             if (cadenceConfig.statusOptions) {
                 cadenceConfig.statusOptions.forEach((status, index) => {
                     const statusDiv = document.createElement('div');
-                    statusDiv.className = 'flex items-center space-x-2';
+                    statusDiv.className = 'flex items-center space-x-2 p-2 bg-white border rounded-md shadow-sm hover:shadow-md transition-shadow';
+                    statusDiv.setAttribute('data-status-index', index);
                     statusDiv.innerHTML = `
-                        <span class="handle text-gray-400 cursor-grab">&#x2630;</span>
-                        <input type="text" value="${status}" class="config-status-name mt-1 w-full p-2 border rounded-md">
-                        <button class="remove-status-btn text-red-500 hover:text-red-700 p-2 bg-gray-100 rounded-md" data-index="${index}" title="Remover Status">&times;</button>
+                        <span class="handle text-gray-400 cursor-grab hover:text-gray-600 p-1" title="Arrastar para reordenar">☰</span>
+                        <input type="text" value="${escapeHtml(status)}" class="config-status-name flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <button class="remove-status-btn text-red-500 hover:text-red-700 p-2 bg-gray-100 rounded-md hover:bg-red-50" data-index="${index}" title="Remover Status">✕</button>
                     `;
                     statusConfigContainer.appendChild(statusDiv);
                 });
+                
+                // Inicializar Sortable para drag & drop
+                initStatusSortable();
             }
 
             // Render Actions
@@ -1460,6 +1660,52 @@
                 actionsConfigContainer.appendChild(actionDiv);
             });
         };
+
+        // --- FUNCIONALIDADE DE DRAG & DROP PARA STATUS ---
+        let statusSortable = null;
+
+        function initStatusSortable() {
+            // Destruir instância anterior se existir
+            if (statusSortable) {
+                statusSortable.destroy();
+            }
+            
+            statusSortable = Sortable.create(statusConfigContainer, {
+                handle: '.handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onStart: function (evt) {
+                    document.body.style.cursor = 'grabbing';
+                    showNotification("💡 Arraste para reordenar os status do funil", "info");
+                },
+                onEnd: function (evt) {
+                    document.body.style.cursor = '';
+                    
+                    // Verificar se houve mudança de posição
+                    if (evt.oldIndex !== evt.newIndex) {
+                        updateStatusOrder(evt.oldIndex, evt.newIndex);
+                        showNotification("✅ Ordem dos status atualizada! Clique em 'Salvar' para confirmar.", "success");
+                    }
+                }
+            });
+        }
+
+        function updateStatusOrder(oldIndex, newIndex) {
+            // Reordenar array de status
+            const statusArray = [...cadenceConfig.statusOptions];
+            const movedStatus = statusArray.splice(oldIndex, 1)[0];
+            statusArray.splice(newIndex, 0, movedStatus);
+            
+            // Atualizar configuração
+            cadenceConfig.statusOptions = statusArray;
+            
+            // Re-renderizar para atualizar índices
+            renderConfigForm();
+            
+            console.log(`📝 Status reordenado: "${movedStatus}" movido da posição ${oldIndex} para ${newIndex}`);
+        }
 
         async function saveConfig() {
             // Save Statuses
@@ -2815,26 +3061,33 @@
 
             // Organizar leads nas datas correspondentes
             console.log(`[DEBUG AGENDA] Processando ${leads.length} leads`);
+            console.log(`[DEBUG AGENDA] Array completo de leads:`, leads.map(l => ({nome: l.nome, nextActionDate: l.nextActionDate})));
+            
             leads.forEach(lead => {
+                console.log(`[DEBUG AGENDA] Processando lead: ${lead.nome}, nextActionDate: ${lead.nextActionDate}`);
                 if (lead.nextActionDate) {
-                    const leadDate = parseDate(lead.nextActionDate);
-                    if (leadDate) {
-                        const leadDateStr = leadDate.toISOString().split('T')[0];
-                        console.log(`[DEBUG AGENDA] Lead ${lead.nome}: nextActionDate=${lead.nextActionDate}, parsed=${leadDateStr}`);
-                        console.log(`[DEBUG AGENDA] Datas disponíveis na agenda:`, Object.keys(leadsByDate));
+                    // CORREÇÃO: Usar diretamente a data string em formato YYYY-MM-DD
+                    let leadDateStr = lead.nextActionDate;
+                    
+                    // Se a data vier com horário, extrair apenas a parte da data
+                    if (leadDateStr.includes('T')) {
+                        leadDateStr = leadDateStr.split('T')[0];
+                    }
+                    
+                    console.log(`[DEBUG AGENDA] Data simplificada para ${lead.nome}: ${leadDateStr}`);
+                    console.log(`[DEBUG AGENDA] Datas disponíveis na agenda:`, Object.keys(leadsByDate));
+                    
+                    if (leadsByDate[leadDateStr]) {
+                        const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                        const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
                         
-                        if (leadsByDate[leadDateStr]) {
-                            const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
-                            const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
-                            
-                            leadsByDate[leadDateStr].push({
-                                ...lead,
-                                currentAction: currentAction
-                            });
-                            console.log(`[DEBUG AGENDA] Lead ${lead.nome} adicionado à data ${leadDateStr}`);
-                        } else {
-                            console.log(`[DEBUG AGENDA] Data ${leadDateStr} não está na janela de 10 dias úteis`);
-                        }
+                        leadsByDate[leadDateStr].push({
+                            ...lead,
+                            currentAction: currentAction
+                        });
+                        console.log(`[DEBUG AGENDA] Lead ${lead.nome} adicionado à data ${leadDateStr}`);
+                    } else {
+                        console.log(`[DEBUG AGENDA] Data ${leadDateStr} não está na janela de dias úteis`);
                     }
                 }
             });
@@ -3463,10 +3716,988 @@
             });
         }
 
+        // --- SISTEMA DE RELATÓRIO EXECUTIVO ---
+        let selectedPeriod = { 
+            type: '7days', 
+            startDate: null, 
+            endDate: null,
+            label: 'Últimos 7 dias'
+        };
+
+        function initExecutiveReport() {
+            // Event listeners para botões de período
+            document.getElementById('period-7days').addEventListener('click', () => selectPeriod('7days', 'Últimos 7 dias'));
+            document.getElementById('period-14days').addEventListener('click', () => selectPeriod('14days', 'Últimas 2 semanas'));
+            document.getElementById('period-30days').addEventListener('click', () => selectPeriod('30days', 'Último mês'));
+            document.getElementById('period-custom').addEventListener('click', () => selectPeriod('custom', 'Período customizado'));
+            
+            // Event listeners para datas customizadas
+            document.getElementById('custom-start-date').addEventListener('change', updateCustomPeriod);
+            document.getElementById('custom-end-date').addEventListener('change', updateCustomPeriod);
+            
+            // Event listeners para modal
+            executiveReportBtn.addEventListener('click', openExecutiveModal);
+            closeExecutiveBtn.addEventListener('click', closeExecutiveModal);
+            executiveModalBackdrop.addEventListener('click', closeExecutiveModal);
+            
+            // Event listener para gerar relatório
+            document.getElementById('generate-executive-report').addEventListener('click', generateExecutiveReport);
+            
+            // Event listeners para exportação
+            document.getElementById('export-executive-excel').addEventListener('click', exportExecutiveToExcel);
+            document.getElementById('email-executive-report').addEventListener('click', emailExecutiveReport);
+        }
+
+        function selectPeriod(type, label) {
+            selectedPeriod.type = type;
+            selectedPeriod.label = label;
+            
+            // Atualizar visual dos botões
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-blue-500', 'action-info');
+                btn.classList.add('action-secondary');
+            });
+            document.getElementById(`period-${type}`).classList.remove('action-secondary');
+            document.getElementById(`period-${type}`).classList.add('action-info', 'ring-2', 'ring-blue-500');
+            
+            // Mostrar/esconder seletor customizado
+            const customSelector = document.getElementById('custom-period-selector');
+            if (type === 'custom') {
+                customSelector.classList.remove('hidden');
+                updateCustomPeriod();
+            } else {
+                customSelector.classList.add('hidden');
+                updatePeriodDates();
+            }
+            
+            document.getElementById('selected-period-text').textContent = label;
+        }
+
+        function updateCustomPeriod() {
+            const startDate = document.getElementById('custom-start-date').value;
+            const endDate = document.getElementById('custom-end-date').value;
+            
+            if (startDate && endDate) {
+                selectedPeriod.startDate = new Date(startDate + 'T00:00:00.000Z');
+                selectedPeriod.endDate = new Date(endDate + 'T23:59:59.999Z');
+                
+                const startFormatted = formatDate(selectedPeriod.startDate.toISOString());
+                const endFormatted = formatDate(selectedPeriod.endDate.toISOString());
+                selectedPeriod.label = `${startFormatted} a ${endFormatted}`;
+                document.getElementById('selected-period-text').textContent = selectedPeriod.label;
+            }
+        }
+
+        function updatePeriodDates() {
+            const today = getToday();
+            let daysAgo;
+            
+            switch (selectedPeriod.type) {
+                case '7days':
+                    daysAgo = 7;
+                    break;
+                case '14days':
+                    daysAgo = 14;
+                    break;
+                case '30days':
+                    daysAgo = 30;
+                    break;
+                default:
+                    return;
+            }
+            
+            selectedPeriod.endDate = new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1);
+            selectedPeriod.startDate = new Date(today.getTime() - (daysAgo - 1) * 24 * 60 * 60 * 1000);
+        }
+
+        function openExecutiveModal() {
+            updatePeriodDates();
+            executiveModal.style.display = 'block';
+            executiveModalBackdrop.style.display = 'block';
+        }
+
+        function closeExecutiveModal() {
+            executiveModal.style.display = 'none';
+            executiveModalBackdrop.style.display = 'none';
+        }
+
+        function generateExecutiveReport() {
+            if (!selectedPeriod.startDate || !selectedPeriod.endDate) {
+                updatePeriodDates();
+            }
+            
+            showLoader("Gerando relatório executivo...");
+            
+            setTimeout(() => {
+                const reportData = analyzeActivities(selectedPeriod.startDate, selectedPeriod.endDate);
+                renderExecutiveReport(reportData);
+                hideLoader();
+            }, 500);
+        }
+
+        function analyzeActivities(startDate, endDate) {
+            const activities = {
+                leadsAdicionados: [],
+                mudancasStatus: [],
+                mensagensEnviadas: [],
+                summary: {
+                    totalLeadsAdicionados: 0,
+                    totalMudancasStatus: 0,
+                    totalMensagensEnviadas: 0,
+                    leadsMaisAtivos: [],
+                    diasMaisAtivos: {}
+                }
+            };
+
+            console.log(`📊 Analisando atividades de ${formatDate(startDate.toISOString())} a ${formatDate(endDate.toISOString())}`);
+
+            leads.forEach(lead => {
+                let leadCreationDate = null;
+                if (lead.createdAt) {
+                    leadCreationDate = new Date(lead.createdAt);
+                } else if (lead.history && lead.history.length > 0) {
+                    const oldestHistory = lead.history.reduce((oldest, current) => {
+                        return new Date(current.timestamp) < new Date(oldest.timestamp) ? current : oldest;
+                    });
+                    leadCreationDate = new Date(oldestHistory.timestamp);
+                } else if (lead.nextActionDate) {
+                    leadCreationDate = new Date(lead.nextActionDate);
+                    leadCreationDate.setDate(leadCreationDate.getDate() - 1);
+                }
+
+                if (leadCreationDate && leadCreationDate >= startDate && leadCreationDate <= endDate) {
+                    activities.leadsAdicionados.push({
+                        empresa: lead.empresa,
+                        nome: lead.nome,
+                        cargo: lead.cargo,
+                        data: leadCreationDate,
+                        dataFormatada: formatDate(leadCreationDate.toISOString()),
+                        status: lead.status
+                    });
+                    activities.summary.totalLeadsAdicionados++;
+                }
+
+                if (lead.history && lead.history.length > 0) {
+                    lead.history.forEach(historyItem => {
+                        const actionDate = new Date(historyItem.timestamp);
+                        
+                        if (actionDate >= startDate && actionDate <= endDate) {
+                            const dayKey = actionDate.toISOString().split('T')[0];
+                            activities.summary.diasMaisAtivos[dayKey] = (activities.summary.diasMaisAtivos[dayKey] || 0) + 1;
+
+                            if (historyItem.newStatus) {
+                                activities.mudancasStatus.push({
+                                    empresa: lead.empresa,
+                                    nome: lead.nome,
+                                    cargo: lead.cargo,
+                                    statusAnterior: historyItem.status,
+                                    statusNovo: historyItem.newStatus,
+                                    data: actionDate,
+                                    dataFormatada: formatDate(actionDate.toISOString()),
+                                    tipo: 'manual'
+                                });
+                                activities.summary.totalMudancasStatus++;
+                            }
+
+                            if (!historyItem.newStatus && typeof historyItem.currentActionIndex === 'number') {
+                                const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
+                                const action = configuredActions[historyItem.currentActionIndex];
+                                
+                                activities.mensagensEnviadas.push({
+                                    empresa: lead.empresa,
+                                    nome: lead.nome,
+                                    cargo: lead.cargo,
+                                    acao: action ? action.name : `Ação ${historyItem.currentActionIndex + 1}`,
+                                    data: actionDate,
+                                    dataFormatada: formatDate(actionDate.toISOString()),
+                                    statusAnterior: historyItem.status
+                                });
+                                activities.summary.totalMensagensEnviadas++;
+                            }
+                        }
+                    });
+                }
+            });
+
+            activities.leadsAdicionados.sort((a, b) => b.data - a.data);
+            activities.mudancasStatus.sort((a, b) => b.data - a.data);
+            activities.mensagensEnviadas.sort((a, b) => b.data - a.data);
+
+            const leadActivity = {};
+            [...activities.mudancasStatus, ...activities.mensagensEnviadas].forEach(activity => {
+                const key = `${activity.empresa} - ${activity.nome}`;
+                leadActivity[key] = (leadActivity[key] || 0) + 1;
+            });
+
+            activities.summary.leadsMaisAtivos = Object.entries(leadActivity)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5)
+                .map(([lead, count]) => ({ lead, count }));
+
+            console.log(`📈 Resumo: ${activities.summary.totalLeadsAdicionados} leads, ${activities.summary.totalMensagensEnviadas} mensagens, ${activities.summary.totalMudancasStatus} mudanças`);
+            
+            return activities;
+        }
+
+        function renderExecutiveReport(reportData) {
+            const contentDiv = document.getElementById('executive-report-content');
+            
+            contentDiv.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <span class="mr-2">📈</span>
+                        Resumo Executivo - ${selectedPeriod.label}
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg text-center">
+                            <div class="text-3xl font-bold text-blue-800">${reportData.summary.totalLeadsAdicionados}</div>
+                            <div class="text-sm text-blue-600 font-medium">Leads Adicionados</div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg text-center">
+                            <div class="text-3xl font-bold text-green-800">${reportData.summary.totalMensagensEnviadas}</div>
+                            <div class="text-sm text-green-600 font-medium">Mensagens Enviadas</div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg text-center">
+                            <div class="text-3xl font-bold text-purple-800">${reportData.summary.totalMudancasStatus}</div>
+                            <div class="text-sm text-purple-600 font-medium">Mudanças de Status</div>
+                        </div>
+                    </div>
+                </div>
+
+                ${reportData.summary.leadsMaisAtivos.length > 0 ? `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">🎯</span>
+                        Leads com Mais Atividade
+                    </h3>
+                    <div class="space-y-2">
+                        ${reportData.summary.leadsMaisAtivos.map(item => `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span class="font-medium">${escapeHtml(item.lead)}</span>
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">${item.count} atividades</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">👥</span>
+                        Leads Adicionados (${reportData.leadsAdicionados.length})
+                    </h3>
+                    ${reportData.leadsAdicionados.length > 0 ? `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Data</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Empresa</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Contato</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Cargo</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status Atual</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${reportData.leadsAdicionados.map(lead => `
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3 text-sm">${lead.dataFormatada}</td>
+                                            <td class="px-4 py-3 font-medium">${escapeHtml(lead.empresa)}</td>
+                                            <td class="px-4 py-3">${escapeHtml(lead.nome)}</td>
+                                            <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(lead.cargo)}</td>
+                                            <td class="px-4 py-3 text-sm">
+                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">${escapeHtml(lead.status)}</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p class="text-gray-500 text-center py-8">Nenhum lead adicionado no período selecionado.</p>'}
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">💬</span>
+                        Mensagens Enviadas (${reportData.mensagensEnviadas.length})
+                    </h3>
+                    ${reportData.mensagensEnviadas.length > 0 ? `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Data</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Empresa</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Contato</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Mensagem/Ação</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status Anterior</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${reportData.mensagensEnviadas.map(msg => `
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3 text-sm">${msg.dataFormatada}</td>
+                                            <td class="px-4 py-3 font-medium">${escapeHtml(msg.empresa)}</td>
+                                            <td class="px-4 py-3">${escapeHtml(msg.nome)}</td>
+                                            <td class="px-4 py-3 text-sm">
+                                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">${escapeHtml(msg.acao)}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-gray-600">${escapeHtml(msg.statusAnterior)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p class="text-gray-500 text-center py-8">Nenhuma mensagem enviada no período selecionado.</p>'}
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">🔄</span>
+                        Mudanças de Status (${reportData.mudancasStatus.length})
+                    </h3>
+                    ${reportData.mudancasStatus.length > 0 ? `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Data</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Empresa</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Contato</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status Anterior</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status Novo</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${reportData.mudancasStatus.map(change => `
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3 text-sm">${change.dataFormatada}</td>
+                                            <td class="px-4 py-3 font-medium">${escapeHtml(change.empresa)}</td>
+                                            <td class="px-4 py-3">${escapeHtml(change.nome)}</td>
+                                            <td class="px-4 py-3 text-sm">
+                                                <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">${escapeHtml(change.statusAnterior)}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-sm">
+                                                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">${escapeHtml(change.statusNovo)}</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p class="text-gray-500 text-center py-8">Nenhuma mudança de status no período selecionado.</p>'}
+                </div>
+            `;
+
+            showNotification(`📊 Relatório executivo gerado para ${selectedPeriod.label}`, "success");
+        }
+
+        function exportExecutiveToExcel() {
+            if (!document.getElementById('executive-report-content').innerHTML.includes('Resumo Executivo -')) {
+                showNotification("⚠️ Gere um relatório primeiro antes de exportar.", "error");
+                return;
+            }
+
+            const reportData = analyzeActivities(selectedPeriod.startDate, selectedPeriod.endDate);
+            
+            const headers = [
+                "RELATÓRIO EXECUTIVO DE ATIVIDADES - SISTEMA CRM",
+                `Período: ${selectedPeriod.label}`,
+                `Gerado em: ${formatDate(new Date().toISOString())}`,
+                "",
+                "📈 RESUMO EXECUTIVO",
+                `Leads Adicionados: ${reportData.summary.totalLeadsAdicionados}`,
+                `Mensagens Enviadas: ${reportData.summary.totalMensagensEnviadas}`,
+                `Mudanças de Status: ${reportData.summary.totalMudancasStatus}`,
+                "",
+                "📋 DETALHAMENTO POR ATIVIDADE"
+            ];
+
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join("\n") + "\n\n";
+
+            if (reportData.leadsAdicionados.length > 0) {
+                csvContent += "👥 LEADS ADICIONADOS\n";
+                csvContent += "Data;Empresa;Contato;Cargo;Status Atual\n";
+                reportData.leadsAdicionados.forEach(lead => {
+                    csvContent += `${lead.dataFormatada};${lead.empresa};${lead.nome};${lead.cargo};${lead.status}\n`;
+                });
+                csvContent += "\n";
+            }
+
+            if (reportData.mensagensEnviadas.length > 0) {
+                csvContent += "💬 MENSAGENS ENVIADAS\n";
+                csvContent += "Data;Empresa;Contato;Mensagem/Ação;Status Anterior\n";
+                reportData.mensagensEnviadas.forEach(msg => {
+                    csvContent += `${msg.dataFormatada};${msg.empresa};${msg.nome};${msg.acao};${msg.statusAnterior}\n`;
+                });
+                csvContent += "\n";
+            }
+
+            if (reportData.mudancasStatus.length > 0) {
+                csvContent += "🔄 MUDANÇAS DE STATUS\n";
+                csvContent += "Data;Empresa;Contato;Status Anterior;Status Novo\n";
+                reportData.mudancasStatus.forEach(change => {
+                    csvContent += `${change.dataFormatada};${change.empresa};${change.nome};${change.statusAnterior};${change.statusNovo}\n`;
+                });
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `relatorio_executivo_${selectedPeriod.type}_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showNotification("📊 Relatório executivo exportado com sucesso!", "success");
+        }
+
+        function emailExecutiveReport() {
+            if (!document.getElementById('executive-report-content').innerHTML.includes('Resumo Executivo -')) {
+                showNotification("⚠️ Gere um relatório primeiro antes de enviar.", "error");
+                return;
+            }
+
+            const reportData = analyzeActivities(selectedPeriod.startDate, selectedPeriod.endDate);
+            
+            const emailSubject = `📊 Relatório Executivo CRM - ${selectedPeriod.label}`;
+            const emailBody = `
+Relatório Executivo de Atividades - Sistema CRM
+Período: ${selectedPeriod.label}
+Gerado em: ${formatDate(new Date().toISOString())}
+
+📈 RESUMO EXECUTIVO:
+• Leads Adicionados: ${reportData.summary.totalLeadsAdicionados}
+• Mensagens Enviadas: ${reportData.summary.totalMensagensEnviadas}  
+• Mudanças de Status: ${reportData.summary.totalMudancasStatus}
+
+${reportData.summary.leadsMaisAtivos.length > 0 ? `
+🎯 LEADS COM MAIS ATIVIDADE:
+${reportData.summary.leadsMaisAtivos.map(item => `• ${item.lead}: ${item.count} atividades`).join('\n')}
+` : ''}
+
+📋 ATIVIDADES DETALHADAS:
+
+👥 LEADS ADICIONADOS (${reportData.leadsAdicionados.length}):
+${reportData.leadsAdicionados.length > 0 ? 
+    reportData.leadsAdicionados.slice(0, 10).map(lead => 
+        `• ${lead.dataFormatada} - ${lead.empresa} (${lead.nome}) - ${lead.status}`
+    ).join('\n') + (reportData.leadsAdicionados.length > 10 ? '\n... e mais ' + (reportData.leadsAdicionados.length - 10) + ' leads' : '')
+    : '• Nenhum lead adicionado no período'
+}
+
+💬 MENSAGENS ENVIADAS (${reportData.mensagensEnviadas.length}):
+${reportData.mensagensEnviadas.length > 0 ? 
+    reportData.mensagensEnviadas.slice(0, 10).map(msg => 
+        `• ${msg.dataFormatada} - ${msg.empresa} (${msg.nome}) - ${msg.acao}`
+    ).join('\n') + (reportData.mensagensEnviadas.length > 10 ? '\n... e mais ' + (reportData.mensagensEnviadas.length - 10) + ' mensagens' : '')
+    : '• Nenhuma mensagem enviada no período'
+}
+
+🔄 MUDANÇAS DE STATUS (${reportData.mudancasStatus.length}):
+${reportData.mudancasStatus.length > 0 ? 
+    reportData.mudancasStatus.slice(0, 10).map(change => 
+        `• ${change.dataFormatada} - ${change.empresa} (${change.nome}) - ${change.statusAnterior} → ${change.statusNovo}`
+    ).join('\n') + (reportData.mudancasStatus.length > 10 ? '\n... e mais ' + (reportData.mudancasStatus.length - 10) + ' mudanças' : '')
+    : '• Nenhuma mudança de status no período'
+}
+
+---
+Para visualizar o relatório completo com detalhes, acesse o Sistema de Prospecção B2B.
+
+Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
+            `.trim();
+
+            const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+            window.location.href = mailtoLink;
+
+            showNotification("📧 Cliente de email aberto com o relatório executivo!", "success");
+        }
+
+        // === SISTEMA DE IMPORTAÇÃO DE LEADS ===
+        
+        let importedLeadsData = [];
+        
+        // Inicializar drag & drop
+        function initDragDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+            
+            // Eventos de drag & drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-green-400', 'bg-green-50');
+            });
+            
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-green-400', 'bg-green-50');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-green-400', 'bg-green-50');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileUpload(files[0]);
+                }
+            });
+            
+            // Click no drop zone para abrir seletor
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Seleção de arquivo
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+        }
+        
+        // Processar arquivo carregado
+        function handleFileUpload(file) {
+            const fileName = file.name.toLowerCase();
+            
+            if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls') && !fileName.endsWith('.csv')) {
+                showNotification("❌ Formato não suportado. Use arquivos Excel (.xlsx, .xls) ou CSV (.csv)", "error");
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                showNotification("❌ Arquivo muito grande. Máximo: 10MB", "error");
+                return;
+            }
+            
+            showLoader("Processando arquivo...");
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    if (fileName.endsWith('.csv')) {
+                        processCSVFile(e.target.result, file.name);
+                    } else {
+                        processExcelFile(e.target.result, file.name);
+                    }
+                } catch (error) {
+                    console.error('Erro ao processar arquivo:', error);
+                    showNotification("❌ Erro ao processar arquivo. Verifique o formato e tente novamente.", "error");
+                } finally {
+                    hideLoader();
+                }
+            };
+            
+            if (fileName.endsWith('.csv')) {
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                reader.readAsBinaryString(file);
+            }
+        }
+        
+        // Processar arquivo Excel
+        function processExcelFile(data, filename) {
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            processImportData(jsonData, filename);
+        }
+        
+        // Processar arquivo CSV
+        function processCSVFile(data, filename) {
+            const lines = data.split('\n');
+            const jsonData = lines.map(line => {
+                // Parse CSV simples (pode ser melhorado para lidar com vírgulas em aspas)
+                return line.split(',').map(cell => cell.trim().replace(/^"(.*)"$/, '$1'));
+            }).filter(row => row.some(cell => cell.length > 0));
+            
+            processImportData(jsonData, filename);
+        }
+        
+        // Processar dados importados
+        function processImportData(data, filename) {
+            console.log('🔍 Processando dados importados:', { filename, totalRows: data.length });
+            
+            if (data.length < 2) {
+                showNotification("❌ Arquivo deve conter pelo menos um cabeçalho e uma linha de dados", "error");
+                return;
+            }
+            
+            const headers = data[0].map(h => String(h).toLowerCase().trim());
+            const rows = data.slice(1);
+            
+            console.log('📋 Cabeçalhos encontrados:', headers);
+            
+            // Mapear colunas automaticamente
+            const columnMapping = mapColumns(headers);
+            console.log('🗺️ Mapeamento de colunas:', columnMapping);
+            
+            importedLeadsData = [];
+            const errors = [];
+            let successCount = 0;
+            
+            rows.forEach((row, index) => {
+                // Verificar se a linha não está vazia
+                const hasData = row.some(cell => cell && String(cell).trim() !== '');
+                if (!hasData) {
+                    console.log(`⏭️ Pulando linha vazia ${index + 2}`);
+                    return;
+                }
+                
+                console.log(`🔍 Processando linha ${index + 2}:`, row);
+                
+                try {
+                    const lead = mapRowToLead(row, columnMapping, headers);
+                    if (lead) {
+                        importedLeadsData.push(lead);
+                        successCount++;
+                        console.log(`✅ Lead criado com sucesso:`, lead.empresa, '-', lead.nome);
+                    }
+                } catch (error) {
+                    console.log(`❌ Erro na linha ${index + 2}:`, error.message);
+                    errors.push(`Linha ${index + 2}: ${error.message}`);
+                }
+            });
+            
+            console.log('📊 Resultado do processamento:', {
+                totalLinhas: rows.length,
+                leadsVálidos: importedLeadsData.length,
+                erros: errors.length
+            });
+            
+            if (importedLeadsData.length === 0) {
+                console.log('❌ Detalhes dos erros:', errors);
+                const errorMessage = errors.length > 0 
+                    ? `❌ Nenhum lead válido encontrado. Erros: ${errors.slice(0, 3).join('; ')}${errors.length > 3 ? '...' : ''}`
+                    : "❌ Nenhum lead válido encontrado no arquivo";
+                showNotification(errorMessage, "error");
+                return;
+            }
+            
+            if (importedLeadsData.length > 1000) {
+                showNotification("⚠️ Muitos leads encontrados. Apenas os primeiros 1000 serão importados.", "warning");
+                importedLeadsData = importedLeadsData.slice(0, 1000);
+            }
+            
+            showImportPreview(filename, successCount, errors);
+        }
+        
+        // Mapear colunas automaticamente
+        function mapColumns(headers) {
+            const mapping = {
+                empresa: -1,
+                dataCriacao: -1,
+                abordagem: -1,
+                linkedin: -1,
+                nome: -1,
+                cargo: -1,
+                outrasInfo: []
+            };
+            
+            headers.forEach((header, index) => {
+                const h = header.toLowerCase().replace(/[^a-z0-9]/g, ''); // Remove acentos e caracteres especiais
+                
+                // Mapeamento mais flexível para empresa
+                if (h.includes('empresa') || h.includes('company') || h.includes('organizacao') || h.includes('organization') || h === 'emp') {
+                    mapping.empresa = index;
+                } 
+                // Data de criação com mais variações
+                else if ((h.includes('data') && (h.includes('criacao') || h.includes('criacao') || h.includes('created'))) || 
+                         h.includes('datacriacao') || h.includes('datecreated') || h.includes('created')) {
+                    mapping.dataCriacao = index;
+                } 
+                // Abordagem / mensagem
+                else if (h.includes('abordagem') || h.includes('approach') || h.includes('mensagem') || 
+                         h.includes('ciclo') || h.includes('etapa') || h.includes('step') || h.includes('msg')) {
+                    mapping.abordagem = index;
+                } 
+                // LinkedIn com mais variações
+                else if (h.includes('linkedin') || h.includes('url') || h.includes('profile') || 
+                         h.includes('perfil') || h.includes('link')) {
+                    mapping.linkedin = index;
+                } 
+                // Nome do contato com mais variações
+                else if (h.includes('nome') || h.includes('contato') || h.includes('name') || 
+                         h.includes('contact') || h.includes('pessoa') || h.includes('person') || h === 'nm') {
+                    mapping.nome = index;
+                } 
+                // Cargo com mais variações
+                else if (h.includes('cargo') || h.includes('position') || h.includes('job') || 
+                         h.includes('funcao') || h.includes('function') || h.includes('title') || h.includes('titulo')) {
+                    mapping.cargo = index;
+                } 
+                // Outras informações
+                else {
+                    mapping.outrasInfo.push(index);
+                }
+            });
+            
+            console.log('🗺️ Mapeamento detalhado:', {
+                empresa: mapping.empresa >= 0 ? headers[mapping.empresa] : 'NÃO ENCONTRADO',
+                nome: mapping.nome >= 0 ? headers[mapping.nome] : 'NÃO ENCONTRADO', 
+                cargo: mapping.cargo >= 0 ? headers[mapping.cargo] : 'opcional',
+                linkedin: mapping.linkedin >= 0 ? headers[mapping.linkedin] : 'opcional',
+                dataCriacao: mapping.dataCriacao >= 0 ? headers[mapping.dataCriacao] : 'opcional',
+                abordagem: mapping.abordagem >= 0 ? headers[mapping.abordagem] : 'opcional',
+                outrasInfo: mapping.outrasInfo.map(i => headers[i])
+            });
+            
+            // Verificar se conseguiu mapear pelo menos uma coluna essencial
+            if (mapping.empresa === -1 && mapping.nome === -1) {
+                console.warn('⚠️ Não foi possível encontrar colunas de Empresa ou Nome');
+                console.log('📋 Cabeçalhos disponíveis:', headers);
+                console.log('💡 Sugestão: Renomeie uma coluna para "Empresa" ou "Nome" no seu arquivo');
+                
+                // Tentar mapear automaticamente usando a primeira coluna como empresa e segunda como nome
+                if (headers.length >= 1) {
+                    mapping.empresa = 0;
+                    console.log(`🔧 Auto-mapeamento: Primeira coluna "${headers[0]}" será tratada como Empresa`);
+                }
+                if (headers.length >= 2) {
+                    mapping.nome = 1; 
+                    console.log(`🔧 Auto-mapeamento: Segunda coluna "${headers[1]}" será tratada como Nome`);
+                }
+            }
+            
+            return mapping;
+        }
+        
+        // Mapear linha para lead
+        function mapRowToLead(row, mapping, headers) {
+            const getValue = (index) => index >= 0 && index < row.length ? String(row[index]).trim() : '';
+            
+            const empresa = getValue(mapping.empresa);
+            const nome = getValue(mapping.nome);
+            const linkedin = getValue(mapping.linkedin);
+            
+            // Validação mais flexível - permite nome vazio se tiver empresa
+            if (!empresa && !nome) {
+                throw new Error('Pelo menos Empresa ou Nome deve estar preenchido');
+            }
+            
+            // Se não tiver empresa, usar "Não informado"
+            const empresaFinal = empresa || 'Não informado';
+            // Se não tiver nome, usar um padrão baseado na empresa
+            const nomeFinal = nome || `Contato - ${empresaFinal}`;
+            
+            console.log(`🔍 Dados extraídos - Empresa: "${empresaFinal}", Nome: "${nomeFinal}"`)
+            
+            // Processar data de criação
+            let createdAt = new Date().toISOString();
+            const dataStr = getValue(mapping.dataCriacao);
+            if (dataStr) {
+                try {
+                    // Tentar formatos DD/MM/AAAA, DD-MM-AAAA, AAAA-MM-DD
+                    let parsedDate;
+                    if (dataStr.includes('/')) {
+                        const [day, month, year] = dataStr.split('/');
+                        parsedDate = new Date(year, month - 1, day);
+                    } else if (dataStr.includes('-')) {
+                        const parts = dataStr.split('-');
+                        if (parts[0].length === 4) {
+                            // AAAA-MM-DD
+                            parsedDate = new Date(dataStr);
+                        } else {
+                            // DD-MM-AAAA
+                            const [day, month, year] = parts;
+                            parsedDate = new Date(year, month - 1, day);
+                        }
+                    } else {
+                        parsedDate = new Date(dataStr);
+                    }
+                    
+                    if (!isNaN(parsedDate.getTime())) {
+                        createdAt = parsedDate.toISOString();
+                    }
+                } catch (e) {
+                    console.warn('Erro ao processar data:', dataStr, e);
+                }
+            }
+            
+            // Processar abordagem (número da mensagem)
+            let currentActionIndex = 0;
+            const abordagemStr = getValue(mapping.abordagem);
+            if (abordagemStr) {
+                const abordagemNum = parseInt(abordagemStr);
+                if (!isNaN(abordagemNum) && abordagemNum >= 1 && abordagemNum <= 5) {
+                    currentActionIndex = abordagemNum - 1; // Converter para índice baseado em 0
+                }
+            }
+            
+            // Coletar outras informações para as notas
+            const outrasInfo = [];
+            mapping.outrasInfo.forEach(index => {
+                const value = getValue(index);
+                if (value) {
+                    outrasInfo.push(`${headers[index]}: ${value}`);
+                }
+            });
+            
+            return {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                empresa: empresaFinal,
+                nome: nomeFinal,
+                cargo: getValue(mapping.cargo) || 'Não informado',
+                linkedin: linkedin.startsWith('http') ? linkedin : (linkedin ? `https://linkedin.com/in/${linkedin}` : ''),
+                status: (cadenceConfig.statusOptions && cadenceConfig.statusOptions.length > 0) ? cadenceConfig.statusOptions[0] : "Lista",
+                currentActionIndex,
+                nextActionDate: currentActionIndex < (cadenceConfig.actions?.length || 0) ? getToday().toISOString() : null,
+                notes: outrasInfo.join('\n'),
+                history: [],
+                createdAt
+            };
+        }
+        
+        // Mostrar preview da importação
+        function showImportPreview(filename, successCount, errors) {
+            const modal = document.getElementById('import-preview-modal');
+            const content = document.getElementById('import-preview-content');
+            const countElement = document.getElementById('import-count');
+            
+            countElement.textContent = importedLeadsData.length;
+            
+            let html = `
+                <div class="mb-6">
+                    <h4 class="text-lg font-medium text-gray-900 mb-2">Arquivo: ${filename}</h4>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="bg-green-50 p-3 rounded">
+                            <div class="text-2xl font-bold text-green-600">${successCount}</div>
+                            <div class="text-sm text-green-600">Leads válidos</div>
+                        </div>
+                        <div class="bg-red-50 p-3 rounded">
+                            <div class="text-2xl font-bold text-red-600">${errors.length}</div>
+                            <div class="text-sm text-red-600">Erros</div>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded">
+                            <div class="text-2xl font-bold text-blue-600">${importedLeadsData.length}</div>
+                            <div class="text-sm text-blue-600">Total a importar</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (errors.length > 0) {
+                html += `
+                    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded">
+                        <h5 class="font-medium text-red-800 mb-2">⚠️ Erros encontrados (${errors.length}):</h5>
+                        <div class="text-sm text-red-700 max-h-32 overflow-y-auto">
+                            ${errors.slice(0, 10).map(error => `<div>• ${error}</div>`).join('')}
+                            ${errors.length > 10 ? `<div class="mt-2 font-medium">... e mais ${errors.length - 10} erros</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="mb-4">
+                    <h5 class="font-medium text-gray-900 mb-3">Preview dos leads (primeiros 5):</h5>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full border border-gray-300">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 border-b">Empresa</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 border-b">Nome</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 border-b">Cargo</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 border-b">Abordagem</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 border-b">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${importedLeadsData.slice(0, 5).map(lead => `
+                                    <tr>
+                                        <td class="px-3 py-2 text-sm">${escapeHtml(lead.empresa)}</td>
+                                        <td class="px-3 py-2 text-sm">${escapeHtml(lead.nome)}</td>
+                                        <td class="px-3 py-2 text-sm">${escapeHtml(lead.cargo)}</td>
+                                        <td class="px-3 py-2 text-sm">${lead.currentActionIndex + 1}/5</td>
+                                        <td class="px-3 py-2 text-sm">
+                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${escapeHtml(lead.status)}</span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        ${importedLeadsData.length > 5 ? `<p class="text-sm text-gray-500 mt-2">... e mais ${importedLeadsData.length - 5} leads</p>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            modal.style.display = 'block';
+        }
+        
+        // Fechar preview de importação
+        function closeImportPreview() {
+            document.getElementById('import-preview-modal').style.display = 'none';
+            importedLeadsData = [];
+            document.getElementById('file-input').value = ''; // Limpar input
+        }
+        
+        // Importar leads para o sistema
+        async function importLeads() {
+            if (importedLeadsData.length === 0) {
+                showNotification("❌ Nenhum lead para importar", "error");
+                return;
+            }
+            
+            showLoader(`Importando ${importedLeadsData.length} leads...`);
+            
+            try {
+                // Verificar duplicatas com leads existentes
+                const duplicateCount = checkForDuplicates();
+                
+                // Adicionar leads ao sistema
+                leads.push(...importedLeadsData);
+                
+                // Salvar no JSONBin
+                await saveDataToBin(false, "Salvando leads importados...");
+                
+                closeImportPreview();
+                hideLoader();
+                
+                const message = duplicateCount > 0 
+                    ? `✅ ${importedLeadsData.length} leads importados com sucesso! (${duplicateCount} duplicatas ignoradas)`
+                    : `✅ ${importedLeadsData.length} leads importados com sucesso!`;
+                
+                showNotification(message, "success");
+                
+                // Atualizar interface
+                renderTable();
+                
+            } catch (error) {
+                console.error('Erro ao importar leads:', error);
+                showNotification("❌ Erro ao importar leads. Tente novamente.", "error");
+                hideLoader();
+            }
+        }
+        
+        // Verificar duplicatas
+        function checkForDuplicates() {
+            let duplicateCount = 0;
+            const existingLeads = new Set(leads.map(lead => `${lead.empresa}|${lead.nome}|${lead.linkedin}`));
+            
+            importedLeadsData = importedLeadsData.filter(lead => {
+                const key = `${lead.empresa}|${lead.nome}|${lead.linkedin}`;
+                if (existingLeads.has(key)) {
+                    duplicateCount++;
+                    return false;
+                }
+                existingLeads.add(key);
+                return true;
+            });
+            
+            return duplicateCount;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadDataFromBin();
             initVersioning();
             initDarkMode();
+            initExecutiveReport();
+            initDragDrop();
         });
     </script>
 
