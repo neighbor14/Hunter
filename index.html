@@ -4741,7 +4741,27 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             console.log('🎨 HTML do modal gerado, tamanho:', html.length);
             
             modal.style.display = 'block';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.zIndex = '9999';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            
+            // Centralizar o modal interno
+            const modalContent = modal.querySelector('.modal');
+            if (modalContent) {
+                modalContent.style.position = 'absolute';
+                modalContent.style.top = '50%';
+                modalContent.style.left = '50%';
+                modalContent.style.transform = 'translate(-50%, -50%)';
+                modalContent.style.zIndex = '10000';
+                console.log('✅ Modal interno centralizado');
+            }
+            
             console.log('👁️ Modal exibido! Style display:', modal.style.display);
+            console.log('🎨 Modal z-index:', modal.style.zIndex);
             console.log('✅ showImportPreview concluída com sucesso!');
         }
         
