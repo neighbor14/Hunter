@@ -4899,9 +4899,26 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
         
         // Fechar preview de importação
         function closeImportPreview() {
-            document.getElementById('import-preview-modal').style.display = 'none';
+            // Fechar modal original
+            const originalModal = document.getElementById('import-preview-modal');
+            if (originalModal) {
+                originalModal.style.display = 'none';
+            }
+            
+            // Fechar modal alternativo se existir
+            const altModal = document.getElementById('alternative-modal');
+            if (altModal) {
+                altModal.remove();
+            }
+            
+            // Limpar dados
             importedLeadsData = [];
-            document.getElementById('file-input').value = ''; // Limpar input
+            const fileInput = document.getElementById('file-input');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            
+            console.log('✅ Modais fechados e dados limpos');
         }
         
         // Importar leads para o sistema
@@ -4927,53 +4944,35 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 console.log('📊 Leads após adição:', leads.length);
                 console.log('✅ Leads adicionados com sucesso à variável global');
                 
-                // Salvar no JSONBin
-                try {
-                    console.log('💾 Iniciando salvamento no JSONBin...');
-                    await saveDataToBin(false, "Salvando leads importados...");
-                    console.log('✅ Salvamento no JSONBin concluído');
-                } catch (saveError) {
-                    console.error('❌ Erro ao salvar no JSONBin:', saveError);
-                    // Continuar mesmo com erro de salvamento
-                    showNotification("⚠️ Leads importados localmente, mas erro ao salvar online", "warning");
-                }
-                
+                // Fechar modal e mostrar leads imediatamente
                 closeImportPreview();
-                
-                console.log('🎯 Finalizando importação...');
                 hideLoader();
                 
-                console.log('🔄 Verificação final da interface...');
+                console.log('🎯 Finalizando importação...');
                 console.log('📊 Total de leads finais:', leads.length);
                 
-                // Verificação final da renderização
-                setTimeout(() => {
-                    console.log('🔄 Verificação final após 500ms...');
-                    if (leads.length > 0) {
-                        console.log('✅ Sistema tem leads, forçando última renderização...');
-                        renderTable();
-                    }
-                }, 500);
+                // Atualizar interface imediatamente
+                console.log('🔄 Atualizando interface...');
+                renderTable();
                 
+                // Salvar no JSONBin em background (não bloquear a UI)
+                setTimeout(async () => {
+                    try {
+                        console.log('💾 Salvando no JSONBin em background...');
+                        await saveDataToBin(true, "Salvando leads importados...");
+                        console.log('✅ Salvamento no JSONBin concluído');
+                    } catch (saveError) {
+                        console.error('❌ Erro ao salvar no JSONBin:', saveError);
+                        showNotification("⚠️ Leads importados com sucesso, mas erro ao sincronizar online", "warning");
+                    }
+                }, 100);
+                
+                // Mostrar notificação de sucesso
                 const message = duplicateCount > 0 
                     ? `✅ ${importedLeadsData.length} leads importados com sucesso! (${duplicateCount} duplicatas ignoradas)`
                     : `✅ ${importedLeadsData.length} leads importados com sucesso!`;
                 
                 showNotification(message, "success");
-                
-                // Atualizar interface
-                console.log('🔄 Chamando renderTable após importação...');
-                console.log('📊 Total de leads no sistema:', leads.length);
-                console.log('📋 Leads importados:', importedLeadsData.length);
-                
-                // Forçar atualização da interface
-                renderTable();
-                
-                // Se não mostrar, tentar novamente após delay
-                setTimeout(() => {
-                    console.log('🔄 Renderização adicional (backup)...');
-                    renderTable();
-                }, 100);
                 
             } catch (error) {
                 console.error('Erro ao importar leads:', error);
