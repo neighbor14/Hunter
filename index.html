@@ -902,6 +902,12 @@
                         </svg>
                         Histórico <span id="current-version" class="text-xs opacity-75">v2.4</span>
                     </button>
+                    <button id="toggle-all-btn" class="action-btn action-neutral" title="Abrir/Fechar todas as empresas">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        Abrir tudo
+                    </button>
                     <button id="executive-report-btn" class="action-btn action-accent">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
@@ -1001,6 +1007,14 @@
                     <label for="status-filter" class="block text-sm font-medium text-gray-700">Filtrar por Status</label>
                     <select id="status-filter" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                         <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="md:w-56">
+                    <label for="activity-filter" class="block text-sm font-medium text-gray-700">Filtrar por Atividade</label>
+                    <select id="activity-filter" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                        <option value="all" selected>Todos</option>
+                        <option value="active">Ativos</option>
+                        <option value="inactive">Inativos</option>
                     </select>
                 </div>
                 <!-- Botão de visualização removido - usando apenas layout de cards -->
@@ -1421,6 +1435,7 @@
         const exportXlsBtn = document.getElementById('export-xls-btn');
         const searchInput = document.getElementById('search-input');
         const statusFilter = document.getElementById('status-filter');
+        const activityFilter = document.getElementById('activity-filter');
         
         // Variável para controlar visualização mobile
         let isMobileView = false;
@@ -1841,8 +1856,9 @@
 
             const searchTerm = searchInput.value.toLowerCase();
             const selectedStatus = statusFilter.value;
+            const selectedActivity = activityFilter ? activityFilter.value : 'all';
 
-            console.log('🔍 Filtros aplicados:', { searchTerm, selectedStatus });
+            console.log('🔍 Filtros aplicados:', { searchTerm, selectedStatus, selectedActivity });
 
             const filteredLeads = leads.filter(lead => {
                 // Garantir que os campos existem antes de fazer toLowerCase()
@@ -1851,10 +1867,12 @@
                 
                 const matchesSearch = empresa.includes(searchTerm) || nome.includes(searchTerm);
                 const matchesStatus = selectedStatus === 'all' || lead.status === selectedStatus;
+                const isActive = lead.isActive !== false;
+                const matchesActivity = selectedActivity === 'all' || (selectedActivity === 'active' && isActive) || (selectedActivity === 'inactive' && !isActive);
                 
                 console.log(`🔍 Filtrando lead: ${lead.empresa} - ${lead.nome} | Busca: ${matchesSearch} | Status: ${matchesStatus}`);
                 
-                return matchesSearch && matchesStatus;
+                return matchesSearch && matchesStatus && matchesActivity;
             });
 
             console.log('📊 Leads filtrados:', filteredLeads.length, 'de', leads.length);
@@ -2102,6 +2120,10 @@
                 if (toggleIcon) {
                     toggleIcon.textContent = newState ? '▼' : '▶';
                 }
+                const toggleBtn = companyHeader.querySelector('.company-toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.textContent = newState ? 'Fechar' : 'Abrir';
+                }
                 
                 if (newState) {
                     companyHeader.classList.remove('company-collapsed');
@@ -2168,7 +2190,8 @@
                                 <p class="text-sm text-gray-500">${groupedLeads[companyName].length} contato(s) ativo(s)</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <button class="action-btn action-secondary company-toggle-btn text-xs">${isExpanded ? 'Fechar' : 'Abrir'}</button>
                             <span class="company-toggle text-2xl text-gray-400">${isExpanded ? '▼' : '▶'}</span>
                         </div>
                     </div>
@@ -2178,6 +2201,14 @@
                 companyHeader.addEventListener('click', () => {
                     toggleCompany(companyName);
                 });
+                // Botão dedicado para abrir/fechar sem propagar
+                const toggleBtn = companyHeader.querySelector('.company-toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleCompany(companyName);
+                    });
+                }
                 
                 cardsBody.appendChild(companyHeader);
                 
@@ -2188,18 +2219,19 @@
 
                 groupedLeads[companyName].forEach(lead => {
                     const nextActionDate = lead.nextActionDate ? parseDate(lead.nextActionDate) : null;
-                    let cardBorderColor = 'border-gray-300';
+                    const isInactive = lead.isActive === false;
+                    let cardBorderColor = isInactive ? 'border-gray-300' : 'border-gray-300';
                     if (nextActionDate && nextActionDate.getTime() === today.getTime()) {
-                        cardBorderColor = 'border-yellow-400';
+                        cardBorderColor = isInactive ? 'border-gray-300' : 'border-yellow-400';
                     } else if (nextActionDate && nextActionDate < today) {
-                        cardBorderColor = 'border-red-400';
+                        cardBorderColor = isInactive ? 'border-gray-300' : 'border-red-400';
                     }
 
                     const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
                     const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
 
                     let actionButton = '';
-                    if (currentAction) {
+                    if (currentAction && !isInactive) {
                         const buttonClass = lead.currentActionIndex === 0 ? 'action-success' : 'action-primary';
                         actionButton = `
                             <button onclick="window.app.executeAction('${lead.id}')" class="action-btn ${buttonClass} text-sm w-full">
@@ -2212,10 +2244,12 @@
                     }
 
                     const card = document.createElement('div');
-                    card.className = `contact-card p-6 border-l-4 ${cardBorderColor}`;
+                    card.className = `contact-card p-6 border-l-4 ${cardBorderColor} ${isInactive ? 'opacity-60' : ''}`;
                     
                     let statusColor = '';
-                    if (nextActionDate && nextActionDate < today) {
+                    if (isInactive) {
+                        statusColor = 'bg-gray-200 text-gray-700';
+                    } else if (nextActionDate && nextActionDate < today) {
                         statusColor = 'bg-red-100 text-red-800';
                     } else if (nextActionDate && nextActionDate.getTime() === today.getTime()) {
                         statusColor = 'bg-yellow-100 text-yellow-800';
@@ -2241,7 +2275,7 @@
                                 <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(lead.nome)}&background=random&color=fff&size=48" 
                                      alt="${lead.nome}" class="w-12 h-12 rounded-full border-2 border-white shadow-md">
                                 <div>
-                                    <h4 class="font-semibold text-gray-900 text-lg">${escapeHtml(lead.nome)}</h4>
+                                    <h4 class="font-semibold ${isInactive ? 'text-gray-500' : 'text-gray-900'} text-lg">${escapeHtml(lead.nome)}${isInactive ? ' (Inativo)' : ''}</h4>
                                     <p class="text-sm text-gray-600">${escapeHtml(lead.cargo)}</p>
                                     <a href="${isValidUrl(lead.linkedin) ? lead.linkedin : '#'}" target="_blank" 
                                        class="text-sm text-blue-600 hover:text-blue-700 transition-colors inline-flex items-center mt-1">
@@ -2253,8 +2287,8 @@
                                 </div>
                             </div>
                             <div class="flex flex-col items-end space-y-2">
-                                <span class="status-badge ${statusColor}">${escapeHtml(lead.status)}</span>
-                                <select onchange="window.app.updateLeadStatus('${lead.id}', this.value)" 
+                                <span class="status-badge ${statusColor}">${isInactive ? 'Inativo (BD)' : escapeHtml(lead.status)}</span>
+                                <select ${isInactive ? 'disabled' : ''} onchange="window.app.updateLeadStatus('${lead.id}', this.value)" 
                                         class="text-xs p-1 rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                         title="Alterar Status">
                                     ${(cadenceConfig.statusOptions || []).map(status => 
@@ -2267,10 +2301,9 @@
                         <div class="bg-gray-50 rounded-lg p-4 mb-4">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-gray-700">Próxima Ação</span>
-                                <span class="text-xs font-medium ${nextActionDate && nextActionDate < today ? 'text-red-600' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'text-yellow-600' : 'text-green-600'}">
-                                    ${nextActionDate && nextActionDate < today ? 'Atrasado' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'Hoje' : 'No prazo'}
-                                </span>
+                                ${isInactive ? '<span class="text-xs font-medium text-gray-500">Desativado</span>' : `<span class="text-xs font-medium ${nextActionDate && nextActionDate < today ? 'text-red-600' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'text-yellow-600' : 'text-green-600'}">${nextActionDate && nextActionDate < today ? 'Atrasado' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'Hoje' : 'No prazo'}</span>`}
                             </div>
+                            ${isInactive ? `<div class="text-sm text-gray-600">Contato desativado (BD). Não participa do funil.</div>` : `
                             <div class="flex items-center space-x-2 mb-2">
                                 <div class="w-2 h-2 ${nextActionDate && nextActionDate < today ? 'bg-red-500' : nextActionDate && nextActionDate.getTime() === today.getTime() ? 'bg-yellow-500' : 'bg-green-500'} rounded-full"></div>
                                 <span class="text-sm text-gray-900 font-medium">${currentAction ? currentAction.name : 'Ciclo Finalizado'}</span>
@@ -2285,7 +2318,7 @@
                                            title="📅 Clique para alterar a data da próxima ação">
                                     <span class="text-xs text-blue-600 font-medium">✏️ Editável</span>
                                 </div>
-                            </div>
+                            </div>`}
                         </div>
 
                         <div class="space-y-2 mb-4">
@@ -2317,6 +2350,14 @@
                                 </svg>
                                 <span class="hidden sm:inline">Editar</span>
                             </button>
+                            <button onclick="window.app.toggleLeadActive('${lead.id}')" 
+                                    class="action-btn ${isInactive ? 'action-success' : 'action-secondary'} text-sm mr-2" 
+                                    title="${isInactive ? 'Ativar' : 'Desativar'} Lead">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    ${isInactive ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />' : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2 2 2m-2-2V7m0 7a5 5 0 100-10 5 5 0 000 10z" />'}
+                                </svg>
+                                ${isInactive ? 'Ativar' : 'Desativar'}
+                            </button>
                             <button onclick="window.app.deleteLead('${lead.id}')" 
                                     class="action-btn action-secondary text-red-600 text-sm" title="Excluir">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2347,9 +2388,36 @@
 
         // --- MANIPULADORES DE EVENTOS GLOBAIS ---
         window.app = {
+            toggleAllCompanies: (expand) => {
+                const newState = !!expand;
+                // Atualiza estado para todas as empresas presentes atualmente
+                const companyHeaders = document.querySelectorAll('.company-header');
+                companyHeaders.forEach(header => {
+                    const nameEl = header.querySelector('h3');
+                    if (!nameEl) return;
+                    const companyName = nameEl.textContent.trim();
+                    companyExpandedState[companyName] = newState;
+                });
+                localStorage.setItem('companyExpandedState', JSON.stringify(companyExpandedState));
+                // Atualiza UI
+                document.querySelectorAll('.company-leads').forEach(container => {
+                    container.classList.toggle('expanded', newState);
+                    container.classList.toggle('collapsed', !newState);
+                });
+                document.querySelectorAll('.company-header').forEach(header => {
+                    const icon = header.querySelector('.company-toggle');
+                    if (icon) icon.textContent = newState ? '▼' : '▶';
+                    const btn = header.querySelector('.company-toggle-btn');
+                    if (btn) btn.textContent = newState ? 'Fechar' : 'Abrir';
+                });
+            },
             executeAction: (id) => {
                 const leadIndex = leads.findIndex(l => l.id === id);
                 if(leadIndex === -1) return;
+                if (leads[leadIndex].isActive === false) {
+                    showNotification('ℹ️ Este contato está desativado (BD). Reative para executar ações.', 'info');
+                    return;
+                }
 
                 const today = getToday();
                 const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
@@ -2440,6 +2508,10 @@
             updateLeadStatus: (id, newStatus) => {
                 const leadIndex = leads.findIndex(l => l.id === id);
                 if (leadIndex === -1 || leads[leadIndex].status === newStatus) return;
+                if (leads[leadIndex].isActive === false) {
+                    showNotification('ℹ️ Este contato está desativado (BD). Reative para alterar status no funil.', 'info');
+                    return;
+                }
 
                 leads[leadIndex].history = leads[leadIndex].history || [];
                 leads[leadIndex].history.push({ 
@@ -2464,6 +2536,10 @@
             updateActionDate: (id, newDate) => {
                 const leadIndex = leads.findIndex(l => l.id === id);
                 if (leadIndex === -1) return;
+                if (leads[leadIndex].isActive === false) {
+                    showNotification('ℹ️ Este contato está desativado (BD). Reative para agendar ações.', 'info');
+                    return;
+                }
 
                 const oldDate = leads[leadIndex].nextActionDate;
                 console.log(`[DEBUG] updateActionDate chamado para lead ${leads[leadIndex].nome}: ${oldDate} -> ${newDate}`);
@@ -2532,6 +2608,10 @@
                 const newActionIndex = parseInt(newActionIndexStr);
                 const leadIndex = leads.findIndex(l => l.id === id);
                 if (leadIndex === -1 || leads[leadIndex].currentActionIndex === newActionIndex) return;
+                if (leads[leadIndex].isActive === false) {
+                    showNotification('ℹ️ Este contato está desativado (BD). Reative para alterar a próxima ação.', 'info');
+                    return;
+                }
 
                 leads[leadIndex].currentActionIndex = newActionIndex;
 
@@ -2562,9 +2642,26 @@
                 if (!newDateStr) return;
                 const leadIndex = leads.findIndex(l => l.id === id);
                 if (leadIndex === -1) return;
+                if (leads[leadIndex].isActive === false) {
+                    showNotification('ℹ️ Este contato está desativado (BD). Reative para agendar ações.', 'info');
+                    return;
+                }
                 // Usar parseDate para garantir consistência
                 const parsedDate = new Date(newDateStr + 'T00:00:00.000Z'); // Força UTC
                 leads[leadIndex].nextActionDate = parsedDate.toISOString();
+                saveDataToBin();
+            },
+
+            toggleLeadActive: (id) => {
+                const leadIndex = leads.findIndex(l => l.id === id);
+                if (leadIndex === -1) return;
+                const current = leads[leadIndex].isActive !== false; // default true
+                leads[leadIndex].isActive = !current;
+                if (leads[leadIndex].isActive) {
+                    showNotification('✅ Contato ativado. Ele volta a participar do funil e da agenda.', 'success');
+                } else {
+                    showNotification('⏸️ Contato desativado. Ele não participa do funil nem da agenda.', 'info');
+                }
                 saveDataToBin();
             },
 
@@ -2678,7 +2775,8 @@
                 nextActionDate: getToday().toISOString(),
                 notes: '',
                 history: [],
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                isActive: true
             };
             leads.push(newLead);
             saveDataToBin();
@@ -3152,8 +3250,9 @@
                 currentDate = addDays(currentDate, 1);
             }
 
-            // CORREÇÃO: Adicionar datas de leads que estão fora da janela padrão
-            leads.forEach(lead => {
+            // CORREÇÃO: Adicionar datas de leads que estão fora da janela padrão (somente ativos)
+            const activeLeadsOnlyForWindow = leads.filter(l => l.isActive !== false);
+            activeLeadsOnlyForWindow.forEach(lead => {
                 if (lead.nextActionDate) {
                     const leadDate = parseDate(lead.nextActionDate);
                     if (leadDate && isWorkingDay(leadDate)) {
@@ -3180,11 +3279,12 @@
                 console.log(`[DEBUG AGENDA] Dia útil: ${dateStr} (${formatDateShort(date)})`);
             });
 
-            // Organizar leads nas datas correspondentes
-            console.log(`[DEBUG AGENDA] Processando ${leads.length} leads`);
-            console.log(`[DEBUG AGENDA] Array completo de leads:`, leads.map(l => ({nome: l.nome, nextActionDate: l.nextActionDate})));
-            
-            leads.forEach(lead => {
+            // Organizar leads nas datas correspondentes (somente ativos)
+            const activeLeadsOnly = leads.filter(l => l.isActive !== false);
+            console.log(`[DEBUG AGENDA] Processando ${activeLeadsOnly.length} leads ativos de ${leads.length} totais`);
+            console.log(`[DEBUG AGENDA] Array completo de leads ativos:`, activeLeadsOnly.map(l => ({nome: l.nome, nextActionDate: l.nextActionDate})));
+
+            activeLeadsOnly.forEach(lead => {
                 console.log(`[DEBUG AGENDA] Processando lead: ${lead.nome}, nextActionDate: ${lead.nextActionDate}`);
                 if (lead.nextActionDate) {
                     // CORREÇÃO: Usar diretamente a data string em formato YYYY-MM-DD
@@ -4443,10 +4543,14 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
         
         // Processar arquivo CSV
         function processCSVFile(data, filename) {
-            const lines = data.split('\n');
+            const lines = data.split(/\r?\n/);
             const jsonData = lines.map(line => {
-                // Parse CSV simples (pode ser melhorado para lidar com vírgulas em aspas)
-                return line.split(',').map(cell => cell.trim().replace(/^"(.*)"$/, '$1'));
+                if (!line) return [];
+                // Detecta delimitador brasileiro ';' ou padrão ',' por linha
+                const semicolons = (line.match(/;/g) || []).length;
+                const commas = (line.match(/,/g) || []).length;
+                const delimiter = semicolons > commas ? ';' : ',';
+                return line.split(delimiter).map(cell => cell.trim().replace(/^"(.*)"$/, '$1'));
             }).filter(row => row.some(cell => cell.length > 0));
             
             processImportData(jsonData, filename);
@@ -4650,9 +4754,33 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             return mapping;
         }
         
+        // Converter número serial de data do Excel para ISO (UTC)
+        function excelSerialToISO(serial) {
+            try {
+                // Usar utilitário da própria biblioteca se disponível
+                if (typeof XLSX !== 'undefined' && XLSX.SSF && typeof XLSX.SSF.parse_date_code === 'function') {
+                    const d = XLSX.SSF.parse_date_code(serial);
+                    if (d && typeof d.y === 'number') {
+                        const date = new Date(Date.UTC(d.y, (d.m || 1) - 1, d.d || 1, d.H || 0, d.M || 0, Math.floor(d.S || 0)));
+                        return date.toISOString();
+                    }
+                }
+                // Fallback aproximado: Excel base 1899-12-30
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                const ms = Math.round((Number(serial) || 0) * 24 * 60 * 60 * 1000);
+                return new Date(excelEpoch.getTime() + ms).toISOString();
+            } catch (e) {
+                return new Date().toISOString();
+            }
+        }
+
         // Mapear linha para lead
         function mapRowToLead(row, mapping, headers) {
-            const getValue = (index) => index >= 0 && index < row.length ? String(row[index]).trim() : '';
+            const getRaw = (index) => index >= 0 && index < row.length ? row[index] : '';
+            const getValue = (index) => {
+                const v = getRaw(index);
+                return (v === null || v === undefined) ? '' : String(v).trim();
+            };
             
             const empresa = getValue(mapping.empresa);
             const nome = getValue(mapping.nome);
@@ -4680,31 +4808,43 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             
             // Processar data de criação
             let createdAt = new Date().toISOString();
+            const rawDate = getRaw(mapping.dataCriacao);
             const dataStr = getValue(mapping.dataCriacao);
-            if (dataStr) {
+            if (rawDate !== '' && rawDate !== null && rawDate !== undefined) {
                 try {
-                    // Tentar formatos DD/MM/AAAA, DD-MM-AAAA, AAAA-MM-DD
-                    let parsedDate;
-                    if (dataStr.includes('/')) {
-                        const [day, month, year] = dataStr.split('/');
-                        parsedDate = new Date(year, month - 1, day);
-                    } else if (dataStr.includes('-')) {
-                        const parts = dataStr.split('-');
-                        if (parts[0].length === 4) {
-                            // AAAA-MM-DD
-                            parsedDate = new Date(dataStr);
-                        } else {
-                            // DD-MM-AAAA
-                            const [day, month, year] = parts;
-                            parsedDate = new Date(year, month - 1, day);
+                    let parsedISO = null;
+                    if (typeof rawDate === 'number') {
+                        // Provável serial do Excel
+                        parsedISO = excelSerialToISO(rawDate);
+                    } else if (/^\d+$/.test(dataStr)) {
+                        // String numérica que pode ser serial
+                        const serialNum = parseInt(dataStr, 10);
+                        if (serialNum > 25000 && serialNum < 60000) {
+                            parsedISO = excelSerialToISO(serialNum);
                         }
-                    } else {
-                        parsedDate = new Date(dataStr);
                     }
-                    
-                    if (!isNaN(parsedDate.getTime())) {
-                        createdAt = parsedDate.toISOString();
+                    if (!parsedISO) {
+                        // Tentar formatos DD/MM/AAAA, DD-MM-AAAA, AAAA-MM-DD
+                        let parsedDate;
+                        if (dataStr.includes('/')) {
+                            const [day, month, year] = dataStr.split('/');
+                            parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+                        } else if (dataStr.includes('-')) {
+                            const parts = dataStr.split('-');
+                            if (parts[0].length === 4) {
+                                parsedDate = new Date(dataStr);
+                            } else {
+                                const [day, month, year] = parts;
+                                parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+                            }
+                        } else {
+                            parsedDate = new Date(dataStr);
+                        }
+                        if (!isNaN(parsedDate.getTime())) {
+                            parsedISO = parsedDate.toISOString();
+                        }
                     }
+                    if (parsedISO) createdAt = parsedISO;
                 } catch (e) {
                     console.warn('Erro ao processar data:', dataStr, e);
                 }
@@ -4740,7 +4880,8 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 nextActionDate: currentActionIndex < (cadenceConfig.actions?.length || 0) ? getToday().toISOString() : null,
                 notes: outrasInfo.join('\n'),
                 history: [],
-                createdAt
+                createdAt,
+                isActive: true
             };
         }
         
@@ -5092,6 +5233,26 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             initDarkMode();
             initExecutiveReport();
             initDragDrop();
+            const toggleAllBtn = document.getElementById('toggle-all-btn');
+            if (toggleAllBtn) {
+                let expanded = false;
+                toggleAllBtn.addEventListener('click', () => {
+                    expanded = !expanded;
+                    window.app.toggleAllCompanies(expanded);
+                    toggleAllBtn.innerHTML = `
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        ${expanded ? 'Fechar tudo' : 'Abrir tudo'}
+                    `;
+                });
+            }
+
+            if (activityFilter) {
+                activityFilter.addEventListener('change', () => {
+                    renderTable();
+                });
+            }
         });
     </script>
 
