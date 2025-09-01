@@ -1824,8 +1824,15 @@
             console.log('🔍 Filtros aplicados:', { searchTerm, selectedStatus });
 
             const filteredLeads = leads.filter(lead => {
-                const matchesSearch = lead.empresa.toLowerCase().includes(searchTerm) || lead.nome.toLowerCase().includes(searchTerm);
+                // Garantir que os campos existem antes de fazer toLowerCase()
+                const empresa = (lead.empresa || '').toLowerCase();
+                const nome = (lead.nome || '').toLowerCase();
+                
+                const matchesSearch = empresa.includes(searchTerm) || nome.includes(searchTerm);
                 const matchesStatus = selectedStatus === 'all' || lead.status === selectedStatus;
+                
+                console.log(`🔍 Filtrando lead: ${lead.empresa} - ${lead.nome} | Busca: ${matchesSearch} | Status: ${matchesStatus}`);
+                
                 return matchesSearch && matchesStatus;
             });
 
@@ -4364,7 +4371,9 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 if (hasHeaderKeywords) {
                     headerRowIndex = i;
                     headers = rowAsString;
-                    console.log(`✅ Cabeçalhos detectados na linha ${i + 1}`);
+                    console.log(`✅ Cabeçalhos detectados na linha ${i + 1}:`);
+                    console.log('📋 Cabeçalhos originais encontrados:', row);
+                    console.log('📋 Cabeçalhos processados:', rowAsString);
                     break;
                 }
             }
@@ -4487,10 +4496,11 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                     console.log(`✅ LinkedIn mapeado para coluna ${index}`);
                 } 
                 // Nome do contato com mais variações
-                else if (h.includes('nome') || h.includes('contato') || h.includes('name') || 
+                else if (h.includes('nomedocontato') || h.includes('nomecontato') || 
+                         h.includes('nome') || h.includes('contato') || h.includes('name') || 
                          h.includes('contact') || h.includes('pessoa') || h.includes('person') || h === 'nm') {
                     mapping.nome = index;
-                    console.log(`✅ Nome mapeado para coluna ${index}`);
+                    console.log(`✅ Nome mapeado para coluna ${index} (cabeçalho: "${original}")`);
                 } 
                 // Cargo com mais variações
                 else if (h.includes('cargo') || h.includes('position') || h.includes('job') || 
@@ -4553,10 +4563,9 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 throw new Error('Pelo menos Empresa ou Nome deve estar preenchido');
             }
             
-            // Se não tiver empresa, usar "Não informado"
-            const empresaFinal = empresa || 'Não informado';
-            // Se não tiver nome, usar um padrão baseado na empresa
-            const nomeFinal = nome || `Contato - ${empresaFinal}`;
+            // Tratar valores undefined/null/vazios
+            const empresaFinal = empresa && empresa !== 'undefined' ? empresa : 'Não informado';
+            const nomeFinal = nome && nome !== 'undefined' ? nome : `Contato - ${empresaFinal}`;
             
             console.log(`🔍 Dados extraídos - Empresa: "${empresaFinal}", Nome: "${nomeFinal}"`)
             
