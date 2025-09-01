@@ -4586,9 +4586,9 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             }, 1000);
         }
         
-        // Mapear colunas automaticamente - SOLUÇÃO DIRETA FORÇADA
+        // Mapear colunas automaticamente - AJUSTADO PARA COLUNA "NOME" PRIMEIRA
         function mapColumns(headers) {
-            console.log('🚨 MAPEAMENTO DIRETO FORÇADO ATIVADO!');
+            console.log('🎯 MAPEAMENTO AJUSTADO PARA COLUNA "NOME" PRIMEIRA!');
             console.log('📋 Cabeçalhos encontrados:', headers);
             
             const mapping = {
@@ -4601,44 +4601,56 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 outrasInfo: []
             };
 
-            // MAPEAMENTO DIRETO FORÇADO - Baseado na estrutura conhecida do arquivo
-            if (headers.length >= 1) {
-                mapping.empresa = 0;
-                console.log(`🚨 FORÇADO: Empresa = coluna 0 ("${headers[0]}")`);
+            // PROCURAR ESPECIFICAMENTE pela coluna "Nome" primeiro
+            headers.forEach((header, index) => {
+                const headerLower = header.toLowerCase().trim();
+                console.log(`🔍 Verificando coluna ${index}: "${header}" → "${headerLower}"`);
+                
+                if (headerLower === 'nome') {
+                    mapping.nome = index;
+                    console.log(`✅ NOME ENCONTRADO na coluna ${index}!`);
+                }
+            });
+            
+            // Se não encontrou "Nome", usar a primeira coluna
+            if (mapping.nome === -1) {
+                mapping.nome = 0;
+                console.log(`⚠️ Nome não encontrado, usando primeira coluna (${headers[0]})`);
             }
             
+            // Mapear outras colunas por posição relativa
             if (headers.length >= 2) {
-                mapping.nome = 1;
-                console.log(`🚨 FORÇADO: Nome = coluna 1 ("${headers[1]}")`);
+                mapping.empresa = 1;
+                console.log(`📊 Empresa = coluna 1 ("${headers[1]}")`);
             }
             
             if (headers.length >= 3) {
                 mapping.cargo = 2;
-                console.log(`🚨 FORÇADO: Cargo = coluna 2 ("${headers[2]}")`);
+                console.log(`📊 Cargo = coluna 2 ("${headers[2]}")`);
             }
             
             if (headers.length >= 4) {
                 mapping.linkedin = 3;
-                console.log(`🚨 FORÇADO: LinkedIn = coluna 3 ("${headers[3]}")`);
+                console.log(`📊 LinkedIn = coluna 3 ("${headers[3]}")`);
             }
             
             if (headers.length >= 5) {
                 mapping.dataCriacao = 4;
-                console.log(`🚨 FORÇADO: Data = coluna 4 ("${headers[4]}")`);
+                console.log(`📊 Data = coluna 4 ("${headers[4]}")`);
             }
             
             if (headers.length >= 6) {
                 mapping.abordagem = 5;
-                console.log(`🚨 FORÇADO: Abordagem = coluna 5 ("${headers[5]}")`);
+                console.log(`📊 Abordagem = coluna 5 ("${headers[5]}")`);
             }
             
             // Adicionar colunas restantes como outras informações
             for (let i = 6; i < headers.length; i++) {
                 mapping.outrasInfo.push(i);
-                console.log(`🚨 FORÇADO: Outras info = coluna ${i} ("${headers[i]}")`);
+                console.log(`📝 Outras info = coluna ${i} ("${headers[i]}")`);
             }
             
-            console.log('🚨 MAPEAMENTO DIRETO APLICADO:', mapping);
+            console.log('🎯 MAPEAMENTO FINAL:', mapping);
             return mapping;
         }
         
