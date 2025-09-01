@@ -4762,6 +4762,48 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             
             console.log('👁️ Modal exibido! Style display:', modal.style.display);
             console.log('🎨 Modal z-index:', modal.style.zIndex);
+            
+            // Verificação final do DOM
+            console.log('🔍 Verificação final do modal:');
+            console.log('Modal existe:', !!modal);
+            console.log('Modal offsetWidth:', modal.offsetWidth);
+            console.log('Modal offsetHeight:', modal.offsetHeight);
+            console.log('Modal getBoundingClientRect:', modal.getBoundingClientRect());
+            console.log('Modal computed style display:', window.getComputedStyle(modal).display);
+            console.log('Modal computed style visibility:', window.getComputedStyle(modal).visibility);
+            console.log('Modal computed style opacity:', window.getComputedStyle(modal).opacity);
+            
+            // Forçar todas as propriedades CSS
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+            modal.classList.remove('hidden');
+            
+            // Scroll para o modal se necessário
+            modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Fallback: se ainda não estiver visível, usar confirm
+            setTimeout(() => {
+                const isVisible = modal.offsetWidth > 0 && modal.offsetHeight > 0;
+                console.log('🔍 Modal é visível após timeout:', isVisible);
+                
+                if (!isVisible) {
+                    console.log('⚠️ Modal não está visível, usando fallback...');
+                    const confirmImport = confirm(
+                        `Modal não apareceu, mas ${importedLeadsData.length} leads foram processados com sucesso!\n\n` +
+                        `Deseja importar todos os ${importedLeadsData.length} leads agora?\n\n` +
+                        `Clique OK para importar ou Cancelar para tentar novamente.`
+                    );
+                    
+                    if (confirmImport) {
+                        console.log('✅ Usuário confirmou importação via fallback');
+                        importLeads();
+                    } else {
+                        console.log('❌ Usuário cancelou importação');
+                        importedLeadsData = [];
+                    }
+                }
+            }, 1000);
+            
             console.log('✅ showImportPreview concluída com sucesso!');
         }
         
