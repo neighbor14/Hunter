@@ -4327,8 +4327,52 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
                 return;
             }
             
-            const headers = data[0].map(h => String(h).toLowerCase().trim());
-            const rows = data.slice(1);
+            // Detectar qual linha contém os verdadeiros cabeçalhos
+            let headerRowIndex = 0;
+            let headers = [];
+            
+            // Procurar por cabeçalhos válidos nas primeiras 3 linhas
+            for (let i = 0; i < Math.min(3, data.length); i++) {
+                const row = data[i];
+                const rowAsString = row.map(cell => String(cell).toLowerCase().trim());
+                
+                // Verificar se essa linha contém palavras-chave de cabeçalhos
+                const hasHeaderKeywords = rowAsString.some(cell => 
+                    cell.includes('empresa') || cell.includes('nome') || cell.includes('data') ||
+                    cell.includes('linkedin') || cell.includes('cargo') || cell.includes('abordagem') ||
+                    cell.includes('company') || cell.includes('name') || cell.includes('contact')
+                );
+                
+                console.log(`🔍 Linha ${i + 1}:`, rowAsString);
+                console.log(`📋 Contém palavras-chave de cabeçalho:`, hasHeaderKeywords);
+                
+                if (hasHeaderKeywords) {
+                    headerRowIndex = i;
+                    headers = rowAsString;
+                    console.log(`✅ Cabeçalhos detectados na linha ${i + 1}`);
+                    break;
+                }
+            }
+            
+            // Se não encontrou cabeçalhos específicos, usar a primeira linha não vazia
+            if (headers.length === 0) {
+                for (let i = 0; i < Math.min(3, data.length); i++) {
+                    const row = data[i].map(cell => String(cell).trim());
+                    if (row.some(cell => cell.length > 0 && !cell.includes('unnamed'))) {
+                        headerRowIndex = i;
+                        headers = row.map(h => String(h).toLowerCase().trim());
+                        console.log(`🔧 Usando linha ${i + 1} como cabeçalhos (fallback)`);
+                        break;
+                    }
+                }
+            }
+            
+            if (headers.length === 0) {
+                showNotification("❌ Não foi possível detectar cabeçalhos válidos no arquivo", "error");
+                return;
+            }
+            
+            const rows = data.slice(headerRowIndex + 1);
             
             console.log('📋 Cabeçalhos encontrados:', headers);
             
@@ -4399,40 +4443,55 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             };
             
             headers.forEach((header, index) => {
-                const h = header.toLowerCase().replace(/[^a-z0-9]/g, ''); // Remove acentos e caracteres especiais
+                const h = header.toLowerCase().replace(/[^a-z0-9]/g, ''); // Remove acentos, dois pontos e caracteres especiais
+                const original = header.toLowerCase().trim(); // Manter versão com caracteres para debug
+                
+                console.log(`🔍 Analisando coluna ${index}: "${original}" → "${h}"`);
                 
                 // Mapeamento mais flexível para empresa
                 if (h.includes('empresa') || h.includes('company') || h.includes('organizacao') || h.includes('organization') || h === 'emp') {
                     mapping.empresa = index;
+                    console.log(`✅ Empresa mapeada para coluna ${index}`);
                 } 
-                // Data de criação com mais variações
-                else if ((h.includes('data') && (h.includes('criacao') || h.includes('criacao') || h.includes('created'))) || 
-                         h.includes('datacriacao') || h.includes('datecreated') || h.includes('created')) {
+                // Data de criação com mais variações  
+                else if (h.includes('data') || h.includes('date') || h.includes('created') || h.includes('criacao')) {
                     mapping.dataCriacao = index;
+                    console.log(`✅ Data de criação mapeada para coluna ${index}`);
                 } 
                 // Abordagem / mensagem
                 else if (h.includes('abordagem') || h.includes('approach') || h.includes('mensagem') || 
-                         h.includes('ciclo') || h.includes('etapa') || h.includes('step') || h.includes('msg')) {
+                         h.includes('ciclo') || h.includes('etapa') || h.includes('step') || h.includes('msg') ||
+                         h.includes('contato') && (h.includes('1') || h.includes('2') || h.includes('3'))) {
                     mapping.abordagem = index;
+                    console.log(`✅ Abordagem mapeada para coluna ${index}`);
                 } 
                 // LinkedIn com mais variações
                 else if (h.includes('linkedin') || h.includes('url') || h.includes('profile') || 
-                         h.includes('perfil') || h.includes('link')) {
+                         h.includes('perfil') || h.includes('link') || h.includes('correto')) {
                     mapping.linkedin = index;
+                    console.log(`✅ LinkedIn mapeado para coluna ${index}`);
                 } 
                 // Nome do contato com mais variações
                 else if (h.includes('nome') || h.includes('contato') || h.includes('name') || 
                          h.includes('contact') || h.includes('pessoa') || h.includes('person') || h === 'nm') {
                     mapping.nome = index;
+                    console.log(`✅ Nome mapeado para coluna ${index}`);
                 } 
                 // Cargo com mais variações
                 else if (h.includes('cargo') || h.includes('position') || h.includes('job') || 
                          h.includes('funcao') || h.includes('function') || h.includes('title') || h.includes('titulo')) {
                     mapping.cargo = index;
-                } 
+                    console.log(`✅ Cargo mapeado para coluna ${index}`);
+                }
+                // Telefone (vai para outras informações)
+                else if (h.includes('tel') || h.includes('phone') || h.includes('telefone') || h.includes('fone')) {
+                    mapping.outrasInfo.push(index);
+                    console.log(`📝 Telefone adicionado às outras informações (coluna ${index})`);
+                }
                 // Outras informações
                 else {
                     mapping.outrasInfo.push(index);
+                    console.log(`📝 Coluna ${index} adicionada às outras informações`);
                 }
             });
             
