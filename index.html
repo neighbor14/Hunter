@@ -1185,12 +1185,7 @@
                 <button id="debug-agenda-btn" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 mr-2" title="Debug da agenda - mostrar informações detalhadas">
                     🐛 Debug Agenda
                 </button>
-                <button id="fix-dates-btn" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 mr-2" title="Corrigir datas dos leads para hoje/próximos dias">
-                    📅 Corrigir Datas
-                </button>
-                <button id="check-overdue-btn" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 mr-2" title="MANUAL: Verificar e reagendar tarefas atrasadas (apenas quando solicitado)">
-                    ⏰ Reagendar Manual
-                </button>
+
 
                 <button id="close-report-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
             </div>
@@ -1915,99 +1910,8 @@
             return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 = segunda, 5 = sexta
         };
         
-        // Função para encontrar próximo dia útil
-        const getNextWorkingDay = (fromDate = null) => {
-            let date = fromDate ? new Date(fromDate) : getToday();
-            date = addDays(date, 1); // Começar do próximo dia
-            
-            while (!isWorkingDay(date)) {
-                date = addDays(date, 1);
-            }
-            
-            return date;
-        };
-        
-        // Função para verificar e corrigir tarefas atrasadas automaticamente
-        const checkAndFixOverdueTasks = (silent = false) => {
-            // Usar timezone de São Paulo para verificação mais precisa
-            const now = new Date();
-            const saoPauloTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-            const today = new Date(Date.UTC(saoPauloTime.getFullYear(), saoPauloTime.getMonth(), saoPauloTime.getDate()));
-            const todayStr = today.toISOString().split('T')[0];
-            
-            // Verificar se é quase fim do dia (após 23:00)
-            const isLateInDay = saoPauloTime.getHours() >= 23;
-            
-            let fixedCount = 0;
-            
-            if (!silent) {
-                console.log('\n=== 🔄 VERIFICAÇÃO DE TAREFAS ATRASADAS ===');
-                console.log(`🕐 Horário São Paulo: ${saoPauloTime.toLocaleString('pt-BR')}`);
-                console.log(`📅 Data atual: ${todayStr}`);
-                console.log(`⏰ É tarde no dia? ${isLateInDay ? 'Sim (após 23h)' : 'Não (antes de 23h)'}`);
-            }
-            
-            leads.forEach(lead => {
-                if (lead.isActive !== false && lead.nextActionDate) {
-                    const leadDate = parseDate(lead.nextActionDate);
-                    const leadDateStr = leadDate.toISOString().split('T')[0];
-                    
-                    // CORREÇÃO: Reagendar apenas se:
-                    // 1. A data é ANTES de hoje (ontem ou anterior)
-                    // 2. OU se é hoje MAS já é muito tarde (após 23h)
-                    const isBeforeToday = leadDate < today;
-                    const isTodayButLate = leadDateStr === todayStr && isLateInDay;
-                    
-                    if (isBeforeToday || isTodayButLate) {
-                        const nextWorkingDay = getNextWorkingDay();
-                        const oldDate = leadDateStr;
-                        
-                        lead.nextActionDate = nextWorkingDay.toISOString();
-                        fixedCount++;
-                        
-                        // Adicionar ao histórico
-                        lead.history = lead.history || [];
-                        lead.history.push({
-                            timestamp: new Date().toISOString(),
-                            action: 'auto_reschedule',
-                            oldDate: oldDate,
-                            newDate: nextWorkingDay.toISOString().split('T')[0],
-                            reason: isBeforeToday ? 'tarefa_atrasada' : 'fim_do_dia',
-                            saoPauloTime: saoPauloTime.toLocaleString('pt-BR')
-                        });
-                        
-                        if (!silent) {
-                            const reason = isBeforeToday ? 'atrasada' : 'fim do dia';
-                            console.log(`📅 ${lead.nome}: ${oldDate} → ${nextWorkingDay.toISOString().split('T')[0]} (reagendado: ${reason})`);
-                        }
-                    } else if (!silent && leadDateStr === todayStr) {
-                        console.log(`⏳ ${lead.nome}: Tarefa para hoje mantida (ainda não é 23h)`);
-                    }
-                }
-            });
-            
-            if (fixedCount > 0) {
-                if (!silent) {
-                    console.log(`✅ ${fixedCount} tarefa(s) atrasada(s) reagendada(s) automaticamente`);
-                    showNotification(`📅 ${fixedCount} tarefa(s) atrasada(s) reagendada(s) para próximos dias úteis`, 'info');
-                }
-                
-                // Salvar as alterações
-                saveDataToBin(false, 'Reagendando tarefas atrasadas...');
-                
-                // Atualizar a agenda
-                setTimeout(() => {
-                    generateAgenda();
-                }, 500);
-                
-                return true;
-            } else {
-                if (!silent) {
-                    console.log('✅ Nenhuma tarefa atrasada encontrada');
-                }
-                return false;
-            }
-        };
+        // FUNÇÕES DE CORREÇÃO AUTOMÁTICA REMOVIDAS
+        // Sistema agora é 100% fiel às datas originais dos leads
         
         const parseDate = (dateStr) => {
             if (!dateStr) return null;
@@ -3480,21 +3384,18 @@
             console.log(`[DEBUG AGENDA] Gerados ${workingDays.length} dias úteis padrão de ${today.toISOString().split('T')[0]}`);
             workingDays.forEach((d, i) => console.log(`[DEBUG AGENDA] Dia útil ${i+1}: ${d.toISOString().split('T')[0]}`));
 
-            // CORREÇÃO CRÍTICA: Incluir TODAS as datas dos leads, independente de serem dias úteis
-            console.log(`[DEBUG AGENDA] 🔍 FORÇANDO INCLUSÃO DE DATAS DOS LEADS:`);
-            const activeLeadsOnlyForWindow = leads.filter(l => l.isActive !== false);
-            activeLeadsOnlyForWindow.forEach(lead => {
-                if (lead.nextActionDate) {
-                    const leadDate = parseDate(lead.nextActionDate);
-                    if (leadDate) {
-                        const leadDateStr = leadDate.toISOString().split('T')[0];
-                        const alreadyIncluded = workingDays.some(d => d.toISOString().split('T')[0] === leadDateStr);
-                        if (!alreadyIncluded) {
-                            workingDays.push(new Date(leadDate));
-                            console.log(`[DEBUG AGENDA] ✅ Forçando inclusão: ${lead.nome} → ${leadDateStr} (${isWorkingDay(leadDate) ? 'dia útil' : 'fim de semana'})`);
-                        } else {
-                            console.log(`[DEBUG AGENDA] 📅 Já incluído: ${lead.nome} → ${leadDateStr}`);
-                        }
+            // INCLUSÃO SIMPLES: Todas as datas dos leads ativos
+            console.log(`[DEBUG AGENDA] 📅 INCLUINDO TODAS AS DATAS DOS LEADS:`);
+            const activeLeadsOnly = leads.filter(l => l.isActive !== false && l.nextActionDate);
+            
+            activeLeadsOnly.forEach(lead => {
+                const leadDate = parseDate(lead.nextActionDate);
+                if (leadDate) {
+                    const leadDateStr = leadDate.toISOString().split('T')[0];
+                    const alreadyIncluded = workingDays.some(d => d.toISOString().split('T')[0] === leadDateStr);
+                    if (!alreadyIncluded) {
+                        workingDays.push(new Date(leadDate));
+                        console.log(`[DEBUG AGENDA] ✅ Incluindo data do lead: ${lead.nome} → ${leadDateStr}`);
                     }
                 }
             });
@@ -3871,64 +3772,8 @@
             showNotification('🐛 Debug completo - veja o console do navegador!', 'info');
         });
         
-        // Event listener para corrigir datas dos leads
-        const fixDatesBtn = document.getElementById('fix-dates-btn');
-        fixDatesBtn.addEventListener('click', () => {
-            if (confirm('🗓️ Deseja corrigir as datas dos leads para distribuí-los nos próximos dias úteis?\n\nIsso irá:\n• Redistribuir leads por dia\n• Manter ordem da cadência\n• Evitar sobrecarga de um dia\n• Salvar alterações automaticamente')) {
-                console.log('\n=== 📅 CORREÇÃO DE DATAS INICIADA ===');
-                
-                const today = getToday();
-                const activeLeads = leads.filter(l => l.isActive !== false && l.nextActionDate);
-                
-                console.log(`📊 Corrigindo ${activeLeads.length} leads ativos com datas`);
-                console.log(`📅 Data base (hoje): ${today.toISOString().split('T')[0]}`);
-                
-                // Distribuir leads pelos próximos dias úteis
-                let dayOffset = 0;
-                activeLeads.forEach((lead, index) => {
-                    // Calcular próximo dia útil
-                    let targetDate = new Date(today);
-                    let daysAdded = 0;
-                    
-                    while (daysAdded <= dayOffset) {
-                        if (isWorkingDay(targetDate)) {
-                            if (daysAdded === dayOffset) break;
-                            daysAdded++;
-                        }
-                        targetDate = addDays(targetDate, 1);
-                    }
-                    
-                    const oldDate = lead.nextActionDate;
-                    lead.nextActionDate = targetDate.toISOString();
-                    
-                    console.log(`✅ ${lead.nome}: ${oldDate.split('T')[0]} → ${targetDate.toISOString().split('T')[0]}`);
-                    
-                    // Distribuir leads: máximo 5 por dia
-                    if ((index + 1) % 5 === 0) {
-                        dayOffset++;
-                    }
-                });
-                
-                console.log('💾 Salvando alterações...');
-                saveDataToBin(false, 'Corrigindo datas dos leads...');
-                
-                setTimeout(() => {
-                    generateAgenda();
-                    showNotification('✅ Datas corrigidas e agenda atualizada!', 'success');
-                }, 1000);
-            }
-        });
-        
-        // Event listener para verificar tarefas atrasadas
-        const checkOverdueBtn = document.getElementById('check-overdue-btn');
-        checkOverdueBtn.addEventListener('click', () => {
-            console.log('\n=== ⏰ VERIFICAÇÃO MANUAL DE TAREFAS ATRASADAS ===');
-            const hasOverdue = checkAndFixOverdueTasks(false); // silent = false para mostrar logs
-            
-            if (!hasOverdue) {
-                showNotification('✅ Nenhuma tarefa atrasada encontrada!', 'success');
-            }
-        });
+        // TODAS AS FUNÇÕES DE CORREÇÃO DE DATAS REMOVIDAS
+        // A agenda agora mostra apenas as datas reais dos leads
 
         // --- LÓGICA DE EXPORTAÇÃO ---
         const exportToXLS = () => {
