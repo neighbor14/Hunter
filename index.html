@@ -3536,11 +3536,21 @@
                     
                     const leadDateStr = leadDate.toISOString().split('T')[0];
                     
-                    console.log(`[DEBUG AGENDA] 🔄 SINCRONIZAÇÃO:`)
-                    console.log(`[DEBUG AGENDA] - ${lead.nome}: nextActionDate original = ${lead.nextActionDate}`);
-                    console.log(`[DEBUG AGENDA] - ${lead.nome}: data parseada = ${leadDate.toISOString()}`);
-                    console.log(`[DEBUG AGENDA] - ${lead.nome}: data final = ${leadDateStr}`);
-                    console.log(`[DEBUG AGENDA] Datas disponíveis na agenda:`, Object.keys(leadsByDate));
+                    console.log(`[DEBUG AGENDA] 🔄 SINCRONIZAÇÃO ${lead.nome}:`)
+                    console.log(`[DEBUG AGENDA] - nextActionDate original = ${lead.nextActionDate}`);
+                    console.log(`[DEBUG AGENDA] - data parseada = ${leadDate.toISOString()}`);
+                    console.log(`[DEBUG AGENDA] - data final = ${leadDateStr}`);
+                    console.log(`[DEBUG AGENDA] - Datas disponíveis na agenda:`, Object.keys(leadsByDate));
+                    
+                    // DEBUG ESPECIAL para Cristina Azevedo
+                    if (lead.nome && lead.nome.toLowerCase().includes('cristina')) {
+                        console.log(`[DEBUG AGENDA] 🚨 CRISTINA AZEVEDO DEBUG:`);
+                        console.log(`[DEBUG AGENDA] - Nome: ${lead.nome}`);
+                        console.log(`[DEBUG AGENDA] - nextActionDate RAW: ${lead.nextActionDate}`);
+                        console.log(`[DEBUG AGENDA] - parseDate resultado:`, leadDate);
+                        console.log(`[DEBUG AGENDA] - leadDateStr final: ${leadDateStr}`);
+                        console.log(`[DEBUG AGENDA] - leadsByDate[${leadDateStr}] existe?`, !!leadsByDate[leadDateStr]);
+                    }
                     
                     if (leadsByDate[leadDateStr]) {
                         const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
@@ -3817,6 +3827,8 @@
             });
             
             console.log('\n📅 VERIFICAÇÃO ESPECÍFICA - AGENDA vs DADOS:');
+            
+            // Verificar Roberto Machado
             console.log('Verificando se Roberto Machado está sendo colocado no dia correto...');
             const roberto = leads.find(l => l.nome && l.nome.toLowerCase().includes('roberto'));
             if (roberto) {
@@ -3828,6 +3840,20 @@
                 console.log(`  - currentActionIndex: ${roberto.currentActionIndex}`);
             } else {
                 console.log('❌ Roberto Machado não encontrado nos leads');
+            }
+            
+            // Verificar Cristina Azevedo
+            console.log('\nVerificando se Cristina Azevedo está sendo colocada no dia correto...');
+            const cristina = leads.find(l => l.nome && l.nome.toLowerCase().includes('cristina'));
+            if (cristina) {
+                console.log('🔍 Cristina Azevedo encontrada:');
+                console.log(`  - nextActionDate: ${cristina.nextActionDate}`);
+                console.log(`  - Data parseada: ${parseDate(cristina.nextActionDate)?.toISOString()}`);
+                console.log(`  - Data string: ${parseDate(cristina.nextActionDate)?.toISOString().split('T')[0]}`);
+                console.log(`  - isActive: ${cristina.isActive}`);
+                console.log(`  - currentActionIndex: ${cristina.currentActionIndex}`);
+            } else {
+                console.log('❌ Cristina Azevedo não encontrada nos leads');
             }
             
             console.log('\n⚠️ PROBLEMAS POSSÍVEIS:');
