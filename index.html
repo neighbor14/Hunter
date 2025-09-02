@@ -1182,8 +1182,11 @@
                 <button id="debug-agenda-btn" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 mr-2" title="Debug da agenda - mostrar informações detalhadas">
                     🐛 Debug Agenda
                 </button>
-                <button id="fix-dates-btn" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600" title="Corrigir datas dos leads para hoje/próximos dias">
+                <button id="fix-dates-btn" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 mr-2" title="Corrigir datas dos leads para hoje/próximos dias">
                     📅 Corrigir Datas
+                </button>
+                <button id="check-overdue-btn" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600" title="Verificar e reagendar tarefas atrasadas">
+                    ⏰ Verificar Atrasadas
                 </button>
                 <button id="close-report-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
             </div>
@@ -1608,6 +1611,12 @@
                 renderConfigForm();
                 populateStatusFilter();
                 renderTable();
+                
+                // Verificar e corrigir tarefas atrasadas automaticamente
+                setTimeout(() => {
+                    checkAndFixOverdueTasks(true); // silent = true para não mostrar notificação no carregamento
+                }, 1000);
+                
                 loader.style.display = 'none';
 
             } catch (error) {
@@ -1900,6 +1909,82 @@
         const isWorkingDay = (date) => {
             const dayOfWeek = date.getUTCDay();
             return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 = segunda, 5 = sexta
+        };
+        
+        // Função para encontrar próximo dia útil
+        const getNextWorkingDay = (fromDate = null) => {
+            let date = fromDate ? new Date(fromDate) : getToday();
+            date = addDays(date, 1); // Começar do próximo dia
+            
+            while (!isWorkingDay(date)) {
+                date = addDays(date, 1);
+            }
+            
+            return date;
+        };
+        
+        // Função para verificar e corrigir tarefas atrasadas automaticamente
+        const checkAndFixOverdueTasks = (silent = false) => {
+            const today = getToday();
+            const todayStr = today.toISOString().split('T')[0];
+            let fixedCount = 0;
+            
+            if (!silent) {
+                console.log('\n=== 🔄 VERIFICAÇÃO DE TAREFAS ATRASADAS ===');
+                console.log(`📅 Data atual: ${todayStr}`);
+            }
+            
+            leads.forEach(lead => {
+                if (lead.isActive !== false && lead.nextActionDate) {
+                    const leadDate = parseDate(lead.nextActionDate);
+                    const leadDateStr = leadDate.toISOString().split('T')[0];
+                    
+                    // Se a data da tarefa é anterior a hoje
+                    if (leadDate < today) {
+                        const nextWorkingDay = getNextWorkingDay();
+                        const oldDate = leadDateStr;
+                        
+                        lead.nextActionDate = nextWorkingDay.toISOString();
+                        fixedCount++;
+                        
+                        // Adicionar ao histórico
+                        lead.history = lead.history || [];
+                        lead.history.push({
+                            timestamp: new Date().toISOString(),
+                            action: 'auto_reschedule',
+                            oldDate: oldDate,
+                            newDate: nextWorkingDay.toISOString().split('T')[0],
+                            reason: 'tarefa_atrasada'
+                        });
+                        
+                        if (!silent) {
+                            console.log(`📅 ${lead.nome}: ${oldDate} → ${nextWorkingDay.toISOString().split('T')[0]} (reagendado automaticamente)`);
+                        }
+                    }
+                }
+            });
+            
+            if (fixedCount > 0) {
+                if (!silent) {
+                    console.log(`✅ ${fixedCount} tarefa(s) atrasada(s) reagendada(s) automaticamente`);
+                    showNotification(`📅 ${fixedCount} tarefa(s) atrasada(s) reagendada(s) para próximos dias úteis`, 'info');
+                }
+                
+                // Salvar as alterações
+                saveDataToBin(false, 'Reagendando tarefas atrasadas...');
+                
+                // Atualizar a agenda
+                setTimeout(() => {
+                    generateAgenda();
+                }, 500);
+                
+                return true;
+            } else {
+                if (!silent) {
+                    console.log('✅ Nenhuma tarefa atrasada encontrada');
+                }
+                return false;
+            }
         };
         
         const parseDate = (dateStr) => {
@@ -3761,6 +3846,17 @@
                 }, 1000);
             }
         });
+        
+        // Event listener para verificar tarefas atrasadas
+        const checkOverdueBtn = document.getElementById('check-overdue-btn');
+        checkOverdueBtn.addEventListener('click', () => {
+            console.log('\n=== ⏰ VERIFICAÇÃO MANUAL DE TAREFAS ATRASADAS ===');
+            const hasOverdue = checkAndFixOverdueTasks(false); // silent = false para mostrar logs
+            
+            if (!hasOverdue) {
+                showNotification('✅ Nenhuma tarefa atrasada encontrada!', 'success');
+            }
+        });
 
         // --- LÓGICA DE EXPORTAÇÃO ---
         const exportToXLS = () => {
@@ -5477,6 +5573,11 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             initDarkMode();
             initExecutiveReport();
             initDragDrop();
+            
+            // Verificação automática de tarefas atrasadas a cada hora
+            setInterval(() => {
+                checkAndFixOverdueTasks(true); // silent = true para não incomodar o usuário
+            }, 60 * 60 * 1000); // 1 hora em milissegundos
             const toggleAllBtn = document.getElementById('toggle-all-btn');
             if (toggleAllBtn) {
                 let expanded = false;
