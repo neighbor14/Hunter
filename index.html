@@ -1182,6 +1182,9 @@
                 <button id="refresh-agenda-btn" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 mr-2" title="Atualizar agenda com dados mais recentes">
                     🔄 Atualizar Agenda
                 </button>
+                <button id="normalize-dates-btn" class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 mr-2" title="Normalizar formatos de data inconsistentes">
+                    🔧 Normalizar Datas
+                </button>
                 <button id="distribute-leads-btn" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 mr-2" title="Distribuir leads automaticamente pelos próximos dias úteis">
                     📅 Distribuir Leads
                 </button>
@@ -3803,6 +3806,14 @@
             showNotification('✅ Agenda atualizada!');
         });
 
+        // Event listener para normalizar datas
+        const normalizeDatesBtn = document.getElementById('normalize-dates-btn');
+        normalizeDatesBtn.addEventListener('click', () => {
+            if (confirm('🔧 NORMALIZAR DATAS\n\nIsso irá corrigir formatos de data inconsistentes que podem estar impedindo leads de aparecer no calendário.\n\n• Mantém as datas originais (dia 02, 03, etc.)\n• Apenas corrige o formato técnico\n• Resolve problemas de sincronização\n\nDeseja continuar?')) {
+                normalizeDates();
+            }
+        });
+
         // Event listener para distribuir leads automaticamente
         const distributeLeadsBtn = document.getElementById('distribute-leads-btn');
         distributeLeadsBtn.addEventListener('click', () => {
@@ -3925,6 +3936,56 @@
             showNotification('🐛 Debug completo - veja o console do navegador!', 'info');
         });
         
+        // FUNÇÃO PARA NORMALIZAR TODAS AS DATAS (CORRIGIR FORMATOS INCONSISTENTES)
+        const normalizeDates = () => {
+            console.log('🔧 Iniciando normalização de datas...');
+            
+            const activeLeads = leads.filter(l => l.isActive !== false && l.nextActionDate);
+            if (activeLeads.length === 0) {
+                showNotification('ℹ️ Nenhum lead ativo encontrado para normalizar.', 'info');
+                return;
+            }
+            
+            let normalizedCount = 0;
+            const dateFormats = {};
+            
+            activeLeads.forEach(lead => {
+                const originalDate = lead.nextActionDate;
+                let normalizedDate = null;
+                
+                // Coletar formatos encontrados
+                const format = originalDate.includes('T') ? 'ISO' : 'Simple';
+                if (!dateFormats[format]) dateFormats[format] = 0;
+                dateFormats[format]++;
+                
+                // Normalizar para formato ISO completo
+                if (originalDate.includes('T')) {
+                    // Já está em formato ISO, manter
+                    normalizedDate = originalDate;
+                } else {
+                    // Formato simples (YYYY-MM-DD), converter para ISO
+                    normalizedDate = originalDate + 'T00:00:00.000Z';
+                    console.log(`🔧 ${lead.nome}: ${originalDate} → ${normalizedDate}`);
+                    lead.nextActionDate = normalizedDate;
+                    normalizedCount++;
+                }
+            });
+            
+            console.log('📊 Formatos encontrados:', dateFormats);
+            console.log(`✅ ${normalizedCount} leads normalizados`);
+            
+            if (normalizedCount > 0) {
+                // Salvar e atualizar interface
+                saveDataToBin().then(() => {
+                    renderTable();
+                    generateAgenda();
+                    showNotification(`🔧 ${normalizedCount} datas normalizadas! Calendário atualizado.`, 'success');
+                });
+            } else {
+                showNotification('✅ Todas as datas já estão no formato correto!', 'success');
+            }
+        };
+
         // FUNÇÃO PARA DISTRIBUIR LEADS AUTOMATICAMENTE EM DIAS ÚTEIS
         const distributeLeadsAcrossWorkingDays = () => {
             console.log('📅 Iniciando distribuição automática de leads por dias úteis...');
