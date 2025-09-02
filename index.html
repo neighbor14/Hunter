@@ -3554,6 +3554,33 @@
 
         // --- NOVO CALENDÁRIO IMPLEMENTADO COM SUCESSO ---
 
+        // --- FUNÇÃO POPULATESTATUS FILTER ---
+        function populateStatusFilter() {
+            const statusFilter = document.getElementById('status-filter');
+            if (!statusFilter) return;
+            
+            // Limpar opções existentes
+            statusFilter.innerHTML = '';
+            
+            // Adicionar opção "Todos"
+            const allOption = document.createElement('option');
+            allOption.value = '';
+            allOption.textContent = 'Todos os Status';
+            statusFilter.appendChild(allOption);
+            
+            // Adicionar opções de status da configuração
+            if (cadenceConfig && cadenceConfig.statusOptions) {
+                cadenceConfig.statusOptions.forEach(status => {
+                    const option = document.createElement('option');
+                    option.value = status;
+                    option.textContent = status;
+                    statusFilter.appendChild(option);
+                });
+            }
+            
+            console.log('✅ Status filter populado com', cadenceConfig?.statusOptions?.length || 0, 'opções');
+        }
+
         // --- LÓGICA DE BUSCA E FILTROS JÁ IMPLEMENTADA ---
 
         // --- INICIALIZAÇÃO ---
