@@ -1182,6 +1182,9 @@
                 <button id="refresh-agenda-btn" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 mr-2" title="Atualizar agenda com dados mais recentes">
                     🔄 Atualizar Agenda
                 </button>
+                <button id="distribute-leads-btn" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 mr-2" title="Distribuir leads automaticamente pelos próximos dias úteis">
+                    📅 Distribuir Leads
+                </button>
                 <button id="debug-agenda-btn" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 mr-2" title="Debug da agenda - mostrar informações detalhadas">
                     🐛 Debug Agenda
                 </button>
@@ -3722,6 +3725,14 @@
             generateAgenda();
             showNotification('✅ Agenda atualizada!');
         });
+
+        // Event listener para distribuir leads automaticamente
+        const distributeLeadsBtn = document.getElementById('distribute-leads-btn');
+        distributeLeadsBtn.addEventListener('click', () => {
+            if (confirm('🚨 ATENÇÃO: Isso irá redistribuir TODOS os leads ativos pelos próximos 10 dias úteis.\n\nTodas as datas atuais serão substituídas.\n\nDeseja continuar?')) {
+                distributeLeadsAcrossWorkingDays();
+            }
+        });
         
         // Event listener para debug da agenda
         const debugAgendaBtn = document.getElementById('debug-agenda-btn');
@@ -3806,8 +3817,54 @@
             showNotification('🐛 Debug completo - veja o console do navegador!', 'info');
         });
         
-        // TODAS AS FUNÇÕES DE CORREÇÃO DE DATAS REMOVIDAS
-        // A agenda agora mostra apenas as datas reais dos leads
+        // FUNÇÃO PARA DISTRIBUIR LEADS AUTOMATICAMENTE EM DIAS ÚTEIS
+        const distributeLeadsAcrossWorkingDays = () => {
+            console.log('📅 Iniciando distribuição automática de leads por dias úteis...');
+            
+            const activeLeads = leads.filter(l => l.isActive !== false && l.nextActionDate);
+            if (activeLeads.length === 0) {
+                showNotification('ℹ️ Nenhum lead ativo encontrado para distribuir.', 'info');
+                return;
+            }
+            
+            // Gerar próximos 10 dias úteis
+            const workingDays = [];
+            let currentDate = new Date();
+            
+            while (workingDays.length < 10) {
+                if (isWorkingDay(currentDate)) {
+                    workingDays.push(new Date(currentDate));
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            // Distribuir leads uniformemente
+            const leadsPerDay = Math.ceil(activeLeads.length / workingDays.length);
+            let leadIndex = 0;
+            let updatedCount = 0;
+            
+            workingDays.forEach((date, dayIndex) => {
+                const leadsForThisDay = activeLeads.slice(leadIndex, leadIndex + leadsPerDay);
+                
+                leadsForThisDay.forEach(lead => {
+                    const newDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                    lead.nextActionDate = newDate.toISOString();
+                    updatedCount++;
+                });
+                
+                leadIndex += leadsPerDay;
+                console.log(`📅 Dia ${date.toISOString().split('T')[0]}: ${leadsForThisDay.length} leads`);
+            });
+            
+            console.log(`✅ ${updatedCount} leads redistribuídos em ${workingDays.length} dias úteis`);
+            
+            // Salvar e atualizar interface
+            saveDataToBin().then(() => {
+                renderTable();
+                generateAgenda();
+                showNotification(`📅 ${updatedCount} leads redistribuídos automaticamente em ${workingDays.length} dias úteis!`, 'success');
+            });
+        };
 
         // --- LÓGICA DE EXPORTAÇÃO ---
         const exportToXLS = () => {
