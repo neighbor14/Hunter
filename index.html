@@ -1926,6 +1926,15 @@
                 return new Date(dateStr + 'T00:00:00.000Z');
             }
             
+            // NOVO: Se é formato DD/MM/AAAA (brasileiro), converter para ISO
+            const brFormat = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (brFormat) {
+                const [, day, month, year] = brFormat;
+                const isoDate = `${year}-${month}-${day}T00:00:00.000Z`;
+                console.log(`[DEBUG parseDate] BR formato: ${dateStr} → ${isoDate}`);
+                return new Date(isoDate);
+            }
+            
             // Fallback para outros formatos
             return new Date(dateStr);
         };
@@ -3465,23 +3474,44 @@
                 console.log(`[DEBUG AGENDA] - Exemplos: ${examples.join(', ')}`);
             });
             
-            // VERIFICAÇÃO ESPECÍFICA: Mostrar leads que deveriam estar no dia 02
+            // VERIFICAÇÃO ESPECÍFICA: Mostrar TODOS os formatos de data encontrados
             console.log(`[DEBUG AGENDA] 🔍 VERIFICAÇÃO ESPECÍFICA DE DATAS:`);
+            const dateFormats = new Set();
+            const day02Leads = [];
+            const day03Leads = [];
+            
             activeLeadsForProcessing.forEach(lead => {
                 if (lead.nextActionDate) {
                     const originalDate = lead.nextActionDate;
                     const parsedDate = parseDate(originalDate);
                     const finalDateStr = parsedDate ? parsedDate.toISOString().split('T')[0] : 'INVALID';
                     
-                    // Log detalhado para identificar problemas
-                    if (originalDate.includes('2025-09-02') || finalDateStr === '2025-09-02') {
-                        console.log(`[DEBUG AGENDA] 📅 LEAD DIA 02: ${lead.nome}`);
-                        console.log(`[DEBUG AGENDA] - Original: ${originalDate}`);
-                        console.log(`[DEBUG AGENDA] - Parsed: ${parsedDate?.toISOString()}`);
-                        console.log(`[DEBUG AGENDA] - Final: ${finalDateStr}`);
+                    // Coletar todos os formatos de data encontrados
+                    dateFormats.add(originalDate);
+                    
+                    // Identificar leads do dia 02 e 03
+                    if (originalDate.includes('02/09') || originalDate.includes('2025-09-02') || finalDateStr === '2025-09-02') {
+                        day02Leads.push({
+                            nome: lead.nome,
+                            original: originalDate,
+                            parsed: parsedDate?.toISOString(),
+                            final: finalDateStr
+                        });
+                    }
+                    
+                    if (originalDate.includes('03/09') || originalDate.includes('2025-09-03') || finalDateStr === '2025-09-03') {
+                        day03Leads.push({
+                            nome: lead.nome,
+                            original: originalDate,
+                            final: finalDateStr
+                        });
                     }
                 }
             });
+            
+            console.log(`[DEBUG AGENDA] 📊 FORMATOS DE DATA ENCONTRADOS:`, Array.from(dateFormats).slice(0, 10));
+            console.log(`[DEBUG AGENDA] 📅 LEADS DIA 02 (${day02Leads.length}):`, day02Leads.slice(0, 5));
+            console.log(`[DEBUG AGENDA] 📅 LEADS DIA 03 (${day03Leads.length}):`, day03Leads.slice(0, 3));
 
             activeLeadsForProcessing.forEach(lead => {
                 console.log(`[DEBUG AGENDA] Processando lead: ${lead.nome}, nextActionDate: ${lead.nextActionDate}`);
