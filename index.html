@@ -1925,13 +1925,22 @@
         
         // Função para verificar e corrigir tarefas atrasadas automaticamente
         const checkAndFixOverdueTasks = (silent = false) => {
-            const today = getToday();
+            // Usar timezone de São Paulo para verificação mais precisa
+            const now = new Date();
+            const saoPauloTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+            const today = new Date(Date.UTC(saoPauloTime.getFullYear(), saoPauloTime.getMonth(), saoPauloTime.getDate()));
             const todayStr = today.toISOString().split('T')[0];
+            
+            // Verificar se é quase fim do dia (após 23:00)
+            const isLateInDay = saoPauloTime.getHours() >= 23;
+            
             let fixedCount = 0;
             
             if (!silent) {
                 console.log('\n=== 🔄 VERIFICAÇÃO DE TAREFAS ATRASADAS ===');
+                console.log(`🕐 Horário São Paulo: ${saoPauloTime.toLocaleString('pt-BR')}`);
                 console.log(`📅 Data atual: ${todayStr}`);
+                console.log(`⏰ É tarde no dia? ${isLateInDay ? 'Sim (após 23h)' : 'Não (antes de 23h)'}`);
             }
             
             leads.forEach(lead => {
@@ -1939,8 +1948,13 @@
                     const leadDate = parseDate(lead.nextActionDate);
                     const leadDateStr = leadDate.toISOString().split('T')[0];
                     
-                    // Se a data da tarefa é anterior a hoje
-                    if (leadDate < today) {
+                    // CORREÇÃO: Reagendar apenas se:
+                    // 1. A data é ANTES de hoje (ontem ou anterior)
+                    // 2. OU se é hoje MAS já é muito tarde (após 23h)
+                    const isBeforeToday = leadDate < today;
+                    const isTodayButLate = leadDateStr === todayStr && isLateInDay;
+                    
+                    if (isBeforeToday || isTodayButLate) {
                         const nextWorkingDay = getNextWorkingDay();
                         const oldDate = leadDateStr;
                         
@@ -1954,12 +1968,16 @@
                             action: 'auto_reschedule',
                             oldDate: oldDate,
                             newDate: nextWorkingDay.toISOString().split('T')[0],
-                            reason: 'tarefa_atrasada'
+                            reason: isBeforeToday ? 'tarefa_atrasada' : 'fim_do_dia',
+                            saoPauloTime: saoPauloTime.toLocaleString('pt-BR')
                         });
                         
                         if (!silent) {
-                            console.log(`📅 ${lead.nome}: ${oldDate} → ${nextWorkingDay.toISOString().split('T')[0]} (reagendado automaticamente)`);
+                            const reason = isBeforeToday ? 'atrasada' : 'fim do dia';
+                            console.log(`📅 ${lead.nome}: ${oldDate} → ${nextWorkingDay.toISOString().split('T')[0]} (reagendado: ${reason})`);
                         }
+                    } else if (!silent && leadDateStr === todayStr) {
+                        console.log(`⏳ ${lead.nome}: Tarefa para hoje mantida (ainda não é 23h)`);
                     }
                 }
             });
@@ -5574,10 +5592,37 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             initExecutiveReport();
             initDragDrop();
             
-            // Verificação automática de tarefas atrasadas a cada hora
+            // Verificação automática de tarefas atrasadas - inteligente por horário
+            const scheduleOverdueChecks = () => {
+                const now = new Date();
+                const saoPauloTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
+                const currentHour = saoPauloTime.getHours();
+                
+                // Verificar com mais frequência no final do dia
+                let checkInterval;
+                if (currentHour >= 22) {
+                    checkInterval = 15 * 60 * 1000; // A cada 15 minutos após 22h
+                } else if (currentHour >= 18) {
+                    checkInterval = 30 * 60 * 1000; // A cada 30 minutos após 18h
+                } else {
+                    checkInterval = 2 * 60 * 60 * 1000; // A cada 2 horas durante o dia
+                }
+                
+                console.log(`⏰ Agendando verificação de tarefas atrasadas a cada ${checkInterval / 60000} minutos`);
+                
+                return setInterval(() => {
+                    checkAndFixOverdueTasks(true); // silent = true para não incomodar o usuário
+                }, checkInterval);
+            };
+            
+            // Iniciar verificação automática
+            let overdueCheckInterval = scheduleOverdueChecks();
+            
+            // Reagendar verificação a cada hora para ajustar frequência conforme horário
             setInterval(() => {
-                checkAndFixOverdueTasks(true); // silent = true para não incomodar o usuário
-            }, 60 * 60 * 1000); // 1 hora em milissegundos
+                clearInterval(overdueCheckInterval);
+                overdueCheckInterval = scheduleOverdueChecks();
+            }, 60 * 60 * 1000); // Reagendar a cada hora
             const toggleAllBtn = document.getElementById('toggle-all-btn');
             if (toggleAllBtn) {
                 let expanded = false;
