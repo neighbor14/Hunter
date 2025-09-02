@@ -2801,15 +2801,31 @@
                     showNotification('ℹ️ Este contato está desativado (BD). Reative para agendar ações.', 'info');
                     return;
                 }
-                // Usar parseDate para garantir consistência
-                const parsedDate = new Date(newDateStr + 'T00:00:00.000Z'); // Força UTC
+                
+                // CORREÇÃO: Garantir formato ISO consistente
+                // Input de data sempre vem como YYYY-MM-DD, converter para ISO UTC
+                const isoDateStr = newDateStr + 'T00:00:00.000Z';
+                const parsedDate = new Date(isoDateStr);
+                
+                // Validar se a data é válida
+                if (isNaN(parsedDate.getTime())) {
+                    showNotification('❌ Data inválida fornecida', 'error');
+                    return;
+                }
+                
+                // Sempre salvar no formato ISO UTC
                 leads[leadIndex].nextActionDate = parsedDate.toISOString();
-                console.log(`[DEBUG] Data alterada via input: ${leads[leadIndex].nome} → ${newDateStr}`);
+                
+                console.log(`[DEBUG] Data alterada via input: ${leads[leadIndex].nome}`);
+                console.log(`[DEBUG] - Input original: ${newDateStr}`);
+                console.log(`[DEBUG] - ISO formatado: ${isoDateStr}`);
+                console.log(`[DEBUG] - Salvo como: ${leads[leadIndex].nextActionDate}`);
+                
                 saveDataToBin();
                 
                 // CORREÇÃO: Atualizar agenda imediatamente após alterar data
                 generateAgenda();
-                showNotification(`📅 Data atualizada: ${leads[leadIndex].nome} → ${formatDate(parsedDate.toISOString())}`, 'success');
+                showNotification(`📅 Data atualizada: ${leads[leadIndex].nome} → ${formatDate(leads[leadIndex].nextActionDate)}`, 'success');
             },
 
             toggleLeadActive: (id) => {
