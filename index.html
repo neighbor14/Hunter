@@ -3460,6 +3460,27 @@
             console.log(`[DEBUG AGENDA] 📊 Distribuição por data:`, dateDistribution);
             Object.keys(dateDistribution).forEach(date => {
                 console.log(`[DEBUG AGENDA] ${date}: ${dateDistribution[date].length} leads`);
+                // Mostrar alguns exemplos de leads nesta data
+                const examples = dateDistribution[date].slice(0, 3);
+                console.log(`[DEBUG AGENDA] - Exemplos: ${examples.join(', ')}`);
+            });
+            
+            // VERIFICAÇÃO ESPECÍFICA: Mostrar leads que deveriam estar no dia 02
+            console.log(`[DEBUG AGENDA] 🔍 VERIFICAÇÃO ESPECÍFICA DE DATAS:`);
+            activeLeadsForProcessing.forEach(lead => {
+                if (lead.nextActionDate) {
+                    const originalDate = lead.nextActionDate;
+                    const parsedDate = parseDate(originalDate);
+                    const finalDateStr = parsedDate ? parsedDate.toISOString().split('T')[0] : 'INVALID';
+                    
+                    // Log detalhado para identificar problemas
+                    if (originalDate.includes('2025-09-02') || finalDateStr === '2025-09-02') {
+                        console.log(`[DEBUG AGENDA] 📅 LEAD DIA 02: ${lead.nome}`);
+                        console.log(`[DEBUG AGENDA] - Original: ${originalDate}`);
+                        console.log(`[DEBUG AGENDA] - Parsed: ${parsedDate?.toISOString()}`);
+                        console.log(`[DEBUG AGENDA] - Final: ${finalDateStr}`);
+                    }
+                }
             });
 
             activeLeadsForProcessing.forEach(lead => {
