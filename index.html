@@ -1996,6 +1996,15 @@
 
         const renderTable = () => {
             console.log('🔄 renderTable() chamado - Total leads:', leads.length);
+            console.log('🔍 Leads array:', leads);
+            
+            if (!leads || leads.length === 0) {
+                console.log('⚠️ Array de leads vazio ou inexistente');
+                if (cardsBody) {
+                    cardsBody.innerHTML = '<div class="text-center py-10 text-gray-500">Carregando leads...</div>';
+                }
+                return;
+            }
             
             const now = Date.now();
             if (now - lastRenderTime < RENDER_DEBOUNCE_TIME) {
