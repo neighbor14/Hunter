@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guia Rápido do Analista - CRM B2B</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            a[href]::after { content: " (" attr(href) ")"; font-size: 0.85em; color: #6b7280; }
+        }
+        code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        li { margin-bottom: 6px; }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+    <div class="max-w-4xl mx-auto p-6 md:p-10">
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold">Guia Rápido do Analista</h1>
+                <p class="text-gray-600">CRM de Prospecção B2B — operação diária e atalhos principais</p>
+            </div>
+            <button class="no-print bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700" onclick="window.print()">Imprimir / Salvar PDF</button>
+        </div>
+
+        <!-- Visão Geral -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">1) Visão Geral</h2>
+            <p class="text-gray-700 mb-3">O sistema organiza contatos por empresa em cartões (cards), com status do funil, próxima ação e atalhos de operação. Os botões do cabeçalho controlam importação, limpeza, abertura/fechamento de grupos, tema, histórico e relatórios.</p>
+            <ul class="list-disc pl-6 text-gray-800">
+                <li><strong>Importar</strong>: carrega um arquivo Excel/CSV com leads em lote.</li>
+                <li><strong>Limpar</strong>: apaga todos os leads (irreversível).</li>
+                <li><strong>Abrir tudo / Fechar tudo</strong>: expande/colapsa todas as empresas visíveis.</li>
+                <li><strong>Escuro</strong>: alterna tema claro/escuro.</li>
+                <li><strong>Histórico</strong>: versões do sistema.</li>
+                <li><strong>Relatório Executivo</strong>: visão de produtividade (períodos pré-definidos) + exportação.</li>
+            </ul>
+        </section>
+
+        <!-- Importação -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">2) Importação de Leads</h2>
+            <p class="text-gray-700 mb-3">Use o botão <strong>Importar</strong> no topo. O arquivo deve seguir esta estrutura (colunas em ordem):</p>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border border-gray-200 text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-700">
+                            <th class="px-3 py-2 border">Coluna</th>
+                            <th class="px-3 py-2 border">Campo</th>
+                            <th class="px-3 py-2 border">Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="px-3 py-2 border">A</td><td class="px-3 py-2 border">Nome</td><td class="px-3 py-2 border">Nome do contato.</td></tr>
+                        <tr><td class="px-3 py-2 border">B</td><td class="px-3 py-2 border">Empresa</td><td class="px-3 py-2 border">Razão social / marca.</td></tr>
+                        <tr><td class="px-3 py-2 border">C</td><td class="px-3 py-2 border">Data de adicionar</td><td class="px-3 py-2 border">Aceita DD/MM/AAAA, AAAA-MM-DD ou serial Excel.</td></tr>
+                        <tr><td class="px-3 py-2 border">D</td><td class="px-3 py-2 border">Abordagem</td><td class="px-3 py-2 border">Número da mensagem no ciclo (1–5).</td></tr>
+                        <tr><td class="px-3 py-2 border">E</td><td class="px-3 py-2 border">LinkedIn</td><td class="px-3 py-2 border">URL do perfil.</td></tr>
+                        <tr><td class="px-3 py-2 border">F</td><td class="px-3 py-2 border">Telefone</td><td class="px-3 py-2 border">Será anexado automaticamente às <strong>Notas</strong>.</td></tr>
+                        <tr><td class="px-3 py-2 border">G</td><td class="px-3 py-2 border">Cargo</td><td class="px-3 py-2 border">Título/cargo do contato.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <ul class="list-disc pl-6 mt-3 text-gray-800">
+                <li>Até 1.000 linhas por importação.</li>
+                <li>CSV com <strong>;</strong> (padrão BR) também é detectado automaticamente.</li>
+                <li>Leads duplicados por <code>Empresa|Nome|LinkedIn</code> são ignorados.</li>
+                <li>Botão <strong>Limpar</strong> remove tudo para reimportar do zero.</li>
+            </ul>
+        </section>
+
+        <!-- Filtros e Agrupamento -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">3) Filtros, Agrupamento e Atalhos</h2>
+            <ul class="list-disc pl-6 text-gray-800">
+                <li><strong>Busca</strong>: filtra por Nome/Empresa.</li>
+                <li><strong>Status</strong>: filtra por etapa do funil.</li>
+                <li><strong>Atividade</strong>: <em>Ativos</em> ou <em>Inativos</em> (regra de base de dados).</li>
+                <li><strong>Abrir/Fechar tudo</strong>: expande/colapsa todas as empresas visíveis.</li>
+                <li>Cada cabeçalho de empresa tem um botão “Abrir/Fechar” local.</li>
+            </ul>
+        </section>
+
+        <!-- Cards -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">4) Cartão do Lead (Card)</h2>
+            <ul class="list-disc pl-6 text-gray-800">
+                <li><strong>Nome, Cargo e LinkedIn</strong> no topo do card.</li>
+                <li><strong>Status do funil</strong> + seletor para mudança de etapa.</li>
+                <li><strong>Próxima Ação</strong> (hoje, atrasado, no prazo) + botão <em>Executar</em> quando aplicável.</li>
+                <li><strong>Agendar data</strong> clicando em “Editável”.</li>
+                <li><strong>Editar</strong>: abre modal para alterar Nome, Empresa, Cargo, LinkedIn e Notas.</li>
+                <li><strong>Ativar/Desativar</strong>: contatos desativados ficam opacos, não participam do funil/agenda.</li>
+                <li><strong>Excluir</strong>: remove o contato definitivamente.</li>
+            </ul>
+        </section>
+
+        <!-- Calendário -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">5) Calendário de Próximos 14 Dias</h2>
+            <p class="text-gray-700 mb-3">O sistema inclui um calendário visual que mostra os leads organizados por data de próxima ação.</p>
+            <ul class="list-disc pl-6 text-gray-800">
+                <li><strong>Visualização por dias</strong>: Terça, Quarta, Quinta, Sexta, Segunda (próximos 14 dias úteis).</li>
+                <li><strong>Leads por dia</strong>: Cada lead aparece no dia de sua próxima ação.</li>
+                <li><strong>Edição de datas</strong>: Clique no campo de data do lead para alterar quando necessário.</li>
+                <li><strong>Atualização automática</strong>: Calendário atualiza em tempo real após edições.</li>
+            </ul>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4">
+                <h4 class="font-medium text-yellow-800">⚠️ Problema: Lead não aparece na data correta?</h4>
+                <p class="text-yellow-700 mt-2"><strong>Solução:</strong></p>
+                <ol class="list-decimal pl-4 mt-1 text-yellow-700">
+                    <li>Abra <strong>Relatórios</strong> (botão no cabeçalho)</li>
+                    <li>Clique no botão <strong>"🔧 Normalizar Datas"</strong></li>
+                    <li>Confirme a operação</li>
+                    <li>Todos os leads aparecerão nas datas corretas</li>
+                </ol>
+                <p class="text-sm text-yellow-600 mt-2"><em>Alternativa:</em> Edite a data do lead manualmente (clique na data e altere).</p>
+            </div>
+        </section>
+
+        <!-- Operação diária -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">6) Fluxo de Operação Diária</h2>
+            <ol class="list-decimal pl-6 text-gray-800">
+                <li>Use os <strong>Filtros</strong> (Busca/Status/Atividade) para focar a lista.</li>
+                <li>Consulte o <strong>Calendário</strong> para ver ações programadas para hoje.</li>
+                <li>Abra uma empresa (ou use <strong>Abrir tudo</strong>).</li>
+                <li>Para cada lead:
+                    <ul class="list-disc pl-6">
+                        <li>Verifique a <strong>Próxima Ação</strong> e a data.</li>
+                        <li>Clique em <strong>Executar</strong> para enviar a mensagem do ciclo e avançar a etapa.</li>
+                        <li>Reagende a data se necessário.</li>
+                        <li>Atualize o <strong>Status</strong> quando houver avanço real (contato, reunião, negociação, fechado).</li>
+                    </ul>
+                </li>
+                <li>Registre observações no campo <strong>Notas</strong> (telefone importado vai para lá automaticamente).</li>
+            </ol>
+        </section>
+
+        <!-- Relatórios -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">7) Relatórios e Ferramentas Avançadas</h2>
+            <ul class="list-disc pl-6 text-gray-800">
+                <li><strong>Relatório Executivo</strong>: métricas de produtividade por período (Leads adicionados, Mensagens enviadas, Mudanças de status).</li>
+                <li><strong>🔧 Normalizar Datas</strong>: corrige formatos inconsistentes que impedem leads de aparecer no calendário.</li>
+                <li><strong>📅 Distribuir Leads</strong>: redistribui todos os leads pelos próximos 10 dias úteis automaticamente.</li>
+                <li><strong>🔄 Atualizar Agenda</strong>: força atualização do calendário com dados mais recentes.</li>
+                <li><strong>Exportar CSV/Excel</strong>: disponível para o relatório executivo.</li>
+                <li><strong>Enviar por e-mail</strong>: abre o cliente de e-mail com resumo do período.</li>
+            </ul>
+        </section>
+
+        <!-- Regras e Dicas -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">8) Regras Importantes & Dicas</h2>
+            <ul class="list-disc pl-6 text-gray-800">
+                <li>Contatos <strong>Inativos (BD)</strong> ficam opacos, mostram status “Inativo (BD)” e não permitem executar ação, alterar status ou agendar.</li>
+                <li>Duplicidade é prevenida por <code>Empresa|Nome|LinkedIn</code>.</li>
+                <li>Use <strong>ESC</strong> para fechar modais rapidamente.</li>
+                <li>Importação aceita serial Excel para datas e detecta automaticamente <strong>;</strong> ou <strong>,</strong> em CSV.</li>
+                <li>Em caso de erro na importação, use <strong>Limpar</strong> e importe novamente com o modelo padrão.</li>
+            </ul>
+        </section>
+
+        <!-- FAQ curta -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold mb-2">9) FAQ Rápido</h2>
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <dt class="font-medium">Lead não aparece na data correta do calendário</dt>
+                    <dd class="text-gray-700">Use <strong>Relatórios → 🔧 Normalizar Datas</strong> para corrigir formatos inconsistentes.</dd>
+                </div>
+                <div>
+                    <dt class="font-medium">Não vejo o botão de executar ação</dt>
+                    <dd class="text-gray-700">Verifique se o lead está <strong>Ativo</strong> e se há uma <strong>Próxima Ação</strong> definida.</dd>
+                </div>
+                <div>
+                    <dt class="font-medium">Como redistribuir leads por vários dias?</dt>
+                    <dd class="text-gray-700">Use <strong>Relatórios → 📅 Distribuir Leads</strong> para distribuição automática pelos próximos 10 dias úteis.</dd>
+                </div>
+                <div>
+                    <dt class="font-medium">Nomes vieram errados na importação</dt>
+                    <dd class="text-gray-700">Confirme o layout das colunas (A=Nome, B=Empresa, C=Data, D=Abordagem, E=LinkedIn, F=Telefone, G=Cargo) e reimporte.</dd>
+                </div>
+                <div>
+                    <dt class="font-medium">Calendário não atualizou após editar data</dt>
+                    <dd class="text-gray-700">Use <strong>Relatórios → 🔄 Atualizar Agenda</strong> ou recarregue a página.</dd>
+                </div>
+                <div>
+                    <dt class="font-medium">Telefone não aparece no card</dt>
+                    <dd class="text-gray-700">O telefone da coluna F é anexado nas <strong>Notas</strong> do lead.</dd>
+                </div>
+                <div>
+                    <dt class="font-medium">Como desativar um lead do funil?</dt>
+                    <dd class="text-gray-700">Use o botão <strong>Desativar</strong> no card. Para reativar, use <strong>Ativar</strong>.</dd>
+                </div>
+                <div>
+                    <dt class="font-medium">Como alterar a data de uma próxima ação?</dt>
+                    <dd class="text-gray-700">Clique no campo de <strong>Data</strong> do lead e altere para a nova data desejada.</dd>
+                </div>
+            </dl>
+        </section>
+
+        <footer class="text-sm text-gray-500 border-t pt-4">
+            Guia gerado para uso interno do time. Imprima ou salve em PDF para compartilhar.
+        </footer>
+    </div>
+</body>
+</html>
+
+
+
+
