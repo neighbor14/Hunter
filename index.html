@@ -3404,85 +3404,157 @@
         }
 
         function generateAgenda() {
+            console.log('🚀 NOVO SISTEMA DE CALENDÁRIO - INICIANDO');
             const agendaContainer = document.getElementById('agenda-calendar');
             agendaContainer.innerHTML = '';
 
             // Função para formatar dia da semana curto
             const formatDayShort = (date) => {
                 const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-                return days[date.getUTCDay()];
+                return days[date.getDay()];
             };
 
             // Função para formatar data curta
             const formatDateShort = (date) => {
-                const day = date.getUTCDate().toString().padStart(2, '0');
-                const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 return `${day}/${month}`;
             };
 
-            const today = getToday();
+            // REGRA SIMPLES: 10 dias úteis a partir de hoje
+            const today = new Date();
             const workingDays = [];
-            
-            // Gerar próximos 10 dias úteis (2 semanas) + incluir datas de leads existentes
             let currentDate = new Date(today);
             let addedDays = 0;
             
+            console.log('📅 Gerando 10 dias úteis a partir de hoje:', today.toISOString().split('T')[0]);
+            
             while (addedDays < 10) {
-                if (isWorkingDay(currentDate)) {
+                const dayOfWeek = currentDate.getDay();
+                // Segunda=1 a Sexta=5 são dias úteis
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                     workingDays.push(new Date(currentDate));
+                    console.log(`📅 Dia útil ${addedDays + 1}: ${currentDate.toISOString().split('T')[0]} (${formatDayShort(currentDate)})`);
                     addedDays++;
                 }
-                currentDate = addDays(currentDate, 1);
+                currentDate.setDate(currentDate.getDate() + 1);
             }
-            
-            console.log(`[DEBUG AGENDA] Gerados ${workingDays.length} dias úteis padrão de ${today.toISOString().split('T')[0]}`);
-            workingDays.forEach((d, i) => console.log(`[DEBUG AGENDA] Dia útil ${i+1}: ${d.toISOString().split('T')[0]}`));
 
-            // INCLUSÃO SIMPLES: Todas as datas dos leads ativos
-            console.log(`[DEBUG AGENDA] 📅 INCLUINDO TODAS AS DATAS DOS LEADS:`);
-            const activeLeadsOnly = leads.filter(l => l.isActive !== false && l.nextActionDate);
-            
-            activeLeadsOnly.forEach(lead => {
-                const leadDate = parseDate(lead.nextActionDate);
-                if (leadDate) {
-                    const leadDateStr = leadDate.toISOString().split('T')[0];
-                    const alreadyIncluded = workingDays.some(d => d.toISOString().split('T')[0] === leadDateStr);
-                    if (!alreadyIncluded) {
-                        workingDays.push(new Date(leadDate));
-                        console.log(`[DEBUG AGENDA] ✅ Incluindo data do lead: ${lead.nome} → ${leadDateStr}`);
-                    }
-                }
-            });
-
-            // Ordenar todas as datas
-            workingDays.sort((a, b) => a.getTime() - b.getTime());
-
-            // Agrupar leads por data
+            // ORGANIZAR LEADS POR DATA - REGRA SIMPLES
+            console.log('📋 Organizando leads ativos por data...');
+            const activeLeads = leads.filter(l => l.isActive !== false && l.nextActionDate);
             const leadsByDate = {};
             
-            console.log(`[DEBUG AGENDA] Gerando agenda para ${workingDays.length} dias úteis:`);
+            // Inicializar todas as datas com array vazio
             workingDays.forEach(date => {
                 const dateStr = date.toISOString().split('T')[0];
                 leadsByDate[dateStr] = [];
-                console.log(`[DEBUG AGENDA] Dia útil: ${dateStr} (${formatDateShort(date)})`);
+            });
+            
+            // Distribuir leads pelas datas
+            activeLeads.forEach(lead => {
+                if (lead.nextActionDate) {
+                    const leadDate = new Date(lead.nextActionDate);
+                    const leadDateStr = leadDate.toISOString().split('T')[0];
+                    
+                    // Se a data não existe no calendário, adicionar
+                    if (!leadsByDate[leadDateStr]) {
+                        leadsByDate[leadDateStr] = [];
+                    }
+                    
+                    leadsByDate[leadDateStr].push(lead);
+                    console.log(`📋 ${lead.nome} → ${leadDateStr}`);
+                }
             });
 
-            // Organizar leads nas datas correspondentes (somente ativos)
-            const activeLeadsForProcessing = leads.filter(l => l.isActive !== false);
-            console.log(`[DEBUG AGENDA] Processando ${activeLeadsForProcessing.length} leads ativos de ${leads.length} totais`);
+            // RENDERIZAR CALENDÁRIO SIMPLES
+            console.log('🎨 Renderizando calendário...');
             
-            // Debug específico para ABF
-            const abfLeads = activeLeadsForProcessing.filter(l => l.nome && l.nome.toLowerCase().includes('abf'));
-            if (abfLeads.length > 0) {
-                console.log(`[DEBUG AGENDA] 🔍 ENCONTRADOS ${abfLeads.length} LEADS ABF ATIVOS:`);
-                abfLeads.forEach(abf => {
-                    console.log(`[DEBUG AGENDA] - ABF: ${abf.nome} | Empresa: ${abf.empresa} | nextActionDate: ${abf.nextActionDate} | ativo: ${abf.isActive}`);
-                });
-            } else {
-                console.log(`[DEBUG AGENDA] ❌ NENHUM LEAD ABF ENCONTRADO NOS ATIVOS`);
-                const allAbfLeads = leads.filter(l => l.nome && l.nome.toLowerCase().includes('abf'));
-                console.log(`[DEBUG AGENDA] - Total de leads ABF (ativos/inativos): ${allAbfLeads.length}`);
-                allAbfLeads.forEach(abf => {
+            // Criar grid simples para 10 dias
+            const calendarGrid = document.createElement('div');
+            calendarGrid.className = 'calendar-grid';
+            calendarGrid.style.display = 'grid';
+            calendarGrid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+            calendarGrid.style.gap = '1rem';
+            
+            // Renderizar cada dia
+            workingDays.forEach((date, index) => {
+                const dateStr = date.toISOString().split('T')[0];
+                const dayLeads = leadsByDate[dateStr] || [];
+                const isToday = dateStr === today.toISOString().split('T')[0];
+                
+                // Container do dia
+                const dayDiv = document.createElement('div');
+                dayDiv.className = `calendar-day ${isToday ? 'today' : ''} ${dayLeads.length > 0 ? 'has-contacts' : ''}`;
+                
+                // Header do dia
+                const headerDiv = document.createElement('div');
+                headerDiv.className = `calendar-day-header ${isToday ? 'today' : ''}`;
+                headerDiv.innerHTML = `
+                    <div class="font-semibold">${formatDayShort(date)}</div>
+                    <div class="text-sm">${formatDateShort(date)}</div>
+                `;
+                
+                // Body com leads
+                const bodyDiv = document.createElement('div');
+                bodyDiv.className = 'calendar-day-body';
+                
+                if (dayLeads.length === 0) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'calendar-empty';
+                    emptyDiv.textContent = '📅 Livre';
+                    bodyDiv.appendChild(emptyDiv);
+                } else {
+                    console.log(`🎨 Renderizando ${dayLeads.length} leads para ${dateStr}`);
+                    dayLeads.forEach(lead => {
+                        const contactDiv = document.createElement('div');
+                        contactDiv.className = 'calendar-contact';
+                        
+                        // Obter ação atual
+                        const configuredActions = cadenceConfig.actions || [];
+                        const currentAction = configuredActions[lead.currentActionIndex] || null;
+                        
+                        contactDiv.innerHTML = `
+                            <div class="calendar-contact-company">${escapeHtml(lead.empresa)}</div>
+                            <div class="calendar-contact-name">${escapeHtml(lead.nome)}</div>
+                            <div class="calendar-contact-action">${currentAction ? currentAction.name : 'Sem ação'}</div>
+                        `;
+                        
+                        // Clique para executar ação
+                        contactDiv.addEventListener('click', () => {
+                            if (currentAction && confirm(`Executar "${currentAction.name}" para ${lead.nome} (${lead.empresa})?`)) {
+                                window.app.executeAction(lead.id);
+                                generateAgenda(); // Atualizar agenda
+                            }
+                        });
+                        
+                        bodyDiv.appendChild(contactDiv);
+                    });
+                }
+                
+                dayDiv.appendChild(headerDiv);
+                dayDiv.appendChild(bodyDiv);
+                calendarGrid.appendChild(dayDiv);
+            });
+            
+            agendaContainer.appendChild(calendarGrid);
+            console.log('✅ Calendário renderizado com sucesso!');
+        }
+
+        // Event listener para atualizar agenda manualmente
+        const refreshAgendaBtn = document.getElementById('refresh-agenda-btn');
+        if (refreshAgendaBtn) {
+            refreshAgendaBtn.addEventListener('click', () => {
+                console.log('[DEBUG] Botão de atualização da agenda clicado');
+                showNotification('🔄 Atualizando agenda...');
+                generateAgenda();
+                showNotification('✅ Agenda atualizada!');
+            });
+        }
+
+        // --- NOVO CALENDÁRIO IMPLEMENTADO ---
+
+        // --- LÓGICA DE BUSCA E FILTROS ---
                     console.log(`[DEBUG AGENDA] - ABF (todos): ${abf.nome} | ativo: ${abf.isActive} | nextActionDate: ${abf.nextActionDate}`);
                 });
             }
