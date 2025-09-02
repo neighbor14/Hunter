@@ -1611,10 +1611,29 @@
                 populateStatusFilter();
                 renderTable();
                 
-                // DESABILITADO: Verificação automática no carregamento estava reagendando incorretamente
-                // setTimeout(() => {
-                //     checkAndFixOverdueTasks(true); // silent = true para não mostrar notificação no carregamento
-                // }, 1000);
+                // CORREÇÃO DE EMERGÊNCIA: Resetar todas as datas para AMANHÃ (03/09/2025)
+                setTimeout(() => {
+                    console.log('🚨 CORREÇÃO DE EMERGÊNCIA: Resetando datas para 03/09/2025');
+                    const targetDate = '2025-09-03T00:00:00.000Z'; // AMANHÃ
+                    let correctedCount = 0;
+                    
+                    leads.forEach(lead => {
+                        if (lead.nextActionDate && lead.nextActionDate !== targetDate) {
+                            console.log(`🔧 ${lead.nome}: ${lead.nextActionDate} → ${targetDate}`);
+                            lead.nextActionDate = targetDate;
+                            correctedCount++;
+                        }
+                    });
+                    
+                    if (correctedCount > 0) {
+                        console.log(`✅ ${correctedCount} leads corrigidos para 03/09/2025`);
+                        saveDataToBin(false, 'Resetando datas para amanhã...');
+                        setTimeout(() => {
+                            generateAgenda();
+                            showNotification(`🚨 ${correctedCount} leads resetados para AMANHÃ (03/09)`, 'success');
+                        }, 1000);
+                    }
+                }, 2000);
                 
                 loader.style.display = 'none';
 
