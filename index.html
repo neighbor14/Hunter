@@ -1185,9 +1185,10 @@
                 <button id="fix-dates-btn" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 mr-2" title="Corrigir datas dos leads para hoje/próximos dias">
                     📅 Corrigir Datas
                 </button>
-                <button id="check-overdue-btn" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600" title="Verificar e reagendar tarefas atrasadas">
+                <button id="check-overdue-btn" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 mr-2" title="Verificar e reagendar tarefas atrasadas">
                     ⏰ Verificar Atrasadas
                 </button>
+
                 <button id="close-report-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
             </div>
         </div>
@@ -3476,17 +3477,20 @@
             console.log(`[DEBUG AGENDA] Gerados ${workingDays.length} dias úteis padrão de ${today.toISOString().split('T')[0]}`);
             workingDays.forEach((d, i) => console.log(`[DEBUG AGENDA] Dia útil ${i+1}: ${d.toISOString().split('T')[0]}`));
 
-            // CORREÇÃO: Adicionar datas de leads que estão fora da janela padrão (somente ativos)
+            // CORREÇÃO CRÍTICA: Incluir TODAS as datas dos leads, independente de serem dias úteis
+            console.log(`[DEBUG AGENDA] 🔍 FORÇANDO INCLUSÃO DE DATAS DOS LEADS:`);
             const activeLeadsOnlyForWindow = leads.filter(l => l.isActive !== false);
             activeLeadsOnlyForWindow.forEach(lead => {
                 if (lead.nextActionDate) {
                     const leadDate = parseDate(lead.nextActionDate);
-                    if (leadDate && isWorkingDay(leadDate)) {
+                    if (leadDate) {
                         const leadDateStr = leadDate.toISOString().split('T')[0];
                         const alreadyIncluded = workingDays.some(d => d.toISOString().split('T')[0] === leadDateStr);
                         if (!alreadyIncluded) {
                             workingDays.push(new Date(leadDate));
-                            console.log(`[DEBUG AGENDA] Adicionada data extra do lead: ${leadDateStr}`);
+                            console.log(`[DEBUG AGENDA] ✅ Forçando inclusão: ${lead.nome} → ${leadDateStr} (${isWorkingDay(leadDate) ? 'dia útil' : 'fim de semana'})`);
+                        } else {
+                            console.log(`[DEBUG AGENDA] 📅 Já incluído: ${lead.nome} → ${leadDateStr}`);
                         }
                     }
                 }
@@ -3520,15 +3524,19 @@
             activeLeadsOnly.forEach(lead => {
                 console.log(`[DEBUG AGENDA] Processando lead: ${lead.nome}, nextActionDate: ${lead.nextActionDate}`);
                 if (lead.nextActionDate) {
-                    // CORREÇÃO: Usar diretamente a data string em formato YYYY-MM-DD
-                    let leadDateStr = lead.nextActionDate;
-                    
-                    // Se a data vier com horário, extrair apenas a parte da data
-                    if (leadDateStr.includes('T')) {
-                        leadDateStr = leadDateStr.split('T')[0];
+                    // CORREÇÃO CRÍTICA: Usar parseDate() para garantir consistência
+                    const leadDate = parseDate(lead.nextActionDate);
+                    if (!leadDate) {
+                        console.log(`[DEBUG AGENDA] ❌ Data inválida para ${lead.nome}: ${lead.nextActionDate}`);
+                        return;
                     }
                     
-                    console.log(`[DEBUG AGENDA] Data simplificada para ${lead.nome}: ${leadDateStr}`);
+                    const leadDateStr = leadDate.toISOString().split('T')[0];
+                    
+                    console.log(`[DEBUG AGENDA] 🔄 SINCRONIZAÇÃO:`)
+                    console.log(`[DEBUG AGENDA] - ${lead.nome}: nextActionDate original = ${lead.nextActionDate}`);
+                    console.log(`[DEBUG AGENDA] - ${lead.nome}: data parseada = ${leadDate.toISOString()}`);
+                    console.log(`[DEBUG AGENDA] - ${lead.nome}: data final = ${leadDateStr}`);
                     console.log(`[DEBUG AGENDA] Datas disponíveis na agenda:`, Object.keys(leadsByDate));
                     
                     if (leadsByDate[leadDateStr]) {
@@ -3774,10 +3782,11 @@
             
             // Debug de datas do sistema
             const systemDate = new Date();
+            const saoPauloTime = new Date(systemDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
             const todayFunction = getToday();
             console.log('🕐 Data do sistema (JavaScript):', systemDate);
             console.log('🕐 Data do sistema (ISO):', systemDate.toISOString());
-            console.log('🕐 Data do sistema (Local):', systemDate.toLocaleDateString('pt-BR'));
+            console.log('🕐 Data São Paulo:', saoPauloTime.toLocaleString('pt-BR'));
             console.log('🕐 getToday() função:', todayFunction);
             console.log('🕐 getToday() ISO:', todayFunction.toISOString());
             console.log('🕐 Timezone offset:', systemDate.getTimezoneOffset());
@@ -3799,8 +3808,24 @@
             console.log('\n🎯 LEADS COM PRÓXIMA AÇÃO:');
             const leadsWithAction = leads.filter(l => l.nextActionDate && l.isActive !== false);
             leadsWithAction.forEach(lead => {
-                console.log(`- ${lead.nome}: ${lead.nextActionDate} (Action ${lead.currentActionIndex})`);
+                const leadDate = parseDate(lead.nextActionDate);
+                const leadDateStr = leadDate ? leadDate.toISOString().split('T')[0] : 'INVÁLIDA';
+                console.log(`- ${lead.nome}: ${lead.nextActionDate} → Data processada: ${leadDateStr} (Action ${lead.currentActionIndex})`);
             });
+            
+            console.log('\n📅 VERIFICAÇÃO ESPECÍFICA - AGENDA vs DADOS:');
+            console.log('Verificando se Roberto Machado está sendo colocado no dia correto...');
+            const roberto = leads.find(l => l.nome && l.nome.toLowerCase().includes('roberto'));
+            if (roberto) {
+                console.log('🔍 Roberto Machado encontrado:');
+                console.log(`  - nextActionDate: ${roberto.nextActionDate}`);
+                console.log(`  - Data parseada: ${parseDate(roberto.nextActionDate)?.toISOString()}`);
+                console.log(`  - Data string: ${parseDate(roberto.nextActionDate)?.toISOString().split('T')[0]}`);
+                console.log(`  - isActive: ${roberto.isActive}`);
+                console.log(`  - currentActionIndex: ${roberto.currentActionIndex}`);
+            } else {
+                console.log('❌ Roberto Machado não encontrado nos leads');
+            }
             
             console.log('\n⚠️ PROBLEMAS POSSÍVEIS:');
             leads.forEach(lead => {
