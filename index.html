@@ -1912,8 +1912,19 @@
         
         const parseDate = (dateStr) => {
             if (!dateStr) return null;
-            const d = new Date(dateStr);
-            return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            
+            // Se já é uma string ISO completa, usar diretamente
+            if (dateStr.includes('T')) {
+                return new Date(dateStr);
+            }
+            
+            // Se é formato YYYY-MM-DD, tratar como UTC para evitar problemas de fuso horário
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return new Date(dateStr + 'T00:00:00.000Z');
+            }
+            
+            // Fallback para outros formatos
+            return new Date(dateStr);
         };
 
         // Controle para evitar renderizações muito próximas
