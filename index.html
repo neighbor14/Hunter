@@ -2776,7 +2776,12 @@
                 // Usar parseDate para garantir consistência
                 const parsedDate = new Date(newDateStr + 'T00:00:00.000Z'); // Força UTC
                 leads[leadIndex].nextActionDate = parsedDate.toISOString();
+                console.log(`[DEBUG] Data alterada via input: ${leads[leadIndex].nome} → ${newDateStr}`);
                 saveDataToBin();
+                
+                // CORREÇÃO: Atualizar agenda imediatamente após alterar data
+                generateAgenda();
+                showNotification(`📅 Data atualizada: ${leads[leadIndex].nome} → ${formatDate(parsedDate.toISOString())}`, 'success');
             },
 
             toggleLeadActive: (id) => {
