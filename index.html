@@ -1179,8 +1179,11 @@
                 <button id="refresh-agenda-btn" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 mr-2" title="Atualizar agenda com dados mais recentes">
                     🔄 Atualizar Agenda
                 </button>
-                <button id="debug-agenda-btn" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600" title="Debug da agenda - mostrar informações detalhadas">
+                <button id="debug-agenda-btn" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 mr-2" title="Debug da agenda - mostrar informações detalhadas">
                     🐛 Debug Agenda
+                </button>
+                <button id="fix-dates-btn" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600" title="Corrigir datas dos leads para hoje/próximos dias">
+                    📅 Corrigir Datas
                 </button>
                 <button id="close-report-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
             </div>
@@ -1891,6 +1894,12 @@
             const today = new Date();
             // Criar data UTC para evitar problemas de timezone
             return new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+        };
+        
+        // Função para verificar se é dia útil (segunda a sexta)
+        const isWorkingDay = (date) => {
+            const dayOfWeek = date.getUTCDay();
+            return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 = segunda, 5 = sexta
         };
         
         const parseDate = (dateStr) => {
@@ -3333,12 +3342,6 @@
             const agendaContainer = document.getElementById('agenda-calendar');
             agendaContainer.innerHTML = '';
 
-            // Função para verificar se é dia útil (segunda a sexta)
-            const isWorkingDay = (date) => {
-                const dayOfWeek = date.getUTCDay();
-                return dayOfWeek >= 1 && dayOfWeek <= 5; // 1 = segunda, 5 = sexta
-            };
-
             // Função para formatar dia da semana curto
             const formatDayShort = (date) => {
                 const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -3366,6 +3369,9 @@
                 }
                 currentDate = addDays(currentDate, 1);
             }
+            
+            console.log(`[DEBUG AGENDA] Gerados ${workingDays.length} dias úteis padrão de ${today.toISOString().split('T')[0]}`);
+            workingDays.forEach((d, i) => console.log(`[DEBUG AGENDA] Dia útil ${i+1}: ${d.toISOString().split('T')[0]}`));
 
             // CORREÇÃO: Adicionar datas de leads que estão fora da janela padrão (somente ativos)
             const activeLeadsOnlyForWindow = leads.filter(l => l.isActive !== false);
@@ -3662,7 +3668,18 @@
         const debugAgendaBtn = document.getElementById('debug-agenda-btn');
         debugAgendaBtn.addEventListener('click', () => {
             console.log('\n=== 🐛 DEBUG AGENDA DETALHADO ===');
-            console.log('📊 Total de leads:', leads.length);
+            
+            // Debug de datas do sistema
+            const systemDate = new Date();
+            const todayFunction = getToday();
+            console.log('🕐 Data do sistema (JavaScript):', systemDate);
+            console.log('🕐 Data do sistema (ISO):', systemDate.toISOString());
+            console.log('🕐 Data do sistema (Local):', systemDate.toLocaleDateString('pt-BR'));
+            console.log('🕐 getToday() função:', todayFunction);
+            console.log('🕐 getToday() ISO:', todayFunction.toISOString());
+            console.log('🕐 Timezone offset:', systemDate.getTimezoneOffset());
+            
+            console.log('\n📊 Total de leads:', leads.length);
             console.log('🔢 Leads ativos:', leads.filter(l => l.isActive !== false).length);
             console.log('📅 Configuração de cadência:', cadenceConfig);
             
@@ -3695,6 +3712,54 @@
             });
             
             showNotification('🐛 Debug completo - veja o console do navegador!', 'info');
+        });
+        
+        // Event listener para corrigir datas dos leads
+        const fixDatesBtn = document.getElementById('fix-dates-btn');
+        fixDatesBtn.addEventListener('click', () => {
+            if (confirm('🗓️ Deseja corrigir as datas dos leads para distribuí-los nos próximos dias úteis?\n\nIsso irá:\n• Redistribuir leads por dia\n• Manter ordem da cadência\n• Evitar sobrecarga de um dia\n• Salvar alterações automaticamente')) {
+                console.log('\n=== 📅 CORREÇÃO DE DATAS INICIADA ===');
+                
+                const today = getToday();
+                const activeLeads = leads.filter(l => l.isActive !== false && l.nextActionDate);
+                
+                console.log(`📊 Corrigindo ${activeLeads.length} leads ativos com datas`);
+                console.log(`📅 Data base (hoje): ${today.toISOString().split('T')[0]}`);
+                
+                // Distribuir leads pelos próximos dias úteis
+                let dayOffset = 0;
+                activeLeads.forEach((lead, index) => {
+                    // Calcular próximo dia útil
+                    let targetDate = new Date(today);
+                    let daysAdded = 0;
+                    
+                    while (daysAdded <= dayOffset) {
+                        if (isWorkingDay(targetDate)) {
+                            if (daysAdded === dayOffset) break;
+                            daysAdded++;
+                        }
+                        targetDate = addDays(targetDate, 1);
+                    }
+                    
+                    const oldDate = lead.nextActionDate;
+                    lead.nextActionDate = targetDate.toISOString();
+                    
+                    console.log(`✅ ${lead.nome}: ${oldDate.split('T')[0]} → ${targetDate.toISOString().split('T')[0]}`);
+                    
+                    // Distribuir leads: máximo 5 por dia
+                    if ((index + 1) % 5 === 0) {
+                        dayOffset++;
+                    }
+                });
+                
+                console.log('💾 Salvando alterações...');
+                saveDataToBin(false, 'Corrigindo datas dos leads...');
+                
+                setTimeout(() => {
+                    generateAgenda();
+                    showNotification('✅ Datas corrigidas e agenda atualizada!', 'success');
+                }, 1000);
+            }
         });
 
         // --- LÓGICA DE EXPORTAÇÃO ---
