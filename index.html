@@ -2789,22 +2789,48 @@
             },
 
             updateNextActionDate: (id, newDateStr) => {
-                if (!newDateStr) return;
+                console.log(`[DEBUG updateNextActionDate] Iniciando atualização:`, { id, newDateStr });
+                
+                if (!newDateStr) {
+                    console.log(`[DEBUG updateNextActionDate] ❌ newDateStr vazio`);
+                    return;
+                }
+                
                 const leadIndex = leads.findIndex(l => l.id === id);
-                if (leadIndex === -1) return;
-                if (leads[leadIndex].isActive === false) {
+                if (leadIndex === -1) {
+                    console.log(`[DEBUG updateNextActionDate] ❌ Lead não encontrado com ID: ${id}`);
+                    return;
+                }
+                
+                const lead = leads[leadIndex];
+                console.log(`[DEBUG updateNextActionDate] 📋 Lead encontrado: ${lead.nome}, isActive: ${lead.isActive}`);
+                
+                if (lead.isActive === false) {
+                    console.log(`[DEBUG updateNextActionDate] ❌ Lead inativo`);
                     showNotification('ℹ️ Este contato está desativado (BD). Reative para agendar ações.', 'info');
                     return;
                 }
-                // Usar parseDate para garantir consistência
-                const parsedDate = new Date(newDateStr + 'T00:00:00.000Z'); // Força UTC
-                leads[leadIndex].nextActionDate = parsedDate.toISOString();
-                console.log(`[DEBUG] Data alterada via input: ${leads[leadIndex].nome} → ${newDateStr}`);
-                saveDataToBin();
                 
-                // CORREÇÃO: Atualizar agenda imediatamente após alterar data
-                generateAgenda();
-                showNotification(`📅 Data atualizada: ${leads[leadIndex].nome} → ${formatDate(parsedDate.toISOString())}`, 'success');
+                const oldDate = lead.nextActionDate;
+                const parsedDate = new Date(newDateStr + 'T00:00:00.000Z'); // Força UTC
+                lead.nextActionDate = parsedDate.toISOString();
+                
+                console.log(`[DEBUG updateNextActionDate] 📅 Alteração realizada:`);
+                console.log(`  - Lead: ${lead.nome}`);
+                console.log(`  - Data antiga: ${oldDate}`);
+                console.log(`  - Data nova: ${lead.nextActionDate}`);
+                console.log(`  - Input recebido: ${newDateStr}`);
+                
+                // Salvar no BD
+                console.log(`[DEBUG updateNextActionDate] 💾 Iniciando salvamento no BD...`);
+                saveDataToBin().then(() => {
+                    console.log(`[DEBUG updateNextActionDate] ✅ Salvamento concluído com sucesso`);
+                    generateAgenda();
+                    showNotification(`📅 Data atualizada: ${lead.nome} → ${formatDate(lead.nextActionDate)}`, 'success');
+                }).catch(error => {
+                    console.error(`[DEBUG updateNextActionDate] ❌ Erro no salvamento:`, error);
+                    showNotification(`❌ Erro ao salvar alteração da data`, 'error');
+                });
             },
 
             toggleLeadActive: (id) => {
