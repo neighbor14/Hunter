@@ -3396,7 +3396,14 @@
             // Organizar leads nas datas correspondentes (somente ativos)
             const activeLeadsOnly = leads.filter(l => l.isActive !== false);
             console.log(`[DEBUG AGENDA] Processando ${activeLeadsOnly.length} leads ativos de ${leads.length} totais`);
-            console.log(`[DEBUG AGENDA] Array completo de leads ativos:`, activeLeadsOnly.map(l => ({nome: l.nome, nextActionDate: l.nextActionDate})));
+            console.log(`[DEBUG AGENDA] Array completo de leads ativos:`, activeLeadsOnly.map(l => ({
+                nome: l.nome, 
+                empresa: l.empresa,
+                nextActionDate: l.nextActionDate, 
+                currentActionIndex: l.currentActionIndex,
+                isActive: l.isActive,
+                status: l.status
+            })));
 
             activeLeadsOnly.forEach(lead => {
                 console.log(`[DEBUG AGENDA] Processando lead: ${lead.nome}, nextActionDate: ${lead.nextActionDate}`);
@@ -3416,13 +3423,19 @@
                         const configuredActions = (cadenceConfig && Array.isArray(cadenceConfig.actions)) ? cadenceConfig.actions : [];
                         const currentAction = lead.currentActionIndex < configuredActions.length ? configuredActions[lead.currentActionIndex] : null;
                         
+                        console.log(`[DEBUG AGENDA] ✅ Adicionando ${lead.nome} à data ${leadDateStr}:`);
+                        console.log(`[DEBUG AGENDA] - currentActionIndex: ${lead.currentActionIndex}`);
+                        console.log(`[DEBUG AGENDA] - configuredActions.length: ${configuredActions.length}`);
+                        console.log(`[DEBUG AGENDA] - currentAction:`, currentAction);
+                        
                         leadsByDate[leadDateStr].push({
                             ...lead,
                             currentAction: currentAction
                         });
-                        console.log(`[DEBUG AGENDA] Lead ${lead.nome} adicionado à data ${leadDateStr}`);
+                        console.log(`[DEBUG AGENDA] Lead ${lead.nome} adicionado à data ${leadDateStr}. Total na data: ${leadsByDate[leadDateStr].length}`);
                     } else {
-                        console.log(`[DEBUG AGENDA] Data ${leadDateStr} não está na janela de dias úteis`);
+                        console.log(`[DEBUG AGENDA] ❌ Data ${leadDateStr} não está na janela de dias úteis`);
+                        console.log(`[DEBUG AGENDA] - Datas disponíveis:`, Object.keys(leadsByDate));
                     }
                 }
             });
@@ -3459,6 +3472,11 @@
                     
                     const bodyDiv = document.createElement('div');
                     bodyDiv.className = 'calendar-day-body';
+                    
+                    console.log(`[DEBUG AGENDA] 📅 Renderizando dia ${dateStr}: ${dayLeads.length} leads`);
+                    if (dayLeads.length > 0) {
+                        console.log(`[DEBUG AGENDA] - Leads do dia:`, dayLeads.map(l => `${l.nome} (${l.empresa})`));
+                    }
                     
                     if (dayLeads.length === 0) {
                         const emptyDiv = document.createElement('div');
@@ -3537,6 +3555,11 @@
                     
                     const bodyDiv = document.createElement('div');
                     bodyDiv.className = 'calendar-day-body';
+                    
+                    console.log(`[DEBUG AGENDA] 📅 Renderizando dia ${dateStr}: ${dayLeads.length} leads`);
+                    if (dayLeads.length > 0) {
+                        console.log(`[DEBUG AGENDA] - Leads do dia:`, dayLeads.map(l => `${l.nome} (${l.empresa})`));
+                    }
                     
                     if (dayLeads.length === 0) {
                         const emptyDiv = document.createElement('div');
