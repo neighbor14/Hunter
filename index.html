@@ -3785,6 +3785,37 @@
             }
         });
         
+        // FUNÇÃO PARA DEBUG RÁPIDO DAS DATAS
+        window.debugDates = () => {
+            console.log('🔍 DEBUG RÁPIDO DAS DATAS DOS LEADS:');
+            console.log('Total de leads:', leads.length);
+            
+            const dateCount = {};
+            const samplesByDate = {};
+            
+            leads.forEach(lead => {
+                if (lead.nextActionDate) {
+                    const rawDate = lead.nextActionDate;
+                    if (!dateCount[rawDate]) {
+                        dateCount[rawDate] = 0;
+                        samplesByDate[rawDate] = [];
+                    }
+                    dateCount[rawDate]++;
+                    if (samplesByDate[rawDate].length < 3) {
+                        samplesByDate[rawDate].push(lead.nome);
+                    }
+                }
+            });
+            
+            console.log('📊 Datas encontradas no BD:');
+            Object.keys(dateCount).forEach(date => {
+                console.log(`${date}: ${dateCount[date]} leads`);
+                console.log(`  Exemplos: ${samplesByDate[date].join(', ')}`);
+            });
+            
+            return { dateCount, samplesByDate };
+        };
+
         // Event listener para debug da agenda
         const debugAgendaBtn = document.getElementById('debug-agenda-btn');
         debugAgendaBtn.addEventListener('click', () => {
