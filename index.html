@@ -1912,8 +1912,26 @@
         
         const parseDate = (dateStr) => {
             if (!dateStr) return null;
+            
+            // Debug específico para ABF
+            if (dateStr.includes('2025-09-03')) {
+                console.log(`[DEBUG parseDate] Processando data para 03/09: "${dateStr}"`);
+                console.log(`[DEBUG parseDate] - Tipo: ${typeof dateStr}`);
+                console.log(`[DEBUG parseDate] - Inclui T: ${dateStr.includes('T')}`);
+            }
+            
             const d = new Date(dateStr);
-            return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const result = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            
+            // Debug específico para ABF
+            if (dateStr.includes('2025-09-03')) {
+                console.log(`[DEBUG parseDate] - new Date(dateStr):`, d);
+                console.log(`[DEBUG parseDate] - Resultado UTC:`, result);
+                console.log(`[DEBUG parseDate] - toISOString():`, result.toISOString());
+                console.log(`[DEBUG parseDate] - split('T')[0]:`, result.toISOString().split('T')[0]);
+            }
+            
+            return result;
         };
 
         // Controle para evitar renderizações muito próximas
