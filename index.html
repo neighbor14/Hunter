@@ -696,6 +696,9 @@
             padding: 0.5rem;
             height: calc(100% - 40px);
             overflow-y: auto;
+            overflow-x: hidden;
+            max-height: 300px; /* Altura máxima para forçar scroll */
+            min-height: 150px; /* Altura mínima para consistência */
         }
 
         .calendar-contact {
@@ -1185,8 +1188,8 @@
                 <button id="fix-dates-btn" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 mr-2" title="Corrigir datas dos leads para hoje/próximos dias">
                     📅 Corrigir Datas
                 </button>
-                <button id="check-overdue-btn" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 mr-2" title="Verificar e reagendar tarefas atrasadas">
-                    ⏰ Verificar Atrasadas
+                <button id="check-overdue-btn" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 mr-2" title="MANUAL: Verificar e reagendar tarefas atrasadas (apenas quando solicitado)">
+                    ⏰ Reagendar Manual
                 </button>
 
                 <button id="close-report-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
@@ -1613,10 +1616,10 @@
                 populateStatusFilter();
                 renderTable();
                 
-                // Verificar e corrigir tarefas atrasadas automaticamente
-                setTimeout(() => {
-                    checkAndFixOverdueTasks(true); // silent = true para não mostrar notificação no carregamento
-                }, 1000);
+                // DESABILITADO: Verificação automática no carregamento estava reagendando incorretamente
+                // setTimeout(() => {
+                //     checkAndFixOverdueTasks(true); // silent = true para não mostrar notificação no carregamento
+                // }, 1000);
                 
                 loader.style.display = 'none';
 
@@ -5617,37 +5620,8 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             initExecutiveReport();
             initDragDrop();
             
-            // Verificação automática de tarefas atrasadas - inteligente por horário
-            const scheduleOverdueChecks = () => {
-                const now = new Date();
-                const saoPauloTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-                const currentHour = saoPauloTime.getHours();
-                
-                // Verificar com mais frequência no final do dia
-                let checkInterval;
-                if (currentHour >= 22) {
-                    checkInterval = 15 * 60 * 1000; // A cada 15 minutos após 22h
-                } else if (currentHour >= 18) {
-                    checkInterval = 30 * 60 * 1000; // A cada 30 minutos após 18h
-                } else {
-                    checkInterval = 2 * 60 * 60 * 1000; // A cada 2 horas durante o dia
-                }
-                
-                console.log(`⏰ Agendando verificação de tarefas atrasadas a cada ${checkInterval / 60000} minutos`);
-                
-                return setInterval(() => {
-                    checkAndFixOverdueTasks(true); // silent = true para não incomodar o usuário
-                }, checkInterval);
-            };
-            
-            // Iniciar verificação automática
-            let overdueCheckInterval = scheduleOverdueChecks();
-            
-            // Reagendar verificação a cada hora para ajustar frequência conforme horário
-            setInterval(() => {
-                clearInterval(overdueCheckInterval);
-                overdueCheckInterval = scheduleOverdueChecks();
-            }, 60 * 60 * 1000); // Reagendar a cada hora
+            // CORREÇÃO AUTOMÁTICA DESABILITADA - sendo fiel às datas reais das tasks
+            console.log('📅 Correção automática de datas DESABILITADA - respeitando datas originais dos leads');
             const toggleAllBtn = document.getElementById('toggle-all-btn');
             if (toggleAllBtn) {
                 let expanded = false;
