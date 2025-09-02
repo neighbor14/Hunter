@@ -1913,19 +1913,29 @@
         const parseDate = (dateStr) => {
             if (!dateStr) return null;
             
+            // CORREÇÃO: Normalizar formato de data antes de processar
+            let normalizedDateStr = dateStr;
+            
+            // Se a data está no formato Simple (YYYY-MM-DD) sem hora, adicionar hora UTC
+            if (normalizedDateStr.match(/^\d{4}-\d{2}-\d{2}$/) && !normalizedDateStr.includes('T')) {
+                normalizedDateStr = normalizedDateStr + 'T00:00:00.000Z';
+                console.log(`[DEBUG parseDate] Formato Simple normalizado: "${dateStr}" → "${normalizedDateStr}"`);
+            }
+            
             // Debug específico para ABF
             if (dateStr.includes('2025-09-03')) {
                 console.log(`[DEBUG parseDate] Processando data para 03/09: "${dateStr}"`);
-                console.log(`[DEBUG parseDate] - Tipo: ${typeof dateStr}`);
-                console.log(`[DEBUG parseDate] - Inclui T: ${dateStr.includes('T')}`);
+                console.log(`[DEBUG parseDate] - Original: "${dateStr}"`);
+                console.log(`[DEBUG parseDate] - Normalizada: "${normalizedDateStr}"`);
+                console.log(`[DEBUG parseDate] - Inclui T: ${normalizedDateStr.includes('T')}`);
             }
             
-            const d = new Date(dateStr);
+            const d = new Date(normalizedDateStr);
             const result = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             
             // Debug específico para ABF
             if (dateStr.includes('2025-09-03')) {
-                console.log(`[DEBUG parseDate] - new Date(dateStr):`, d);
+                console.log(`[DEBUG parseDate] - new Date(normalizedDateStr):`, d);
                 console.log(`[DEBUG parseDate] - Resultado UTC:`, result);
                 console.log(`[DEBUG parseDate] - toISOString():`, result.toISOString());
                 console.log(`[DEBUG parseDate] - split('T')[0]:`, result.toISOString().split('T')[0]);
