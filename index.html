@@ -3433,9 +3433,9 @@
             });
 
             // Organizar leads nas datas correspondentes (somente ativos)
-            const activeLeadsOnly = leads.filter(l => l.isActive !== false);
-            console.log(`[DEBUG AGENDA] Processando ${activeLeadsOnly.length} leads ativos de ${leads.length} totais`);
-            console.log(`[DEBUG AGENDA] Array completo de leads ativos:`, activeLeadsOnly.map(l => ({
+            const activeLeadsForProcessing = leads.filter(l => l.isActive !== false);
+            console.log(`[DEBUG AGENDA] Processando ${activeLeadsForProcessing.length} leads ativos de ${leads.length} totais`);
+            console.log(`[DEBUG AGENDA] Array completo de leads ativos:`, activeLeadsForProcessing.map(l => ({
                 nome: l.nome, 
                 empresa: l.empresa,
                 nextActionDate: l.nextActionDate, 
@@ -3444,7 +3444,7 @@
                 status: l.status
             })));
 
-            activeLeadsOnly.forEach(lead => {
+            activeLeadsForProcessing.forEach(lead => {
                 console.log(`[DEBUG AGENDA] Processando lead: ${lead.nome}, nextActionDate: ${lead.nextActionDate}`);
                 if (lead.nextActionDate) {
                     // CORREÇÃO CRÍTICA: Usar parseDate() para garantir consistência
