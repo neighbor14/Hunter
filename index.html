@@ -3426,6 +3426,23 @@
             // Organizar leads nas datas correspondentes (somente ativos)
             const activeLeadsForProcessing = leads.filter(l => l.isActive !== false);
             console.log(`[DEBUG AGENDA] Processando ${activeLeadsForProcessing.length} leads ativos de ${leads.length} totais`);
+            
+            // Debug específico para ABF
+            const abfLeads = activeLeadsForProcessing.filter(l => l.nome && l.nome.toLowerCase().includes('abf'));
+            if (abfLeads.length > 0) {
+                console.log(`[DEBUG AGENDA] 🔍 ENCONTRADOS ${abfLeads.length} LEADS ABF ATIVOS:`);
+                abfLeads.forEach(abf => {
+                    console.log(`[DEBUG AGENDA] - ABF: ${abf.nome} | Empresa: ${abf.empresa} | nextActionDate: ${abf.nextActionDate} | ativo: ${abf.isActive}`);
+                });
+            } else {
+                console.log(`[DEBUG AGENDA] ❌ NENHUM LEAD ABF ENCONTRADO NOS ATIVOS`);
+                const allAbfLeads = leads.filter(l => l.nome && l.nome.toLowerCase().includes('abf'));
+                console.log(`[DEBUG AGENDA] - Total de leads ABF (ativos/inativos): ${allAbfLeads.length}`);
+                allAbfLeads.forEach(abf => {
+                    console.log(`[DEBUG AGENDA] - ABF (todos): ${abf.nome} | ativo: ${abf.isActive} | nextActionDate: ${abf.nextActionDate}`);
+                });
+            }
+            
             console.log(`[DEBUG AGENDA] Array completo de leads ativos:`, activeLeadsForProcessing.map(l => ({
                 nome: l.nome, 
                 empresa: l.empresa,
@@ -3453,14 +3470,18 @@
                     console.log(`[DEBUG AGENDA] - data final = ${leadDateStr}`);
                     console.log(`[DEBUG AGENDA] - Datas disponíveis na agenda:`, Object.keys(leadsByDate));
                     
-                    // DEBUG ESPECIAL para Cristina Azevedo
-                    if (lead.nome && lead.nome.toLowerCase().includes('cristina')) {
-                        console.log(`[DEBUG AGENDA] 🚨 CRISTINA AZEVEDO DEBUG:`);
+                    // DEBUG ESPECIAL para ABF
+                    if (lead.nome && lead.nome.toLowerCase().includes('abf')) {
+                        console.log(`[DEBUG AGENDA] 🚨 ABF DEBUG DETALHADO:`);
                         console.log(`[DEBUG AGENDA] - Nome: ${lead.nome}`);
+                        console.log(`[DEBUG AGENDA] - Empresa: ${lead.empresa}`);
                         console.log(`[DEBUG AGENDA] - nextActionDate RAW: ${lead.nextActionDate}`);
                         console.log(`[DEBUG AGENDA] - parseDate resultado:`, leadDate);
                         console.log(`[DEBUG AGENDA] - leadDateStr final: ${leadDateStr}`);
                         console.log(`[DEBUG AGENDA] - leadsByDate[${leadDateStr}] existe?`, !!leadsByDate[leadDateStr]);
+                        console.log(`[DEBUG AGENDA] - isActive: ${lead.isActive}`);
+                        console.log(`[DEBUG AGENDA] - currentActionIndex: ${lead.currentActionIndex}`);
+                        console.log(`[DEBUG AGENDA] - Todas as datas disponíveis:`, Object.keys(leadsByDate));
                     }
                     
                     if (leadsByDate[leadDateStr]) {
