@@ -3948,30 +3948,67 @@
             
             let normalizedCount = 0;
             const dateFormats = {};
+            const problematicLeads = [];
             
             activeLeads.forEach(lead => {
                 const originalDate = lead.nextActionDate;
                 let normalizedDate = null;
                 
-                // Coletar formatos encontrados
-                const format = originalDate.includes('T') ? 'ISO' : 'Simple';
+                // Debug específico para Roberto Machado
+                if (lead.nome && lead.nome.toLowerCase().includes('roberto')) {
+                    console.log(`🔍 ROBERTO DEBUG:`, {
+                        nome: lead.nome,
+                        originalDate: originalDate,
+                        tipo: typeof originalDate,
+                        includes_T: originalDate.includes('T'),
+                        length: originalDate.length
+                    });
+                }
+                
+                // Detectar formato mais robustamente
+                let format = 'Unknown';
+                if (originalDate.includes('T') && originalDate.includes('Z')) {
+                    format = 'ISO_Full';
+                } else if (originalDate.includes('T')) {
+                    format = 'ISO_Partial';
+                } else if (originalDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    format = 'Simple_YYYY-MM-DD';
+                } else if (originalDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                    format = 'Brazilian_DD/MM/YYYY';
+                } else {
+                    format = 'Other';
+                    problematicLeads.push(`${lead.nome}: "${originalDate}"`);
+                }
+                
                 if (!dateFormats[format]) dateFormats[format] = 0;
                 dateFormats[format]++;
                 
-                // Normalizar para formato ISO completo
-                if (originalDate.includes('T')) {
-                    // Já está em formato ISO, manter
+                // Normalizar baseado no formato detectado
+                if (format === 'ISO_Full') {
+                    // Já está correto
                     normalizedDate = originalDate;
-                } else {
-                    // Formato simples (YYYY-MM-DD), converter para ISO
+                } else if (format === 'Simple_YYYY-MM-DD') {
+                    // Converter YYYY-MM-DD para ISO completo
                     normalizedDate = originalDate + 'T00:00:00.000Z';
                     console.log(`🔧 ${lead.nome}: ${originalDate} → ${normalizedDate}`);
                     lead.nextActionDate = normalizedDate;
                     normalizedCount++;
+                } else if (format === 'Brazilian_DD/MM/YYYY') {
+                    // Converter DD/MM/YYYY para ISO
+                    const [day, month, year] = originalDate.split('/');
+                    normalizedDate = `${year}-${month}-${day}T00:00:00.000Z`;
+                    console.log(`🔧 ${lead.nome}: ${originalDate} → ${normalizedDate}`);
+                    lead.nextActionDate = normalizedDate;
+                    normalizedCount++;
+                } else {
+                    console.warn(`⚠️ Formato não reconhecido para ${lead.nome}: "${originalDate}"`);
                 }
             });
             
             console.log('📊 Formatos encontrados:', dateFormats);
+            if (problematicLeads.length > 0) {
+                console.warn('⚠️ Leads com formatos problemáticos:', problematicLeads);
+            }
             console.log(`✅ ${normalizedCount} leads normalizados`);
             
             if (normalizedCount > 0) {
