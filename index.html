@@ -2725,20 +2725,22 @@
                     console.log(`[DEBUG] Dados salvos no JSONBin. Atualizando interfaces...`);
                     renderTable(); // Re-renderizar para atualizar as cores de status
                     
-                    // Se o modal de relatórios estiver aberto, regenerar todo o relatório
+                    // CORREÇÃO: Sempre atualizar a agenda quando data é alterada
+                    console.log(`[DEBUG] Regenerando agenda após alterar data para: ${newDate}`);
+                    
+                    // Sempre atualizar a agenda
+                    setTimeout(() => {
+                        console.log(`[DEBUG] Atualizando agenda...`);
+                        generateAgenda(); // Regenera a agenda
+                    }, 100);
+                    
+                    // Se o modal de relatórios estiver aberto, regenerar também o relatório
                     const reportModal = document.getElementById('report-modal');
                     if (reportModal && reportModal.style.display === 'block') {
-                        console.log(`[DEBUG] Regenerando relatório após alterar data para: ${newDate}`);
-                        console.log(`[DEBUG] Lead atualizado:`, leads[leadIndex]);
-                        
-                        // Forçar atualização com delay para garantir que dados foram processados
+                        console.log(`[DEBUG] Modal de relatórios aberto - regenerando relatório completo`);
                         setTimeout(() => {
-                            console.log(`[DEBUG] Forçando regeneração completa da agenda...`);
-                            generateAgenda(); // Regenera especificamente a agenda
-                            generateReport(); // Regenera todos os relatórios incluindo a agenda
-                        }, 100);
-                    } else {
-                        console.log(`[DEBUG] Modal de relatórios não está aberto, não regenerando`);
+                            generateReport(); // Regenera todos os relatórios
+                        }, 200);
                     }
                 }).catch(error => {
                     console.error('[DEBUG] Erro ao salvar dados:', error);
@@ -2868,6 +2870,12 @@
                 
                 // Salvar e atualizar interface
                 saveDataToBin();
+                
+                // CORREÇÃO: Atualizar agenda quando lead é editado
+                setTimeout(() => {
+                    generateAgenda();
+                }, 500);
+                
                 showNotification("✅ Lead atualizado com sucesso!", "success");
             },
 
