@@ -970,31 +970,87 @@
 
 
         <!-- Seção para Adicionar Novo Lead -->
-        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h2 class="text-2xl font-semibold mb-4">Adicionar Novo Lead</h2>
-            <form id="add-lead-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                <div class="lg:col-span-1">
-                    <label for="empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
-                    <input type="text" id="empresa" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div>
-                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome do Contato</label>
-                    <input type="text" id="nome" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div>
-                    <label for="cargo" class="block text-sm font-medium text-gray-700">Cargo</label>
-                    <input type="text" id="cargo" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div class="lg:col-span-1">
-                    <label for="linkedin" class="block text-sm font-medium text-gray-700">URL LinkedIn</label>
-                    <input type="url" id="linkedin" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Adicionar Lead</button>
-            </form>
+        <div class="bg-white rounded-xl shadow-md mb-8">
+            <!-- Botão para expandir/colapsar formulário -->
+            <div class="p-4">
+                <button id="toggle-add-lead-btn" class="w-full flex items-center justify-between p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        <span class="font-semibold">Adicionar Novo Lead</span>
+                    </div>
+                    <svg id="toggle-arrow" class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Formulário (inicialmente oculto) -->
+            <div id="add-lead-form-container" class="hidden px-6 pb-6">
+                <form id="add-lead-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                    <div class="lg:col-span-1">
+                        <label for="empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
+                        <input type="text" id="empresa" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="nome" class="block text-sm font-medium text-gray-700">Nome do Contato</label>
+                        <input type="text" id="nome" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="cargo" class="block text-sm font-medium text-gray-700">Cargo</label>
+                        <input type="text" id="cargo" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label for="linkedin" class="block text-sm font-medium text-gray-700">URL LinkedIn</label>
+                        <input type="url" id="linkedin" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Adicionar Lead</button>
+                </form>
+            </div>
         </div>
 
         <!-- Input de importação escondido -->
         <input type="file" id="file-input" class="hidden" accept=".xlsx,.xls,.csv" />
+
+        <!-- Dashboard Compacto -->
+        <div class="bg-white rounded-xl shadow-md mb-8 p-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Total de Leads -->
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-800" id="dashboard-total-leads">0</div>
+                    <div class="text-xs text-gray-500">Total Leads</div>
+                </div>
+                
+                <!-- Leads Ativos -->
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600" id="dashboard-active-leads">0</div>
+                    <div class="text-xs text-gray-500">Ativos</div>
+                </div>
+                
+                <!-- Próximas Ações (Hoje) -->
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-600" id="dashboard-today-actions">0</div>
+                    <div class="text-xs text-gray-500">Ações Hoje</div>
+                </div>
+                
+                <!-- Taxa de Conversão -->
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="dashboard-conversion-rate">0%</div>
+                    <div class="text-xs text-gray-500">Taxa Conversão</div>
+                </div>
+            </div>
+            
+            <!-- Barra de Status (opcional, só aparece se houver espaço) -->
+            <div class="mt-3 pt-3 border-t border-gray-200 hidden md:block">
+                <div class="flex justify-between text-xs text-gray-600">
+                    <span>🟢 <span id="dashboard-status-0">0</span></span>
+                    <span>🟡 <span id="dashboard-status-1">0</span></span>
+                    <span>🔵 <span id="dashboard-status-2">0</span></span>
+                    <span>🔴 <span id="dashboard-status-3">0</span></span>
+                </div>
+            </div>
+        </div>
 
         <!-- Filtros e Busca -->
         <div class="bg-white p-4 rounded-xl shadow-md mb-8">
@@ -1844,6 +1900,52 @@
         let lastRenderTime = 0;
         const RENDER_DEBOUNCE_TIME = 200; // milissegundos
 
+        // Função para atualizar o dashboard
+        const updateDashboard = () => {
+            const totalLeads = leads.length;
+            const activeLeads = leads.filter(lead => lead.isActive !== false).length;
+            
+            // Calcular ações para hoje
+            const today = new Date().toISOString().split('T')[0];
+            const todayActions = leads.filter(lead => {
+                if (!lead.nextActionDate) return false;
+                const actionDate = new Date(lead.nextActionDate).toISOString().split('T')[0];
+                return actionDate === today && lead.isActive !== false;
+            }).length;
+            
+            // Calcular taxa de conversão (leads que saíram da lista ou chegaram ao final)
+            const completedLeads = leads.filter(lead => {
+                return lead.status && lead.status.toLowerCase().includes('finalizado') || 
+                       lead.status && lead.status.toLowerCase().includes('convertido') ||
+                       lead.status && lead.status.toLowerCase().includes('fechado') ||
+                       (lead.currentActionIndex >= (cadenceConfig.actions?.length || 0));
+            }).length;
+            
+            const conversionRate = totalLeads > 0 ? Math.round((completedLeads / totalLeads) * 100) : 0;
+            
+            // Atualizar elementos do dashboard
+            const totalElement = document.getElementById('dashboard-total-leads');
+            const activeElement = document.getElementById('dashboard-active-leads');
+            const todayElement = document.getElementById('dashboard-today-actions');
+            const conversionElement = document.getElementById('dashboard-conversion-rate');
+            
+            if (totalElement) totalElement.textContent = totalLeads;
+            if (activeElement) activeElement.textContent = activeLeads;
+            if (todayElement) todayElement.textContent = todayActions;
+            if (conversionElement) conversionElement.textContent = conversionRate + '%';
+            
+            // Atualizar distribuição de status (primeiros 4)
+            if (cadenceConfig.statusOptions && cadenceConfig.statusOptions.length > 0) {
+                for (let i = 0; i < 4; i++) {
+                    const statusElement = document.getElementById(`dashboard-status-${i}`);
+                    if (statusElement && cadenceConfig.statusOptions[i]) {
+                        const count = leads.filter(lead => lead.status === cadenceConfig.statusOptions[i]).length;
+                        statusElement.textContent = count;
+                    }
+                }
+            }
+        };
+
         const renderTable = () => {
             console.log('🔄 renderTable() chamado - Total leads:', leads.length);
             
@@ -1880,6 +1982,9 @@
             // Renderizar apenas layout de cards (layout tabela removido para evitar duplicação)
             // renderTableView(filteredLeads); // REMOVIDO - causava layout duplicado
             renderCardsView(filteredLeads);
+            
+            // Atualizar dashboard
+            updateDashboard();
         };
         
         const renderTableView = (filteredLeads) => {
@@ -2781,6 +2886,15 @@
             leads.push(newLead);
             saveDataToBin();
             form.reset();
+            
+            // Fechar formulário após adicionar com sucesso
+            const addLeadFormContainer = document.getElementById('add-lead-form-container');
+            const toggleArrow = document.getElementById('toggle-arrow');
+            if (addLeadFormContainer && toggleArrow) {
+                addLeadFormContainer.classList.add('hidden');
+                toggleArrow.style.transform = 'rotate(0deg)';
+                showNotification('✅ Lead adicionado com sucesso!', 'success');
+            }
         });
 
         const closeNotesModal = () => {
@@ -5251,6 +5365,32 @@ Este relatório foi gerado automaticamente pelo Sistema CRM - RecargaPay
             if (activityFilter) {
                 activityFilter.addEventListener('change', () => {
                     renderTable();
+                });
+            }
+            
+            // Toggle do formulário de adicionar lead
+            const toggleAddLeadBtn = document.getElementById('toggle-add-lead-btn');
+            const addLeadFormContainer = document.getElementById('add-lead-form-container');
+            const toggleArrow = document.getElementById('toggle-arrow');
+            
+            if (toggleAddLeadBtn && addLeadFormContainer && toggleArrow) {
+                let isExpanded = false;
+                
+                toggleAddLeadBtn.addEventListener('click', () => {
+                    isExpanded = !isExpanded;
+                    
+                    if (isExpanded) {
+                        addLeadFormContainer.classList.remove('hidden');
+                        toggleArrow.style.transform = 'rotate(180deg)';
+                        // Focar no primeiro campo quando expandir
+                        setTimeout(() => {
+                            const empresaField = document.getElementById('empresa');
+                            if (empresaField) empresaField.focus();
+                        }, 100);
+                    } else {
+                        addLeadFormContainer.classList.add('hidden');
+                        toggleArrow.style.transform = 'rotate(0deg)';
+                    }
                 });
             }
         });
