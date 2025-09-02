@@ -1606,9 +1606,13 @@
                 cadenceConfig = database.config;
                 
                 console.log('Leads originais:', database.leads.length, 'Leads únicos:', uniqueLeads.length);
+                console.log('🔍 Array leads após atualização:', leads.length);
+                console.log('🔍 Primeiro lead:', leads[0]);
 
                 renderConfigForm();
                 populateStatusFilter();
+                
+                console.log('🎯 Chamando renderTable com', leads.length, 'leads');
                 renderTable();
                 
                 // Removido reset automático de datas: manter sempre as datas originais do BD
