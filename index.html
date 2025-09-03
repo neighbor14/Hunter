@@ -797,56 +797,181 @@
             }
         }
         
+        /* Pipeline de Mensagens */
+        .pipeline-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            min-height: 400px;
+        }
+
+        .pipeline-column {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            min-height: 350px;
+        }
+
+        .pipeline-header {
+            text-align: center;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .pipeline-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .pipeline-lead {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .pipeline-lead:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: #3b82f6;
+        }
+
+        .pipeline-lead-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .pipeline-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-right: 0.75rem;
+        }
+
+        .pipeline-lead-info h4 {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1f2937;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .pipeline-lead-info p {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .pipeline-lead-date {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            text-align: right;
+            margin-top: 0.25rem;
+        }
+
+        /* Cores diferentes para cada coluna */
+        .pipeline-column:nth-child(1) .pipeline-header { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .pipeline-column:nth-child(2) .pipeline-header { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .pipeline-column:nth-child(3) .pipeline-header { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .pipeline-column:nth-child(4) .pipeline-header { background: linear-gradient(135deg, #10b981, #059669); }
+        .pipeline-column:nth-child(5) .pipeline-header { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
         /* Melhorias de responsividade mobile */
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
             }
             
-            .mobile-stack {
-                flex-direction: column;
+            .pipeline-container {
+                grid-template-columns: repeat(2, 1fr);
                 gap: 0.5rem;
             }
             
-            .mobile-stack > * {
-                width: 100% !important;
+            .pipeline-column {
+                min-height: 250px;
             }
-            
-            .table-responsive {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+        }
+        
+        @media (max-width: 480px) {
+            .pipeline-container {
+                grid-template-columns: 1fr;
             }
-            
-            .mobile-card {
-                display: none;
-            }
-            
-            .mobile-view .table-responsive {
-                display: none;
-            }
-            
-            .mobile-view .mobile-card {
-                display: block;
-            }
-            
-            .mobile-lead-card {
-                background: white;
-                border-radius: 0.5rem;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-                border-left: 4px solid #4f46e5;
-            }
-            
-            .modal {
-                width: 95% !important;
-                height: 90% !important;
-                top: 5% !important;
-                left: 2.5% !important;
-                transform: none !important;
-            }
+        }
+
+        .mobile-stack {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .mobile-stack > * {
+            width: 100% !important;
+        }
+        
+        .table-responsive {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .mobile-card {
+            display: none;
+        }
+        
+        .mobile-view .table-responsive {
+            display: none;
+        }
+        
+        .mobile-view .mobile-card {
+            display: block;
+        }
+        
+        .mobile-lead-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #4f46e5;
+        }
+        
+        .modal {
+            width: 95% !important;
+            height: 90% !important;
+            top: 5% !important;
+            left: 2.5% !important;
+            transform: none !important;
         }
     </style>
 </head>
@@ -1317,6 +1442,12 @@
         <h3 class="text-2xl font-bold mb-4">📅 Agenda - Próximos 14 Dias Úteis</h3>
         <div id="agenda-calendar" class="mb-8">
             <!-- Agenda será inserida aqui -->
+        </div>
+
+        <!-- Pipeline de Mensagens -->
+        <h3 class="text-2xl font-bold mb-4">🎯 Pipeline de Mensagens - Leads Ativos</h3>
+        <div id="pipeline-funnel" class="mb-8 bg-white rounded-lg shadow-sm border p-6">
+            <!-- Pipeline será inserido aqui -->
         </div>
 
         <!-- Funil Kanban -->
@@ -3208,6 +3339,7 @@
             generateMessagePerformance();
 
             generateAgenda();
+            generatePipeline();
             generateKanban();
         }
 
@@ -3415,6 +3547,127 @@
                     `<p class="text-blue-700 text-sm">• ${insight}</p>`
                 ).join('');
             }
+        }
+
+        function generatePipeline() {
+            const pipelineContainer = document.getElementById('pipeline-funnel');
+            pipelineContainer.innerHTML = '';
+            
+            // Obter configurações de ações
+            const actions = cadenceConfig.actions || [];
+            if (actions.length === 0) {
+                pipelineContainer.innerHTML = '<p class="text-center text-gray-500">Configure as ações da cadência primeiro.</p>';
+                return;
+            }
+            
+            // Filtrar apenas leads ativos
+            const activeLeads = leads.filter(l => l.isActive !== false);
+            
+            // Agrupar leads por currentActionIndex
+            const leadsByStage = {};
+            for (let i = 0; i < actions.length; i++) {
+                leadsByStage[i] = [];
+            }
+            
+            activeLeads.forEach(lead => {
+                const stage = lead.currentActionIndex || 0;
+                if (stage < actions.length) {
+                    leadsByStage[stage].push(lead);
+                }
+            });
+            
+            // Função para gerar iniciais
+            const getInitials = (name) => {
+                return name.split(' ')
+                    .map(word => word.charAt(0).toUpperCase())
+                    .slice(0, 2)
+                    .join('');
+            };
+            
+            // Função para cores do avatar baseada no nome
+            const getAvatarColor = (name) => {
+                const colors = [
+                    'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                    'linear-gradient(135deg, #f59e0b, #d97706)',
+                    'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                    'linear-gradient(135deg, #10b981, #059669)',
+                    'linear-gradient(135deg, #ef4444, #dc2626)',
+                    'linear-gradient(135deg, #6366f1, #4f46e5)',
+                    'linear-gradient(135deg, #ec4899, #db2777)'
+                ];
+                const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                return colors[index % colors.length];
+            };
+            
+            // Criar container do pipeline
+            const pipelineGrid = document.createElement('div');
+            pipelineGrid.className = 'pipeline-container';
+            
+            // Criar colunas para cada ação
+            actions.forEach((action, index) => {
+                const column = document.createElement('div');
+                column.className = 'pipeline-column';
+                
+                const header = document.createElement('div');
+                header.className = 'pipeline-header';
+                header.innerHTML = `
+                    Mensagem ${index + 1}
+                    <div class="pipeline-count">${leadsByStage[index].length}</div>
+                `;
+                
+                column.appendChild(header);
+                
+                // Adicionar leads da etapa
+                leadsByStage[index].forEach(lead => {
+                    const leadCard = document.createElement('div');
+                    leadCard.className = 'pipeline-lead';
+                    
+                    const initials = getInitials(lead.nome);
+                    const avatarColor = getAvatarColor(lead.nome);
+                    const nextActionDate = lead.nextActionDate ? formatDate(lead.nextActionDate) : 'Sem data';
+                    
+                    leadCard.innerHTML = `
+                        <div class="pipeline-lead-header">
+                            <div class="pipeline-avatar" style="background: ${avatarColor}">
+                                ${initials}
+                            </div>
+                            <div class="pipeline-lead-info">
+                                <h4>${escapeHtml(lead.nome)}</h4>
+                                <p>${escapeHtml(lead.empresa)}</p>
+                            </div>
+                        </div>
+                        <div class="pipeline-lead-date">Próx: ${nextActionDate}</div>
+                    `;
+                    
+                    // Adicionar click para executar ação
+                    leadCard.addEventListener('click', () => {
+                        if (confirm(`Executar "${action.name}" para ${lead.nome} (${lead.empresa})?`)) {
+                            window.app.executeAction(lead.id);
+                            // Fechar modal e atualizar
+                            document.getElementById('report-modal-backdrop').style.display = 'none';
+                            document.getElementById('report-modal').style.display = 'none';
+                            renderTable();
+                        }
+                    });
+                    
+                    column.appendChild(leadCard);
+                });
+                
+                // Se não há leads nesta etapa, mostrar mensagem
+                if (leadsByStage[index].length === 0) {
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.className = 'text-center text-gray-400 text-sm mt-4';
+                    emptyMessage.textContent = 'Nenhum lead nesta etapa';
+                    column.appendChild(emptyMessage);
+                }
+                
+                pipelineGrid.appendChild(column);
+            });
+            
+            pipelineContainer.appendChild(pipelineGrid);
+            
+            // Log para debug
+            console.log('📊 Pipeline gerado:', leadsByStage);
         }
 
         function generateAgenda() {
