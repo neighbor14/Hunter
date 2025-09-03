@@ -3563,6 +3563,12 @@
             // Filtrar apenas leads ativos
             const activeLeads = leads.filter(l => l.isActive !== false);
             
+            // Atualizar título com contador de leads ativos
+            const pipelineTitle = document.querySelector('#pipeline-funnel').previousElementSibling;
+            if (pipelineTitle && pipelineTitle.tagName === 'H3') {
+                pipelineTitle.innerHTML = `🎯 Pipeline de Mensagens - Leads Ativos (${activeLeads.length})`;
+            }
+            
             // Agrupar leads por currentActionIndex
             const leadsByStage = {};
             for (let i = 0; i < actions.length; i++) {
